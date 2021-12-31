@@ -520,9 +520,14 @@ CREATE TABLE `tuser` (
 
 ### 联合索引
 
-------
+https://www.cnblogs.com/xuwc/p/14007766.html
 
-MySQL可以创建联合索引（即在多列上创建索引，一个索引可以包含最多16列。）
+MySQL可以创建联合索引（即在多列上创建一个索引，一个索引可以包含最多16列。），英文叫 [Multiple-Column Indexes](https://dev.mysql.com/doc/refman/8.0/en/multiple-column-indexes.html)
+
+
+如果分别为每个列创建索引，则即使一个条件查找中利用了多个索引列字段去匹配，那么SQL引擎查找也只会选择用一个合适的索引条件去查找，然后通过索引合并的方式查找。或者只会选择用一个索引列去匹配查找(策略是判断哪个列过滤排除的数据更多)
+
+
 
 联合索引的好处：
 
@@ -535,9 +540,14 @@ MySQL可以创建联合索引（即在多列上创建索引，一个索引可以
 
 #### 最左前缀匹配原则
 
-关于最左前缀匹配，有如下原则：
+所谓的索引有效，是指**使用了索引的快速搜索功能，并且有效的减少了扫描行**，所以**全索引扫描**（辅助索引树）和**全表扫描**（主键索引树）都不能称为真正的**索引有效**
 
-顺序扫描索引
+
+谈到联合索引，一定要讲最左前缀匹配，有如下原则：
+
+-- **如果查询的时候查询条件可以通过索引精确匹配左边连续一列或几列，则此列就可以被用到**。
+
+-- 
 
 ```sql
 CREATE TABLE test (
@@ -549,9 +559,14 @@ CREATE TABLE test (
 	INDEX name (last_name,first_name,age)
 );
 
--- name 是一个包含了 last_name 和 first_name 列的联合索引。
+-- name 是一个包含了 last_name,first_name,age 三列的联合索引。
 
--- 对于这个表，使用 (last_name) 和 (last_name,first_name) (last_name,first_name,age) 这样的条件才可以走索引
+
+-- 对于这个表，使用 (last_name) 和 (last_name,first_name) (last_name,first_name,age) 这样的条件过滤才可以走索引
+-- 这里需要注意的是，查询的时候如果两个条件都用上了但是顺序不同。
+-- 如 first_name= xx and last_name ＝xx，那么现在的查询引擎会自动优化为匹配联合索引的顺序，这样是能够命中索引的。
+-- 由于最左前缀原则，在创建联合索引时，索引字段的顺序需要考虑字段值去重之后的个数，较多的放前面。ORDER BY子句也遵循此规则。
+
 
 SELECT * FROM test WHERE last_name='Jones';
 SELECT * FROM test WHERE last_name='Jones' AND first_name='John';
