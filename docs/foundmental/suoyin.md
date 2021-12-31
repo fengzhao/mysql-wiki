@@ -883,17 +883,110 @@ https://github.com/kekobin/blog/issues/87
 
 
 
-https://github.com/Snailclimb/JavaGuide/blob/master/docs/database/MySQL%E9%AB%98%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E8%A7%84%E8%8C%83%E5%BB%BA%E8%AE%AE.md
+https://github.com/Snailclimb/JavaGuide/blob/main/docs/database/mysql/mysql-high-performance-optimization-specification-recommendations.md
 
 
 
 
-
-## 性能优化概述
+# 性能优化概述
 
 数据库性能优化在数据库层面有很多因素，例如，表，查询语句，数据库配置等。
 
-数据库操作最终是作用在硬件层面的CPU和磁盘的IO操作上。所以要尽可能让开销足够小。
+数据库操作最终是作用在硬件层面的CPU计算和磁盘的IO操作上。所以要尽可能让开销足够小。
+
+
+
+优化的几个简单原则：
+
+1. 减少数据访问： 设置合理的字段类型，启用压缩，通过索引访问等减少磁盘IO
+2. 返回更少的数据： 只返回需要的字段和数据分页处理 减少磁盘IO及网络IO
+3. 减少交互次数： 批量DML操作，函数存储等减少数据连接次数
+4. 减少服务器CPU开销： 尽量减少数据库排序操作以及全表查询，减少 cpu 内存占用
+5. 利用更多资源： 使用表分区，可以增加并行操作，更大限度利用cpu资源
+
+
+
+## 优化器和查询成本
+
+一般来说一个sql查询可以有不同的执行方案，可以选择走某个索引进行查询，也可以选择全表扫描。
+
+**查询优化器**则会比较并选择其中成本最低的方案去执行查询。
+
+
+
+查询成本分大体为两种：
+
+- **I/O成本**：磁盘读写的开销。一个查询或一个写入，都要从磁盘中读写数据，要一定的IO开销。
+
+- **CPU成本**：关联查询，条件查找，都要CPU来进行计算判断，一定的计算开销。
+
+MySQL使用的InnoDB引擎会把数据和索引都存储到磁盘上，当查询的时候需要先把数据先加载到内存中在进行下一步操作，这个加载的时间就是I/O成本。
+
+当数据被加载到内存中后，CPU会计算查询条件匹配，对数据排序等等操作，这一步所消耗的时间就是CPU成本。
+
+**但是查询优化器并不会真正的去执行sql，只会去根据优化的结果去预估一个成本。**
+
+**InnoDB引擎规定读取一个页面花费的成本默认约是0.25，读取以及检测一条记录是否符合搜索条件的成本默认约是0.1。**
+
+为什么都是约呢，因为MySQL内部的计算成本比较复杂这里提取了两个主要的计算参数。
+
+```shell
+## MySQL server 层面的各种开销
+mysql> select * from mysql.server_cost;
++------------------------------+------------+---------------------+---------+---------------+
+| cost_name                    | cost_value | last_update         | comment | default_value |
++------------------------------+------------+---------------------+---------+---------------+
+| disk_temptable_create_cost   |       NULL | 2021-09-24 14:47:20 | NULL    |            20 |
+| disk_temptable_row_cost      |       NULL | 2021-09-24 14:47:20 | NULL    |           0.5 |
+| key_compare_cost             |       NULL | 2021-09-24 14:47:20 | NULL    |          0.05 |
+| memory_temptable_create_cost |       NULL | 2021-09-24 14:47:20 | NULL    |             1 |
+| memory_temptable_row_cost    |       NULL | 2021-09-24 14:47:20 | NULL    |           0.1 |
+| row_evaluate_cost            |       NULL | 2021-09-24 14:47:20 | NULL    |           0.1 |
++------------------------------+------------+---------------------+---------+---------------+
+6 rows in set (0.00 sec)
+
+mysql>
+
+## MySQL 存储引擎层面的各种开销
+mysql> select * from mysql.engine_cost;
++-------------+-------------+------------------------+------------+---------------------+---------+---------------+
+| engine_name | device_type | cost_name              | cost_value | last_update         | comment | default_value |
++-------------+-------------+------------------------+------------+---------------------+---------+---------------+
+| default     |           0 | io_block_read_cost     |       NULL | 2021-09-24 14:47:20 | NULL    |             1 |
+| default     |           0 | memory_block_read_cost |       NULL | 2021-09-24 14:47:20 | NULL    |          0.25 |
++-------------+-------------+------------------------+------------+---------------------+---------+---------------+
+2 rows in set (0.00 sec)
+
+mysql>
+```
+
+
+
+
+
+
+
+#### 基于成本的优化
+
+在一条单表查询语句真正执行之前，Mysql的查询优化器会找出执行该语句所有可能使用的方案，对比之后找出成本最低的方案。
+
+这个成本最低的方案就是所谓的**执行计划**，之后才会调用存储引擎提供的接口真正的执行查询。
+
+**多数情况下，一条查询可以有很多种执行方式，最后都返回相应的结果。优化器的作用就是找到这其中最好的执行计划。**
+
+MySQL采用了基于开销的优化器，以确定处理查询的最解方式，也就是说执行查询之前，都会先选择一条自认为最优的方案，然后执行这个方案来获取结果。
+
+在很多情况下，MySQL能够计算最佳的可能查询计划，但在某些情况下，MySQL没有关于数据的足够信息，或者是提供太多的相关数据信息，估测就不那么友好了。
+
+
+
+**对于一些执行起来十分耗费性能的语句，MySQL 还是依据一些规则，竭尽全力的把这个很糟糕的语句转换成某种可以比较高效执行的形式，这个过程也可以被称作查询重写**。
+
+
+
+MySQL 使用基于成本的优化器，**它尝试预测一个查询使用某种执行计划时的成本，并选择其中成本最小的一个。**
+
+在 MySQL 可以通过查询当前会话的 last_query_cost 的值来得到其计算当前查询的成本。
 
 
 
@@ -917,6 +1010,984 @@ https://github.com/Snailclimb/JavaGuide/blob/master/docs/database/MySQL%E9%AB%98
 为了快速随机访问文件中的记录，可以使用索引结构，每个索引结构与一个特定的搜索码关联。
 
 被索引的文件
+
+
+
+
+
+
+
+
+
+
+
+# 索引失效或不走索引的原因
+
+
+
+
+
+
+
+- 对索引列进行了运算，运算包括。
+
+  ```sql
+  -- 索引失效的原因是索引是针对原值建的二叉树，将列值计算后，原来的二叉树就用不上了。
+  select * from t where id*3=3000
+  ```
+
+  
+
+- 索引列字段数据类型不一致
+
+- 两个表的索引列的字段数据类型不一致
+
+  - 索引列字段和常量比较时，数据类型不一致。
+
+- 字符集不一致
+
+  要比较的字段字符集不一致
+
+- 
+
+
+
+
+
+# MySQL 多表连接
+
+
+
+驱动表的概念是指多表关联查询时，第一个被处理的表，使用此表的记录去关联其他表。
+
+驱动表的确定很关键，会直接影响多表连接的关联顺序，也决定了后续关联时的查询性能。
+
+- 驱动表/主表/前表
+- 被驱动表/副表/后表
+
+驱动表的选择遵循一个原则：**`在对最终结果集没影响的前提下，优先选择结果集最小的那张表作为驱动表`**。
+
+**改变驱动表就意味着改变连接顺序，只有在不会改变最终输出结果的前提下才可以对驱动表做优化选择。**
+
+https://blog.csdn.net/lkforce/article/details/102940091
+
+
+
+## 连接查询
+
+写过或者学过 SQL 的人应该都知道 left join，知道 left join 的实现的效果，就是保留左表的全部信息，然后把右表往左表上拼接，如果拼不上就是 null。
+
+除了 left join 以外，还有 inner join、outer join、right join，这些不同的 join 能达到的什么样的效果，大家应该都了解了。
+
+
+
+驱动表的选择原则
+
+MySQL 会如何选择驱动表，按从左至右的顺序选择第一个？
+
+
+
+
+
+多表连接的顺序？
+
+假设我们有 3 张表：A、B、C，和如下 SQL
+
+```sql
+-- 伪 SQL，不能直接执行
+A LEFT JOIN B ON B.aId = A.id  LEFT JOIN C ON C.aId = A.id
+WHERE A.name = '666' AND B.state = 1 AND C.create_time > '2019-11-22 12:12:30'
+```
+
+是 A 和 B 联表处理完之后的结果再和 C 进行联表处理，还是 A、B、C 一起联表之后再进行过滤处理 ，还是说这两种都不对，有其他的处理方式 ？
+
+
+
+join 主要有 Nested Loop、Hash Join、Merge Join 这三种算法方式，最普遍最好的理解的 Nested Loop join 。
+
+顾名思义就是嵌套循环连接。
+
+但是根据场景不同可能有不同的变种：
+
+- Simple Nested-Loop join
+- Index Nested-Loop join
+- Block Nested-Loop join
+- Betched Key Access join
+
+
+
+Nested Loop join 翻译过来就是**嵌套循环连接**的意思，那什么又是嵌套循环呢？
+
+嵌套大家应该都能理解，就是一层套一层；那循环呢，你可以理解成是 for 循环。
+
+
+
+
+
+在正式开始之前，先介绍两个概念：
+
+- 驱动表（也叫主表）：
+
+
+
+小表驱动大表。
+
+
+
+我们常说，**小表驱动大表，驱动表一定是小表吗？其实更精准一点是指的是根据条件获得的子集合一定要小，而不是说实体表本身一定要小，大表如果获得的子集合小，一样可以简称这个大表为驱动表。 ，最好选择与其他表的主键字段进行比较，或者与已经索引的字段进行比较，这样一来，就有意识地将业务需求的主表**
+
+和被驱动表（也叫非驱动表，还可以叫匹配表，亦可叫内表），简单来说，驱动表就是主表，left join 中的左表就是驱动表，right join 中的右表是驱动表。
+
+一个是驱动表，那另一个就只能是非驱动表了，在 join 的过程中，其实就是从驱动表里面依次（注意理解这里面的依次）取出每一个值，然后去非驱动表里面进行匹配，那具体是怎么匹配的呢？这就是我们接下来讲的这三种连接方式。
+
+
+
+
+
+
+
+
+
+## Simple Nested-Loop Join
+
+
+
+Simple Nested-Loop Join 是这三种方法里面最简单，最好理解，也是最符合大家认知的一种连接方式。
+
+现在有两张表 table A 和 table B，我们让 **table A left join table B**，如果是用第一种连接方式去实现的话，会是怎么去匹配的呢？直接上图：
+
+
+
+![img](assets/1153954-20201210195552830-1911874625.png)
+
+
+
+
+
+- 上面的 left join 会从**驱动表 table A** 中**逐行取出每一个值**。（在外层循环中）
+- 然后去**非驱动表 table B**   中从**上往下依次匹配**。（在内存循环中）
+
+- 然后把匹配到的值进行返回，最后把所有返回值进行合并，这样我们就查找到了 table A left join table B 的结果。
+
+利用这种方法，如果 table A 有 100 行，table B 有 100 行，总共需要执行 10 x 10 = 100 次循环。
+
+**嵌套循环连接join（Nested-Loop Join Algorithms）：是每次匹配1行，匹配速度较慢，需要的内存较少。**
+
+```java
+//伪代码表示
+List<Row> result = new ArrayList<>();
+for(Row r1 in List<Row> t1){
+	for(Row r2 in List<Row> t2){
+		if(r1.id = r2.tid){
+			result.add(r1.join(r2));
+		}
+	}
+}
+
+// 很多人说
+```
+
+
+
+
+
+```sql
+-- 在实际 inner join 中，数据库引擎会自动选取数量小的表做为驱动表
+-- 驱动表是 t2，被驱动表是 t1。先执行查找的就是驱动表(执行计划结果的id如果一样则按从上到下顺序执行sql);优化器一般会优先选择小表做驱动表。
+-- 所以使用 inner join 时，排在前面的表并不一定就是驱动表。
+-- 当使用join时，mysql会选择数据量比较小的表作为驱动表，大表作为被驱动表。
+
+-- 当使用left join时，左表是驱动表，右表是被驱动表，当使用right join时，右表时驱动表，左表是被驱动表。
+
+-- 使用了 NLJ算法。一般 join 语句中，如果执行计划 Extra 中未出现 Using join buffer 则表示使用的 join 算 法是NLJ
+select * from t1 inner join t2 on t1.id=t2.tid
+
+-- 从表 t2 中读取一行数据(如果t2表有查询过滤条件的，会从过滤结果里取出一行数据);
+```
+
+
+
+
+
+这种暴力匹配的方式在数据库中一般不使用。
+
+
+
+举个例子：
+
+select * from t1 inner join t2 on t1.id=t2.tid
+
+（1）t1称为外层表，也可称为驱动表。
+（2）t2称为内层表，也可称为被驱动表。
+
+
+
+```java
+//伪代码表示：
+List<Row> result = new ArrayList<>();
+for(Row r1 in List<Row> t1){
+	for(Row r2 in List<Row> t2){
+		if(r1.id = r2.tid){
+			result.add(r1.join(r2));
+		}
+	}
+}
+```
+
+
+
+```shell
+# 对于t1,t2,t3这样三个表，t1范围查找，t2索引查找，t3全扫描
+
+
+Table   Join Type
+t1      range
+t2      ref
+t3      ALL
+
+
+for each row in t1 matching range {
+  for each row in t2 matching reference key {
+    for each row in t3 {
+      if row satisfies join conditions, send to client
+    }
+  }
+}
+
+
+# 因为NLJ算法是通过外循环的行去匹配内循环的行，所以内循环的表会被扫描多次。
+```
+
+https://blog.csdn.net/weixin_44663675/article/details/112190762
+
+## Block Nested-Loop Join Algorithm
+
+https://dev.mysql.com/doc/refman/8.0/en/nested-loop-joins.html
+
+https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_join_buffer_size
+
+前面的算法， 逐行查找，每次磁盘IO都读很少数据，自然效率很低。
+
+**块嵌套循环联接（BNL）算法**，将外循环的行缓存起来，读取缓存中的行，减少内循环的表被扫描的次数。
+
+**例如，如果10行读入缓冲区并且缓冲区传递给下一个内循环，在内循环读到的每行可以和缓冲区的10行做比较。**
+
+**这样使内循环表被扫描的次数减少了一个数量级。**
+
+
+
+**在 MySQL 8.0.18 之前，如果连接字段没有索引，MySQL 默认会使用这个算法。**
+
+在 MySQL 8.0.18 之后。
+
+
+
+MySQL使用联接缓冲区时，会遵循下面这些原则：
+
+- join_buffer_size 系统变量的值决定了每个 join_buffer 的大小。
+- 联接类型为ALL、index、range时（换句话说，联接的过程会扫描索引或全表扫描时），MySQL会使用 join_buffer 。
+- join_buffer 是分配给每一个能被缓冲的 join，所以一个查询可能会使用多个 join_buffer 。
+- 使用到的列才会放到 join_buffer 中，并不是每一个整行数据。
+- 缓冲区是分配给每一个能被缓冲的联接，所以一个查询可能会使用多个联接缓冲区。
+
+
+
+**注意**
+
+```sql
+-- 注意 在 MySQL 中， CROSS JOIN  等价于  INNER JOIN ， 这两个可以互换使用。
+-- 但是在标准SQL中，这两个并不一样。
+
+SELECT * FROM t1 LEFT JOIN (t2, t3, t4)  ON (t2.a=t1.a AND t3.b=t1.b AND t4.c=t1.c)
+
+SELECT * FROM t1 LEFT JOIN (t2 CROSS JOIN t3 CROSS JOIN t4)  ON (t2.a=t1.a AND t3.b=t1.b AND t4.c=t1.c)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Index Nested-Loop Join
+
+Index Nested-Loop Join  翻译成中文叫 **索引嵌套循环连接查询**
+
+
+
+Index Nested-Loop Join 这种方法中，我们看到了 Index，大家应该都知道这个就是索引的意思。
+
+
+
+**这个 Index 是要求非驱动表上要有索引，有了索引以后可以减少匹配次数，匹配次数减少了就可以提高查询的效率了。**
+
+为什么会有了索引以后可以减少查询的次数呢？这个其实就涉及到数据结构里面的一些知识了，给大家举个例子就清楚了
+
+
+
+1. 索引嵌套循环连接是基于索引进行连接的算法，索引是基于内层表的，通过**外层表匹配条件**直接与**内层表索引**进行匹配，避免和内层表的每条记录进行比较， 从而利用索引的查询减少了对内层表的匹配次数，优势极大的提升了 join的性能：
+
+> 原来的匹配次数 = 外层表行数 * 内层表行数
+> 优化后的匹配次数= 外层表的行数 * 内层表索引的高度
+
+1. 使用场景：只有内层表 join 的列有索引时，才能用到 Index Nested-LoopJoin 进行连接。
+2. 由于用到索引，如果索引是辅助索引而且返回的数据还包括内层表的其他数据，则会回内层表查询数据，多了一些IO操作。
+3. 
+
+
+
+
+
+MySQL8.0正式引入了Hash Join 的连接方式。
+
+
+
+
+
+## 实例
+
+
+
+```sql
+-- 建表t2
+CREATE TABLE `t2` (
+  `id` int(11) NOT NULL,
+  `a` int(11) DEFAULT NULL,
+  `b` int(11) DEFAULT NULL,
+  `c` int(11) DEFAULT NULL,
+  `d` int(11) DEFAULT NULL, 
+  PRIMARY KEY (`id`),
+  KEY `a` (`a`),
+  KEY `b` (`b`),
+  KEY `c` (`c`),
+  KEY `d` (`d`)
+) ENGINE=InnoDB;
+
+-- t2测试数据
+delimiter ;;
+create procedure idata2()
+begin
+  declare i int;
+  set i=1;
+  while(i<=1000)do
+    insert into t2 values(i, i+1, i+2, i+2, i+4);
+    set i=i+1;
+  end while;
+end;;
+
+delimiter ;
+
+-- 调用存储过程
+call idata2();
+
+
+-- 建表t1
+create table t1 like t2;
+insert into t1 (select * from t2 where id<=100);
+
+
+-- t1测试数据
+delimiter ;;
+create procedure idata1()
+begin
+  declare i int;
+  set i=2000;
+  while(i<=3000)do
+    insert into t1 values(i, i, i, i, i);
+    set i=i+1;
+  end while;
+end;;
+
+delimiter ;
+
+-- 调用存储过程
+call idata1();
+
+
+
+
+-- t1 的数据  1-100  2000-3000  一共是1101条数据
+-- t2 的数据  1-1000  一共是1000条数据
+
+-- 直接多表查询，笛卡尔积：1101*1000 条数据，一般很少有这样的查询
+select *  from t1 , t2   
+
+
+
+-- 内连接查询，匹配到了1-100这100行数据
+select count(*)  from t1  join t2 on  t1.id=t2.id
+
+-- 查看执行计划
+
+
+explain select count(*)  from t1  join t2 on  t1.id=t2.id
+-- 此时驱动表是t2
+
+
+explain select t1.* from t1  join t2 on  t1.id=t2.id
+
+explain select t2.* from t1  join t2 on  t1.id=t2.id
+
+-- 不等值连接查询
+explain select count(*) from t1  join t2 on  t1.id != t2.id
+
+
+
+
+-- t1 的数据  1-100  2000-3000  一共是1101条数据
+-- t2 的数据  1-1000  一共是1000条数据
+
+
+```
+
+
+
+
+
+
+
+
+
+# MySQL 执行计划
+
+在MySQL中，我们可以通过 **EXPLAIN** 命令获取MySQL如何执行 SELECT 语句的信息，包括在 SELECT 语句执行过程中表如何连接和连接的顺序。
+
+Explain 可以使用在` SELECT, DELETE, INSERT, REPLACE, and UPDATE` 语句中，执行的结果会在每一行显示用到的每一个表的详细信息。
+
+
+
+简单语句可能结果就只有一行，但是复杂的查询语句会有很多行数据。
+
+
+
+### `Explain` 的使用
+
+在 SQL 语句前面加上 `explain `，如：` EXPLAIN SELECT * FROM a;`
+
+
+
+
+
+
+
+### `Explain` 输出的字段内容
+
+```
+id, select_type, table, partitions, type, possible_keys, key, key_len, ref, rows,filtered,extra
+```
+
+| 列名          | 含义                                                  |
+| :------------ | :---------------------------------------------------- |
+| id            | 查询语句的标识                                        |
+| select_type   | 查询的类型                                            |
+| table         | 当前行所查的表                                        |
+| partitions    | 匹配的分区                                            |
+| type          | 访问类型                                              |
+| possible_keys | 查询可能用到的索引                                    |
+| key           | mysql 决定采用的索引来优化查询                        |
+| key_len       | 索引 key 的长度                                       |
+| ref           | 显示了之前的表在key列记录的索引中查找值所用的列或常量 |
+| rows          | 查询扫描的行数，预估值，不一定准确                    |
+| filtered      | 查询的表行占表的百分比                                |
+| extra         | 额外的查询辅助信息                                    |
+
+
+
+
+
+### select_type类型
+
+**select_type**:表示查询类型，常见的取值有：
+
+|   类型   |               说明                |
+| :------: | :-------------------------------: |
+|  SIMPLE  |   简单表，不使用表连接或子查询    |
+| PRIMARY  |      主查询，即最外层的查询       |
+|  UNION   | UNION中的第二个或者后面的查询语句 |
+| SUBQUERY |         子查询中的第一个          |
+| DERIVED  |              派生表               |
+
+
+
+
+
+**table**:输出结果集的表（表别名）
+
+
+
+### type类型
+
+表示MySQL在表中找到所需行的方式，或者叫访问类型。常见访问类型如下，从上到下，性能由差到最好：
+
+|         ALL         |         全表扫描         | 一般是没有where条件或者where条件没有使用索引的查询语句       |
+| :-----------------: | :----------------------: | ------------------------------------------------------------ |
+|      **index**      |      **索引全扫描**      | **MySQL遍历整个索引来查询匹配行，并不会扫描表，一般是查询的字段有索引的语句** |
+|      **range**      |     **索引范围扫描**     | **索引范围扫描，常用于<、<=、>、>=、between等操作**          |
+| **index_subquery**  |      **索引子查询**      |                                                              |
+| **unique_subquery** |    **唯一索引子查询**    |                                                              |
+|   **index_merge**   |       **索引合并**       |                                                              |
+|   **ref_or_null**   |                          |                                                              |
+|    **fulltext**     |     **全文索引扫描**     |                                                              |
+|       **ref**       |    **非唯一索引扫描**    | **使用非唯一索引或唯一索引的前缀扫描，返回匹配某个单独值的记录行** |
+|     **eq_ref**      |     **唯一索引扫描**     | **类似ref，区别在于使用的索引是唯一索引，对于每个索引键值，表中只有一条记录匹配** |
+|  **const,system**   | **单表最多有一个匹配行** | **单表中最多有一条匹配行，查询起来非常迅速，所以这个匹配行的其他列的值可以被优化器在当前查询中当作常量来处理** |
+|      **NULL**       |   **不用扫描表或索引**   |                                                              |
+
+
+
+#### ALL场景
+
+**全表扫描，一般是没有where条件或者where条件没有使用索引的查询语句**
+
+> 全表扫描：MySQL要从磁盘读取整个表，逐行遍历并进行计算匹配比对的过程。
+
+```sql
+-- customer表中的active字段没有索引：逐行读取并跟查询条件比对
+EXPLAIN SELECT * FROM customer WHERE active=0;
+```
+
+#### index场景
+
+**索引全扫描，MySQL遍历整个索引来查询匹配行，并不会扫描表**
+
+```sql
+-- 一般是查询的字段都有索引的查询语句
+EXPLAIN SELECT store_id FROM customer;
+```
+
+#### range场景
+
+**索引范围扫描，常用于 <、<=、>、>=、between等操作，仅扫描部分索引行的数据**
+
+```sql
+-- 在这种情况下，注意比较的字段要加上索引。否则就是全表扫描
+-- 这种也不是绝对的，也有可能走全表扫描，无论什么情况下，只查询需要的列
+EXPLAIN SELECT * FROM customer WHERE customer_id>=10 AND customer_id<=20;
+EXPLAIN select  apprdate from temp_policy_org_base where apprdate > '8' and apprdate < '10' ;
+
+```
+
+
+
+#### [`index_subquery`](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html#jointype_index_subquery)
+
+#### [`unique_subquery`](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html#jointype_unique_subquery)
+
+#### [`index_merge`](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html#jointype_index_merge)
+
+#### [`ref_or_null`](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html#jointype_ref_or_null)
+
+
+
+#### fulltext场景
+
+
+
+#### ref场景
+
+- 根据索引字段进行等值查询，**返回匹配某个单独值的记录行** （非唯一索引，或者唯一索引的前缀扫描。）
+
+  ```sql
+  SELECT * FROM ref_table WHERE key_column=expr;
+  ```
+
+  
+
+- join联表查询
+
+**ref_table、other_table** 表关联查询，关联字段`customer.customer_id`（主键），`payment.customer_id`（非唯一索引）
+
+```sql
+    SELECT * FROM ref_table,other_table  WHERE ref_table.key_column=other_table.column;
+```
+
+
+
+关联查询时必定会有一张表进行全表扫描，此表一定是几张表中记录行数最少的表，然后再通过非唯一索引寻找其他关联表中的匹配行，以此达到表关联时扫描行数最少。
+
+
+
+因为**customer**、**payment**两表中**customer**表的记录行数最少，所以**customer**表进行全表扫描，**payment**表通过非唯一索引寻找匹配行。
+
+
+
+
+
+
+
+#### eq_ref场景
+
+表示对于前表的每一个结果，都只能匹配到后表的一行结果。并且查询的比较操作通常是 `=`，查询效率较高。
+
+
+
+```shell
+SELECT * FROM ref_table,other_table  WHERE ref_table.key_column=other_table.column;
+SELECT * FROM ref_table,other_table  WHERE ref_table.key_column_part1=other_table.column AND ref_table.key_column_part2=1;
+```
+
+
+
+
+
+#### system/const场景
+
+**单表中最多有一条匹配行，查询起来非常迅速，所以这个匹配行的其他列的值可以被优化器在当前查询中当作常量来处理。**
+
+场景：将唯一索引或主键，跟常量匹配查找。
+
+```shell
+SELECT * FROM tbl_name WHERE primary_key=1;
+SELECT * FROM tbl_name  WHERE primary_key_part1=1 AND primary_key_part2=2;
+
+
+```
+
+system查找，表中只有一行。system是特殊的const查找情况。
+
+
+
+
+
+
+
+### Extra 类型
+
+
+
+关于如何理解MySQL执行计划中Extra列的Using where、Using Index、Using index condition，Using index,Using where这四者的区别。
+
+首先，我们来看看官方文档关于三者的简单介绍（官方文档并没有介绍Using index,Using where这种情况）
+
+
+
+**Using where**
+
+  表示MySQL Server在存储引擎收到记录后进行“后过滤”（Post-filter）。
+
+如果查询未能使用索引，Using where的作用只是提醒我们MySQL将用where子句来过滤结果集。这个一般发生在MySQL服务器，而不是存储引擎层。
+
+**一般发生在不能走索引扫描的情况下或者走索引扫描，但是有些查询条件不在索引当中的情况下。**
+
+注意，Using where过滤元组和执行计划是否走全表扫描或走索引查找没有关系。
+
+Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后进行“后过滤”（Post-filter）。
+
+ 不管SQL语句的执行计划是全表扫描（type=ALL)或非唯一性索引扫描（type=ref)。
+
+网上有种说法“Using where：表示优化器需要通过索引回表查询数据" ，上面实验可以证实这种说法完全不正确。
+
+
+
+**Using Index**
+
+ [覆盖索引](###索引覆盖)：表示直接访问索引就能够获取到所需要的数据（），不需要通过回表查询。
+
+注意：执行计划中的Extra列的“Using index”跟type列的“index”不要混淆。Extra列的“Using index”表示索引覆盖。而type列的“index”表示Full Index Scan。
+
+
+
+**Using Index Condition**
+
+[索引下推](###索引下推ICP)：会先条件过滤索引，过滤完索引后找到所有符合索引条件的数据行，随后用 WHERE 子句中的其他条件去过滤这些数据行；
+
+
+
+
+
+
+
+# MySQL排序优化
+
+
+
+
+
+- **通过有序索引顺序扫描直接返回有序数据**
+
+  因为索引的结构是B+树，索引中的数据是按照一定顺序进行排列的，所以在排序查询中如果能利用索引，就能避免额外的排序操作。
+
+  EXPLAIN分析查询时，Extra显示为Using index。
+
+
+
+
+
+
+
+- **Filesort排序，对返回的数据进行排序**
+
+  所有不是通过索引直接返回排序结果的操作都是Filesort排序，也就是说进行了额外的排序操作。EXPLAIN分析查询时，Extra显示为Using filesort。
+
+  
+
+  
+
+**其实 MySQL 会给每个线程分配一块内存用于排序，称为 sort_buffer，由sort_buffer_size这个参数控制**。
+
+
+
+
+
+
+
+
+
+## ORDER BY优化的核心原则
+
+
+
+
+
+### 全字段排序
+
+```sql
+create table 't' (
+	'id' int(11) not null,
+	'city' vachar(16) not null,
+	'name' vachar(16) not null,
+	'age' vachar(16) not null,
+	'addr' varchar(128) default null,
+	primary key('id'),
+	key 'city'('city')
+)engine = InnoDB;
+
+select city,name,age from t where city = '杭州' order by name limit 1000;
+```
+
+
+
+为了避免全表扫描，需要在city字段上加上索引
+
+假设满足city = '杭州’条件的行是从ID_X到ID_(X+N)的这些记录。
+
+执行流程：
+
+1. 初始化sort_buffer，确定放入name、city、age三个字段;
+2. 从索引city找到第一个满足city = '杭州’条件的主键id，也就是ID_X;
+3. 到主键id索引取出整行，取name、city、age三个字段值，存入sort_buffer;
+4. 从索引city取下一个记录的主键id;
+5. 重复step3、4直到city的值不满足查询条件为止，对应的ID(X+N);
+6. 对sort_buffer中的数据按照字段name做快速排序
+7. 按照排序结果取前1000行返回给客户端
+
+
+
+简单说，就是通过索引字段查找之后，然后把整行数据都加载到内存
+
+
+
+### rowid排序
+
+
+
+
+
+
+
+# MySQL count 优化
+
+
+
+```sql
+select count(*) from api_runtime_log;
+
+
+```
+
+
+
+在 **InnoDB 存储引擎**中，**count(\*)** 函数是先从内存中读取数据到**内存缓冲区**，然后进行扫描获得行记录数。
+
+- 这里 InnoDB 会**优先走二级索引**；
+- 如果同时存在多个二级索引，会选择**key_len 最小**的二级索引；
+- 如果不存在二级索引，那么会走**主键索引**；
+- 如果连主键都不存在，那么就走**全表扫描**！
+
+
+
+
+
+# MySQL 数据转型
+
+
+
+[官网手册](https://dev.mysql.com/doc/refman/5.7/en/type-conversion.html)
+
+MySQL 中有各种数据类型，包括：数字，字符、字符串、时间  等几种大类型。
+
+
+
+当不同类型的数据进行计算时，可能会发生隐式或显式转换。显式转换一般是各种函数：CONVERT()  CAST() 等等。
+
+
+
+> 当操作符与不同类型的操作数一起使用时，会发生类型转换以使操作数兼容。
+>
+> 举个例子，当操作数是字符跟数字时， MySQL 会根据使用的操作符，转换字符到数字或转换数字成字符。
+>
+> ```
+> mysql> SELECT 1+'1';
+>      -> 2
+> mysql> SELECT CONCAT(2,' test');
+>      -> '2 test'
+> ```
+>
+> 
+
+
+
+
+
+## 比较操作的隐式转换
+
+
+
+- 两个参数至少有一个是 NULL 时，比较的结果也是 NULL，例外是使用 <=> 对两个 NULL 做比较时会返回 1，这两种情况都不需要做类型转换。
+
+  ```sql
+  select 1=NULL   -- 结果也是null
+  ```
+
+  
+
+- 两个参数都是字符串，会按照字符串来比较，不做类型转换
+
+- 两个参数都是整数，按照整数来比较，不做类型转换
+
+
+
+- 字符串和数字比较时，会尝试将字符串转换为数字。
+
+
+
+
+
+
+
+
+
+# MySQL 排序和比较规则
+
+
+
+
+
+## 字符集和校验规则
+
+
+
+### 1.1、二进制
+
+binary 。计算机底层存储数据只是一大堆二进制的0和1。
+
+### 1.2、字符
+
+character 。现在有各种各样的字符，包括英文字母，阿拉伯数字，中文，emoji 等等各种特殊字符。
+
+
+
+### 1.3 字符编码
+
+
+
+### 1.4、字符集
+
+character set 。想要把各种人类可以理解的字符存储到计算机中，就需要建立字符与二进制数字的映射关系。
+
+字符集就是这样的一种映射关系，不同的字符集表示的字符数量不同，字符集越大，所能表示的字符越多，需要占用的二进制位更多，需要的磁盘空间就越大。
+
+MySQL中所支持的字符集存在 `information_schema.CHARACTER_SETS` 表中。
+
+utf8 是 MySQL 中的一种字符集，只支持最长三个字节的 UTF-8 字符，也就是 Unicode 中的基本多文本平面。
+
+**其中 utf8mb4 字符集兼容性最好，它可以存各种语言的字符，包括 emoji 表情等。一般都可以直接使用 utf8mb4  字符集。**
+
+
+
+字符集的作用范围：
+
+- schema
+- table 
+- column 
+
+
+
+### 1.5、校验规则(排序规则)
+
+
+
+collation 。检验规则，又称排序规则，是用于比较字符和排序的一套规则，即字符的排序规则。比如有的规则区分大小写，有的则无视。
+
+比如我们在比较
+
+如果指定校验规则为"不区分大小写"，那么a和A，e和E就是等价的。
+
+世界上的文字很多，所以才会有“不区分音调”的要求，这时候e、ē、é、ě、è就是等价的。
+
+那么假设我们要进行拼音查找，只要按e去找就可以全部列出来，很方便。甚至，它们也和ê、ë也是等价的，这样就更方便了。
+
+每种字符集都可能有多种检验规则，并且都有一个默认的检验规则(information_schema. CHARACTER_SETS.DEFAULT_COLLATE_NAME)
+
+**每个校验规则只能用于一个字符集，因此字符集与校验规则是一对多的关系。**
+
+校验规则存储在  information_schema. COLLATIONS 表中。一般使用  utf8mb4_general_ci 排序规则。
+
+排序规则命名惯例：字符集名\_对应的语言排序规则_ai/as/ci/cs/ks/bin
+
+​	
+
+- ai  口音不敏感（accent-sensitive ）
+- 口音不敏感
+- 大写敏感
+- 小写敏感
+- 
+
+​	语言名一般都是用 general 	
+
+​	其中ci表示大小写不敏感性，cs表示大小写敏感性，bin表示二进制。
+
+​	按字母排序，或者按照二进制排序
+
+
+
+utf8mb4_tr_0900_ai_ci
+
+utf8mb4_hu_0900_ai_ci
+
+utf8mb4_turkish_ci
+
+utf8mb4_hungarian_ci
+
+
+
+
+
+#### 英文排序规则
+
+
+
+
+
+## 中文字段排序和比较
+
+要进行中文排序，比如通讯录里面的排序列表。啊XX 排到 曾XX 等等。
+
+如果存储汉字的字段编码使用的是GBK字符集，因为GBK内码编码时本身就采用了拼音排序的方法
+
+（常用一级汉字3755个采用拼音排序，二级汉字就不是了，但考虑到人名等都是常用汉字，因此只是针对一级汉字能正确排序也够用了）.
+
+直接在查询语句后面添加 `ORDER BY name ASC`，查询结果将按照姓氏的升序排序；
+
+
+
+如果存储字段的不是采用 GBK 编码 。需要在排序的时候对字段进行转码，对应的 SQL 是 `ORDER BY convert(name using gbk) ASC `
 
 
 
