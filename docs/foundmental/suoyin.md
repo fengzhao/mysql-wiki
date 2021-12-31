@@ -320,13 +320,13 @@ mysql> explain select * from slowtech.t1 order by c1,c2 desc;
 
 #### MySQL group by 隐式排序
 
-**从 5.7 升级到 8.0 的注意事项**
+
 
 在 MySQL5.7 中，group by 子句会隐式排序。
 
-默认情况下 GROUP BY 会隐式排序（即 group by id 后面没有 asc 和 desc 关键字）。但是 group by 自己会排序
+默认情况下 GROUP BY 会隐式排序（即 group by id 后面没有 asc 和 desc 关键字）。但是 group by 自己会排序 
 
-- 不推荐 **GROUP BY隐式排序（group by id）**  或**GROUP BY显式排序( group by id desc)**。
+- 不推荐 **GROUP BY 隐式排序（group by id）**  或**GROUP BY 显式排序( group by id desc)**。
 
 - 要生成给定的排序 ORDER，请提供ORDER BY子句。`group by id order by id `
 
@@ -389,6 +389,19 @@ select id, SUM(cnt) from t group by id  asc;
 >
 > See Also index, primary key, secondary index.
 
+
+
+既然 MySQL InnoDB 表默认是主键索引的 B+Tree 存放的。那么默认不带任何条件和排序的全表扫描是默认按照什么顺序呢？
+
+> 理解SQL最重要的一点就是要明白表不保证是有序的，因为表是为了代表一个集合（如果有重复项，则是多集），而集合是无序的。
+>
+> 如果在查询表时不指定ORDER BY子句，那么虽然查询可以返回一个结果表，但MySQL Server可以自由地按任意顺序对结果中的行进行排序。
+>
+> 为了确保结果中的行按照一定的顺序进行排序，唯一的方法就是显示地指定一个ORDER BY子句。
+
+
+
+[MySQL论坛](https://forums.mysql.com/read.php?21,239471,239688)
 
 
 
@@ -532,7 +545,7 @@ MySQL可以创建联合索引（即在多列上创建一个索引，一个索引
 联合索引的好处：
 
 - 建一个联合索引 `(col1,col2,col3)`，实际相当于建了 `(col1)`，`(col1,col2)`，`(col1,col2,col3)` 三个索引。每多一个索引，都会增加写操作的开销和磁盘空间的开销。对于大量数据的表，使用联合索引会大大的减少开销！
-- 
+
 
 
 
@@ -547,7 +560,7 @@ MySQL可以创建联合索引（即在多列上创建一个索引，一个索引
 
 -- **如果查询的时候查询条件可以通过索引精确匹配左边连续一列或几列，则此列就可以被用到**。
 
--- 
+-- 一定要注意，是精准匹配，
 
 ```sql
 CREATE TABLE test (
