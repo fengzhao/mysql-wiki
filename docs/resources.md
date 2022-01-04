@@ -9,6 +9,11 @@
 
 [MySQL8.0官方手册中文版](https://www.deituicms.com/mysql8cn/cn/)
 
+[MySQL8查询性能调优](https://github.com/zxyle/MySQL-8-Query-Performance-Tuning)
+
+[深入理解MySQL InnoDB存储引擎](https://github.com/asdbex1078/MySQL/)
+
+
 ## 科大学习资源
 
 [1.数据库系统概论_第一章_绪论](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/1.1.pdf)
