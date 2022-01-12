@@ -81,7 +81,7 @@ nav:
       - "5. 关系模型和关系代数": basic/5.relation.md
       - "6. SQL题目练习": basic/6.sql_practice.md
       - "7. 熟悉 ansible 命令": basic/Ansible-command.md
-      - "8. MySQL字符集和排序规则": basic/8.MySQL字符集和排序规则.md
+      - "8. MySQL字符集和排序规则": basic/7.MySQL数据类型.md
       - "9. MySQL逻辑架构和性能优化概述": basic/9.mysql_architecture.md
       - "10. 使用变量": basic/Variables.md
       - "11. Facts 数据": basic/Facts.md
