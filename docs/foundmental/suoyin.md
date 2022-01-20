@@ -363,13 +363,11 @@ select id, SUM(cnt) from t group by id  asc;
 
 ## 索引组织表
 
-
-
 目前的流行的 MySQL 存储引擎中，InnoDB 是最优先的引擎选型，我们在部署和规划的过程中，应该首选为 InnoDB 作为存储引擎的首选。
 
-在 InnoDB 存储引擎中，因为表都是按照主键的顺序进行存放的，我们称之为索引组织表(index organized table ，IOT)
+在 InnoDB 存储引擎中，因为表都是按照主键的顺序进行存放的，我们称之为**索引组织表(index organized table ，IOT)**
 
-因为在 InnoDB 中，数据文件本身就是根据主键索引排序的B+Tree的数据结构，叶节点包含了完整的数据记录。
+因为在 InnoDB 中，数据文件本身就是根据主键索引排序的 B+Tree 的数据结构进行存储，其中叶子节点包含了完整的数据记录。
 
 
 
@@ -377,9 +375,9 @@ select id, SUM(cnt) from t group by id  asc;
 >
 > clustered index
 >
-> The InnoDB term for a primary key index. InnoDB table storage is organized based on the values of the
+> The InnoDB term for a primary key index. InnoDB table storage is organized based on the values of the primary key columns, 
 >
-> primary key columns, to speed up queries and sorts involving the primary key columns. For best performance,
+> to speed up queries and sorts involving the primary key columns. For best performance,
 >
 > choose the primary key columns carefully based on the most performance-critical queries. Because modifying
 >
@@ -391,7 +389,7 @@ select id, SUM(cnt) from t group by id  asc;
 
 
 
-既然 MySQL InnoDB 表默认是主键索引的 B+Tree 存放的。那么默认不带任何条件和排序的全表扫描是默认按照什么顺序呢？
+既然 MySQL InnoDB 表默认是主键索引的 B+Tree 存放的。那么默认不带任何条件和排序的全表扫描是默认按照什么顺序返回结果呢？
 
 > 理解SQL最重要的一点就是要明白表不保证是有序的，因为表是为了代表一个集合（如果有重复项，则是多集），而集合是无序的。
 >
@@ -399,10 +397,7 @@ select id, SUM(cnt) from t group by id  asc;
 >
 > 为了确保结果中的行按照一定的顺序进行排序，唯一的方法就是显示地指定一个ORDER BY子句。
 
-
-
 [MySQL论坛](https://forums.mysql.com/read.php?21,239471,239688)
-
 
 
 
@@ -429,6 +424,51 @@ select id, SUM(cnt) from t group by id  asc;
 alter table T engine=InnoDB;
 
 ```
+
+### 如何正确选择主键
+
+#### 自增主键
+
+
+
+自增主键是指自增列上定义的主键，在建表语句中一般是这么定义的：
+
+```sql
+create table t1 (
+    -- 创建自增列
+	`rid` int(11)  NOT NULL  AUTO_INCREMENT,
+	-- 以自增列创建主键
+    PRIMARY KEY (`id`),
+ )   
+```
+
+插入新记录的时候可以不指定 ID 的值，系统会获取当前 ID 最大值加 1 作为下一条记录的 ID 值。
+
+也就是说，自增主键的插入数据模式，正符合了我们前面提到的递增插入的场景。
+
+每次插入一条新记录，都是追加操作，都不涉及到挪动其他记录，也不会触发叶子节点的分裂。
+
+**而用业务逻辑的字段做主键，则往往不容易保证有序插入，这样写数据成本相对较高。一般多数情况建议使用业务无关的自增列作为主键。**
+
+对于业务中需要唯一的，可以使用唯一约束。
+
+
+
+除了性能外，还可以从存储空间来看，假设表中确实有一个唯一字段。比如字符串类型的身份证号，那应该用身份证号做主键，还是用自增字段做主键呢？
+
+
+
+**为什么不建议过长的字段做主键？**
+
+由于每个非主键索引的叶子节点上都是主键的值。如果用身份证号做主键，
+
+那么每个二级索引的叶子节点占用约20个字节，而如果用整型做主键，则只要4个字节，如果是长整型（bigint）则是8个字节。
+
+**显然，主键长度越小，普通索引的叶子节点就越小，普通索引占用的空间也就越小。**
+
+**所以从性能和存储来看，自增主键往往是更合适的选择。**
+
+
 
 
 
@@ -465,7 +505,7 @@ CREATE TABLE `geek` (
 
 非主键索引，其实是另外一颗单独的 B+Tree，叶子结点中只存放主键索引的值。
 
-通过非主键索引查找数据时，先去查找索引所在的B+树上进行查找。然后再根据索引的值，再去主键索引的B+树上进行查找。
+通过非主键索引查找数据时，先去查找索引所在的B+树上进行查找。然后再根据索引的值，再回去主键索引的B+树上进行查找。
 
 第二个过程被称为**回表查询，**即要查询的列不在非主键索引中。
 
@@ -496,7 +536,7 @@ read_rnd_buffer_size  这是一个内存中的buffer用于分配给每个客户�
 
 
 
-
+https://opensource.actionsky.com/20200616-mysql/
 
 
 
@@ -693,47 +733,6 @@ CREATE TABLE test (blob_col BLOB, INDEX(blob_col(10)));
 除了性能外，页分裂操作还影响数据页的利用率。原本放在一个页的数据，现在分到两个页中，整体空间利用率降低大约50%。
 
 **当然有分裂就有合并。当相邻两个页由于删除了数据，利用率很低之后，会将数据页做合并。合并的过程，可以认为是分裂过程的逆过程。**
-
-
-
-### 自增主键
-
-------
-
-
-
-自增主键是指自增列上定义的主键，在建表语句中一般是这么定义的：
-
-```sql
-`rid` int(11)  NOT NULL  AUTO_INCREMENT,
-PRIMARY KEY (`id`),
-```
-
-插入新记录的时候可以不指定 ID 的值，系统会获取当前 ID 最大值加 1 作为下一条记录的 ID 值。
-
-也就是说，自增主键的插入数据模式，正符合了我们前面提到的递增插入的场景。
-
-每次插入一条新记录，都是追加操作，都不涉及到挪动其他记录，也不会触发叶子节点的分裂。
-
-而用业务逻辑的字段做主键，则往往不容易保证有序插入，这样写数据成本相对较高。
-
-除了性能外，还可以从存储空间来看，假设表中确实有一个唯一字段。
-
-比如字符串类型的身份证号，那应该用身份证号做主键，还是用自增字段做主键呢？
-
-
-
-**为什么不建议过长的字段做主键？**
-
-由于每个非主键索引的叶子节点上都是主键的值。如果用身份证号做主键，
-
-那么每个二级索引的叶子节点占用约20个字节，而如果用整型做主键，则只要4个字节，如果是长整型（bigint）则是8个字节。
-
-**显然，主键长度越小，普通索引的叶子节点就越小，普通索引占用的空间也就越小。**
-
-**所以从性能和存储来看，自增主键往往是更合适的选择。**
-
-
 
 
 
