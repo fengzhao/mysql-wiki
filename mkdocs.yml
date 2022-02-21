@@ -155,10 +155,11 @@ nav:
           - "使用 API 运行 Palybook": dev/api/api-playbook.md
           - "使用 suitable": dev/api/api-suitable.md
           - "使用 ansible runner": dev/api/api-ansible-runner.md
-  - "Ansible UI":
-      - "Ansible UI 说明": ui/index.md
+  - "MySQL 调优":
+      - "调优概述": optimize/1.overview.md
       - "Ansible Awx": ui/awx.md
-      - "Ansible Tower": ui/tower.md
+      - "数据库结构调优": optimize/.md
+      -  数据大小： optimize/many_tables.md     
   - "Ansible 认证":
       - "Ansible 认证说明": certification/index.md
       - "EX407 示例试题": certification/ex407-example.md
