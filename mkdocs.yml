@@ -72,7 +72,7 @@ nav:
   - "Home": index.md
   - "MySQL相关资源": resources.md
   # - "赞赏支持": appreciate.md
-  - "MySQL 入门":
+  - "MySQL入门":
       - "0. MySQL的起源和分支": basic/0.mysql_source.md
       - "1. 数据库概述": basic/1.introduce_database.md
       - "2. 安装 MySQL": basic/2.install_mysql.md
@@ -97,7 +97,7 @@ nav:
           - "5. Ansible 配置": basic/Reference/Config.md
       - "Windows":
           - "1. 管理 Windows 主机": basic/Windows/manager-windows.md
-  - "MySQL 基础":
+  - "MySQL基础":
       - "索引相关": foundmental/suoyin.md
       - "Ansible 的常用设置": advanced/ansible-config.md
       - "Ansible 最佳实践": advanced/best-practices.md
@@ -116,7 +116,7 @@ nav:
           - "在 Jenkins 中使用 Ansible": advanced/practice/jenkins-and-ansible.md
       - "使用 ARA 记录 Ansible 执行结果": advanced/ara.md
       - "使用 Ansible-cmdb": advanced/ansible-cmdb.md
-  - "MySQL 高级":
+  - "MySQL高级":
       - "深入理解innoDB存储引擎":
           - "1.0.MySQL架构到innoDB架构": advanced/1.0.MySQL架构到innoDB架构.md
           - "1.1.0.InnoDB——简介": advanced/1.1.0.InnoDB——简介.md
@@ -155,11 +155,12 @@ nav:
           - "使用 API 运行 Palybook": dev/api/api-playbook.md
           - "使用 suitable": dev/api/api-suitable.md
           - "使用 ansible runner": dev/api/api-ansible-runner.md
-  - "MySQL 调优":
+  - "MySQL调优":
+      - "数据大小"： optimize/many_tables.md     
       - "调优概述": optimize/1.overview.md
       - "Ansible Awx": ui/awx.md
       - "数据库结构调优": optimize/.md
-      -  数据大小： optimize/many_tables.md     
+      
   - "Ansible 认证":
       - "Ansible 认证说明": certification/index.md
       - "EX407 示例试题": certification/ex407-example.md
