@@ -156,7 +156,7 @@ nav:
           - "使用 suitable": dev/api/api-suitable.md
           - "使用 ansible runner": dev/api/api-ansible-runner.md
   - "MySQL调优":
-      - "数据大小"： optimize/many_tables.md     
+      - "数据大小"：optimize/many_tables.md     
       - "调优概述": optimize/1.overview.md
       - "Ansible Awx": ui/awx.md
       - "数据库结构调优": optimize/.md
