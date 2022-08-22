@@ -367,7 +367,7 @@ select id, SUM(cnt) from t group by id  asc;
 
 在 InnoDB 存储引擎中，因为表都是按照主键的顺序进行存放的，我们称之为 **索引组织表(index organized table ，IOT)**
 
-因为在 InnoDB 中，数据文件本身就是根据主键索引排序的 B+Tree 的数据结构进行存储，其中叶子节点包含了完整的数据记录。
+**因为在 InnoDB 中，数据文件本身就是根据主键索引排序的 B+Tree 的数据结构进行存储，其中叶子节点包含了完整的数据记录。**
 
 
 
