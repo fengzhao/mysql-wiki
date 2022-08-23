@@ -50,7 +50,7 @@
 
 **顺序索引**
 
-顺序索引的主要数据结构是 B-Tree 。将索引列的数据
+顺序索引的主要数据结构是 B+Tree 。将索引列按照
 
 
 索引项是由索引码值和指向具有该索引码的一条或多条记录的指针组成。
@@ -367,7 +367,8 @@ select id, SUM(cnt) from t group by id  asc;
 
 在 InnoDB 存储引擎中，因为表都是按照主键的顺序进行存放的，我们称之为 **索引组织表(index organized table ，IOT)**
 
-因为在 InnoDB 中，数据文件本身就是根据主键索引排序的 B+Tree 的数据结构进行存储，其中叶子节点包含了完整的数据记录。
+因为在 InnoDB 中，数据文件本身就是根据**主键索引**排序的 B+Tree 的数据结构进行存储，其中叶子节点包含了完整的数据记录。
+
 
 
 
@@ -405,15 +406,60 @@ select id, SUM(cnt) from t group by id  asc;
 
 
 
-**innodb 表中的主键，就是聚簇索引。**
+**innodb 表中的主键，就是聚簇索引（或者说聚集索引）。**
 
 主键索引的叶子节点存的是整行数据。由于表里的数据行只能按照一颗B+树排序，因此**一张表只能有一个聚簇索引。**
 
-- **如果在建表时没有主键，会用一个不为空的唯一索引列做为主键，成为此表的聚簇索引。**
+- **如果在建表时没有主键，MySQL内部会尝试找一个可以做为唯一索引（唯一不重复且不可为空的列）的列做为主键，成为此表的聚簇索引。当表中有多个非空唯一索引，InnoDB选择建表时定义的第一个非空唯一索引为主键。**
 
-- **如果在建表时也没有索引，InnoDB会隐式定义使用UUID形式一个主键来作为聚簇索引。**
+- **如果上述条件不满足，InnoDB内部会隐式自动创建一个6字节大小的指针**
 
 **一般建议在建表的时候显式指定主键（这样MySQL就自动根据这个主键索引去存储数据）。**
+
+
+_rowid介绍
+
+在MySQL中存在一个隐藏列 _rowid 来标记唯一标识。但是需要注意的是 _rowid 并不是一个真实存在的列，本质是一个非空唯一列的别名。因此，在某些情况下 _rowid 是不存在的。它只存在于以下情况：
+
+1、当表中存在一个数字类型的单列主键时， _rowid 其实指的就是这个主键列
+
+2、当表中不存在主键但存在一个数字类型的非空唯一列时，  _rowid 其实指的就是这个对应的非空唯一列
+
+```shell
+
+# 详见MySQL文档 https://dev.mysql.com/doc/refman/8.0/en/create-index.html
+
+If a table has a PRIMARY KEY or UNIQUE NOT NULL index that consists of a single column that has an integer type, you can use _rowid to refer to the indexed column in SELECT statements, as follows:
+
+_rowid refers to the PRIMARY KEY column if there is a PRIMARY KEY consisting of a single integer column. If there is a PRIMARY KEY but it does not consist of a single integer column, _rowid cannot be used.
+
+Otherwise, _rowid refers to the column in the first UNIQUE NOT NULL index if that index consists of a single integer column. If the first UNIQUE NOT NULL index does not consist of a single integer column, _rowid cannot be used.
+```
+
+```shell
+
+mysql> create table test(a int primary key,b varchar(5));
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> insert into test values(1,'a'),(2,'b'),(3,'c'),(4,'c'),(5,'d');
+Query OK, 5 rows affected (0.00 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> select _rowid from test;
++--------+
+| _rowid |
++--------+
+|      1 |
+|      2 |
+|      3 |
+|      4 |
+|      5 |
++--------+
+5 rows in set (0.00 sec)
+
+```
+
+
 
 **在InnoDB中，聚簇索引默认就是主键索引**。
 
@@ -469,7 +515,10 @@ create table t1 (
 **所以从性能和存储来看，自增主键往往是更合适的选择。**
 
 
+主键性能问题不是一个单一的问题，需要MySQL方向持续改造的，将技术价值和业务价值结合起来。很多业务很多人都知道主键最好设置成自增列，但是大多数情况下，这种自增列却没有实际的业务含义，尽管是主键列保证了ID的唯一性，但是业务开发无法直接根据主键自增列来进行查询，于是他们需要寻找新的业务属性，添加一系列的唯一性索引，非唯一性索引等等，这样一来我们坚持的规范和业务使用的方式就存在了偏差。
 
+
+从另外一个维度来说，我们对于主键的理解是有偏差的，我们不能单一的认为主键就一定是从1开始的整数类型，我们需要结合业务场景来看待，比如我们的身份证其实就是一个不错的例子，把证号分成了几个区段，偏于检索和维护；或者是外出就餐时得到的流水单号，它都有一定的业务属性在里面，对于我们去理解业务的使用是一种不错的借鉴。
 
 
 
@@ -490,6 +539,7 @@ CREATE TABLE `geek` (
 
 
 -- 主键 a，b的聚簇索引组织顺序相当于 order by a,b ，也就是先按a排序，再按b排序，c无序。
+
 –a--|–b--|–c--|–d--
 1 2 3 d
 1 3 2 d
