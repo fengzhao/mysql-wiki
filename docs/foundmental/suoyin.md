@@ -1548,7 +1548,21 @@ Explain 可以使用在` SELECT, DELETE, INSERT, REPLACE, and UPDATE` 语句中�
 在 SQL 语句前面加上 `explain `，如：` EXPLAIN SELECT * FROM a;`
 
 
+```SQL
 
+EXPLAIN [explain_type] {explainable_stmt }
+explain_type: 
+{ EXTENDED | PARTITIONS | FORMAT = format_name}
+ 
+format_name:
+{ TRADITIONAL | JSON}
+explainable_stmt:
+{ SELECT statement | DELETE statement | INSERT statement | REPLACE statement | UPDATE statement }
+
+-- 以JSON格式显示explain输出
+EXPLAIN  format="JSON"  SELECT * FROM a
+
+```
 
 
 
@@ -1736,7 +1750,7 @@ system查找，表中只有一行。system是特殊的const查找情况。
 
 ### Extra 类型
 
-
+Extra 描述了MySQL内部如何进行额外的处理。
 
 关于如何理解MySQL执行计划中Extra列的Using where、Using Index、Using index condition，Using index,Using where这四者的区别。
 
