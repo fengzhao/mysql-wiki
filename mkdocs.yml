@@ -163,8 +163,8 @@ nav:
       - "数据库结构调优": optimize/.md
       
   - "PostgreSQL入门":
-      - "0. PostgreSQL简介": postgresql/0.postgresql简介.md
-      - "EX407 示例试题": certification/ex407-example.md
+      - "0. PostgreSQL简介": postgresql/01.postgresql简介.md
+      - "1. PogreSQL安装": postgresql/02.postgresql安装.md
   - "Ansible Roles":
       - "Ansible roles 怎么用？": roles/index.md
       - "认证":
