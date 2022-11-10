@@ -83,7 +83,7 @@ nav:
       - "7. MySQL数据类型": basic/7.MySQL数据类型.md
       - "8. MySQL字符集和排序规则": basic/8.MySQL字符集和排序规则.md
       - "9. MySQL逻辑架构和性能优化概述": basic/9.mysql_architecture.md
-      - "10. 数据库事务和锁": basic/10.sql-Transactio.md
+      - "10. 数据库事务和锁": basic/10.sql-Transaction.md
       - "11. Facts 数据": basic/Facts.md
       - "12. Jinja2 模板语法": basic/Jinja2.md
       - "13. 条件判断与循环": basic/Conditionals-loop.md
