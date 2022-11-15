@@ -162,11 +162,11 @@ nav:
       - "Ansible Awx": ui/awx.md
       - "数据库结构调优": optimize/.md
       
-  - "PostgreSQL入门":
+  - "PostgreSQL":
       - "0. PostgreSQL简介": postgresql/01.postgresql简介.md
       - "1. PogreSQL安装": postgresql/02.postgresql安装.md
-  - "Ansible Roles":
-      - "Ansible roles 怎么用？": roles/index.md
+  - "MongoDB":
+      - "0. MongoDB概述": mongodb/01.简介.md
       - "认证":
           - kerberos-client: roles/auth/kerberos-client.md
           - kerberos-server: roles/auth/kerberos-server.md
