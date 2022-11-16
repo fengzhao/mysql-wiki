@@ -172,7 +172,7 @@ nav:
           - kerberos-server: roles/auth/kerberos-server.md
           - openldap: roles/auth/openldap.md
 
-  - "redis":
+  - "Redis":
       - "0. redis概述": redis/01.redis简介.md
       - "认证":
           - kerberos-client: roles/auth/kerberos-client.md
