@@ -165,6 +165,8 @@ nav:
   - "PostgreSQL":
       - "0. PostgreSQL简介": postgresql/01.postgresql简介.md
       - "1. PogreSQL安装": postgresql/02.postgresql安装.md
+      - "2. PogreSQL体系架构": postgresql/03.体系架构.md
+
   - "MongoDB":
       - "0. MongoDB概述": mongodb/01.简介.md
       - "认证":
