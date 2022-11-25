@@ -178,6 +178,7 @@ nav:
 
   - "Redis":
       - "0. redis概述": redis/01.redis简介.md
+      - "2. redis客户端": redis/02.redis客户端.md
       - "认证":
           - kerberos-client: roles/auth/kerberos-client.md
           - kerberos-server: roles/auth/kerberos-server.md
