@@ -72,6 +72,35 @@ MySql 最常用存储引擎 InnoDB 和 MyISAM 都不支持 Hash 索引，它们�
 
 但是如果你在创建索引的时候定义其类型为 Hash，成功建表，而且你通过 SHOW CREATE TABLE  和 show index from table 来看，实际还是 B-Tree 。
 
+查阅官网文档，可以发现InnoDB支持的所有特性，其中对Hash index特征的支持描述是：
+
+> No (InnoDB utilizes hash indexes internally for its Adaptive Hash Index feature.)
+
+> 不支持（InnoDB在内部利用hash索引来实现其自适应hash索引特性）
+
+
+根据文档发现，自适应索引是InnoDB引擎的内存结构中的一种特性。对自适应hash索引的描述:
+
+> 自适应hash索引特性使InnoDB能够在具有适当的工作负载和足够的缓冲池内存的系统上执行更像内存中的数据库，而不牺牲事务特性或可靠性。
+
+总的来说就是提高了查询性能。
+
+这里的自适应指的是不需要人工来制定，而是系统根据情况来自动完成的。
+
+那什么情况下才会使用自适应Hash索引呢？如果某个数据经常会访问到，当满足一定条件的时候，就会将这个数据页的地址存放到Hash表中。这样下次查询的时候，就可以直接找到这个页面的所在位置。需要说明的是： 
+
+- 自适应哈希索引只保存热数据（经常被使用到的数据），并非全表数据。因此数据量并不会很大，可以让自适应Hash放到缓冲池中，也就是InnoDB buffer pool，进一步提升查找效率。 
+
+- InnoDB中的自适应Hash相当于是“索引的索引”，采用Hash索引存储的是B+树索引中的页面的地址。这也就是为什么可以称自适应Hash为索引的索引。采用自适应Hash索引目的是可以根据SQL的查询条件加速定位到叶子节点，特别是当B+树比较深的时候，通过自适应Hash索引可以提高数据的检索效率。 
+
+- 自适应Hash采用Hash函数映射到一个哈希表中，所以对于字典类型的数据查找非常方便 哈希表是数组+链表的形式。通过Hash函数可以计算索引键值所对应的bucket（桶）的位置，如果产生Hash冲突，如果产生哈希冲突，就需要遍历链表来解决。 
+
+- 是否开启了自适应Hash，可以通过innodb_adaptive_hash_index变量来查看，比如：mysql> show variables like '%adaptive_hash_index'; 
+
+所以，总结下InnoDB本身不支持Hash，但是提供自适应Hash索引，不需要用户来操作，而是存储引擎自动完成的。
+
+自适应Hash也是InnoDB三大关键特性之一，另外两个分别是插入缓冲（Insert Buffer）和二次写(Double Write)。
+
 **虽然常见存储引擎并不支持 Hash 索引，但 InnoDB 有另一种实现方法：自适应哈希索引。**
 
 **InnoDB 存储引擎会监控对表上索引的查找，如果观察到建立哈希索引可以带来速度的提升，则建立哈希索引。**  
