@@ -85,7 +85,7 @@ nav:
       - "9. MySQL逻辑架构和性能优化概述": basic/9.mysql_architecture.md
       - "10. 数据库事务和锁": basic/10.sql-Transaction.md
       - "11. Facts 数据": basic/Facts.md
-      - "12. Jinja2 模板语法": basic/Jinja2.md
+      - "12. MySQL内存概述": basic/12.MySQL内存概述.md
       - "13. 条件判断与循环": basic/Conditionals-loop.md
       - "14. Blocks": basic/Blocks.md
       - "15. Playbook 高级特性": basic/Playbook-features.md
