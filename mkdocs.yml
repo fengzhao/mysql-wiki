@@ -99,10 +99,10 @@ nav:
           - "1. 管理 Windows 主机": basic/Windows/manager-windows.md
   - "MySQL基础":
       - "1.索引相关": foundmental/suoyin.md
-      - "2.数据库设计": advanced/02.数据库设计.md
-      - "3.在线DDL": advanced/03.在线DDL.md
-      - "4.联表算法": advanced/04.MySQL连表查询算法.md
-      - "5.insert语法": advanced/05.MySQL-insert语法.md
+      - "2.数据库设计": dev/02.数据库设计.md
+      - "3.在线DDL": dev/03.在线DDL.md
+      - "4.联表算法": dev/04.MySQL连表查询算法.md
+      - "5.insert语法": dev/05.MySQL-insert语法.md
       - "使用动态主机管理云服务": advanced/dynamic-inventory.md
       - "Ansible 安全":
           - "Ansible 控制节点安全": advanced/security/index.md
