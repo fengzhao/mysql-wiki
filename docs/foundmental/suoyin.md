@@ -215,7 +215,6 @@ ALTER TABLE t1   ADD INDEX unique idx_name(column(10)) USING BTREE;
 MySQL 8.0.19 中新增了三种索引方式：隐藏索引、降序索引、函数索引
 
 
-
 **隐藏索引概述**
 
 MySQL 8.0.19 及以上支持隐藏索引（invisible index），也称为不可见索引。**隐藏索引不会默认被优化器使用。主键不能设置为隐藏（包括显式设置或隐式设置）**
@@ -1703,8 +1702,6 @@ EXPLAIN select  apprdate from temp_policy_org_base where apprdate > '8' and appr
 
 ```
 
-
-
 #### [`index_subquery`](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html#jointype_index_subquery)
 
 #### [`unique_subquery`](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html#jointype_unique_subquery)
@@ -1713,11 +1710,7 @@ EXPLAIN select  apprdate from temp_policy_org_base where apprdate > '8' and appr
 
 #### [`ref_or_null`](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html#jointype_ref_or_null)
 
-
-
 #### fulltext场景
-
-
 
 #### ref场景
 
@@ -1726,8 +1719,6 @@ EXPLAIN select  apprdate from temp_policy_org_base where apprdate > '8' and appr
   ```sql
   SELECT * FROM ref_table WHERE key_column=expr;
   ```
-
-  
 
 - join联表查询
 
