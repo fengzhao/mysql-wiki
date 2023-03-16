@@ -1879,6 +1879,7 @@ create table 't' (
 	key 'city'('city')
 )engine = InnoDB;
 
+-- 查询城市是"杭州"的所有人名字，并且按照姓名排序返回前 1000 个人的姓名、年龄
 select city,name,age from t where city = '杭州' order by name limit 1000;
 ```
 
@@ -1886,12 +1887,12 @@ select city,name,age from t where city = '杭州' order by name limit 1000;
 
 为了避免全表扫描，需要在city字段上加上索引
 
-假设满足city = '杭州’条件的行是从ID_X到ID_(X+N)的这些记录。
+假设满足`city = '杭州'`条件的行是从ID_X到ID_(X+N)的这些记录。
 
 执行流程：
 
 1. 初始化sort_buffer，确定放入name、city、age三个字段;
-2. 从索引city找到第一个满足city = '杭州’条件的主键id，也就是ID_X;
+2. 从索引city找到第一个满足 `city = '杭州'` 条件的主键id，也就是ID_X;
 3. 到主键id索引取出整行，取name、city、age三个字段值，存入sort_buffer;
 4. 从索引city取下一个记录的主键id;
 5. 重复step3、4直到city的值不满足查询条件为止，对应的ID(X+N);
@@ -1899,8 +1900,13 @@ select city,name,age from t where city = '杭州' order by name limit 1000;
 7. 按照排序结果取前1000行返回给客户端
 
 
+> tips，sort_buffer是MySQL分配给每个线程用于排序的内存。
+sort_buffer是MySQL分配给每个线程用于排序的内存。sort_buffer_size是sort_buffer的大小，如果要排序的数据量小于sort_buffer_size，排序就在内存中完成，如果排序数据量过大，就得使用磁盘临时文件辅助排序。外部排序一般使用归并排序算法。
 
-简单说，就是通过索引字段查找之后，然后把整行数据都加载到内存
+
+简单说，就是通过索引字段查找符合条件的记录之后，然后把整行数据都加载到内存。最后再排序。
+
+显而易见，全字段排序方法缺点：单行大的话占用内存空间。
 
 
 
