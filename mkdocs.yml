@@ -157,8 +157,9 @@ nav:
           - "使用 ansible runner": dev/api/api-ansible-runner.md
   - "MySQL调优":
       #- "Ansible 架构": dev/ansible-architecture.md
-      - "数据大小": optimize/many_tables.md     
       - "调优概述": optimize/1.overview.md
+      - "数据大小": optimize/many_tables.md     
+      
       - "Ansible Awx": ui/awx.md
       - "数据库结构调优": optimize/.md
       
