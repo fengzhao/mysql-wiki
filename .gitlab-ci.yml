@@ -2,6 +2,8 @@
 image: python:alpine
 # Functions that should be executed before the build script is run
 before_script: 
+  - RUN apk update
+  - RUN apk add git
   - pip install -r requirements.txt
   # - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple mkdocs && mkdocs --version
   # - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple mkdocs-material
