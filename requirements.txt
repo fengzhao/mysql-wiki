@@ -1,4 +1,12 @@
+<<<<<<< HEAD
 mkdocs
 mkdocs-material
 mkdocs-minify-plugin
 mkdocs-git-revision-date-localized-plugin
+=======
+mkdocs
+mkdocs-material
+mkdocs-minify-plugin
+mkdocs-git-revision-date-localized-plugin
+GitPython
+>>>>>>> b0a61987f95219c847685f291f8e2e5a805d6441
