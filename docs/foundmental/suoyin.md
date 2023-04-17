@@ -1842,7 +1842,16 @@ Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后�
 比如这样的例子：
 
 ```SQL
-SELECT pk, key_part1, key_part2 FROM t1 ORDER BY key_part1, key_part2;
+CREATE TABLE `user` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `age` int(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `nameIndex` (`name`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+select name from user order by name asc;
 ```
 
 - **Filesort排序，对返回的数据进行排序**
@@ -1947,8 +1956,9 @@ rowId 就是 MySQL 对每行数据的唯一标识符。
 
 
 
-[参考](https://cloud.tencent.com/developer/article/1788764)
+[参考1](https://cloud.tencent.com/developer/article/1788764)
 
+[参考2](https://juejin.cn/post/7215736946253430844)
 
 # MySQL count 优化
 
