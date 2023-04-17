@@ -1839,7 +1839,11 @@ Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后�
 
   EXPLAIN分析查询时，Extra显示为Using index。
 
+比如这样的例子：
 
+```SQL
+SELECT pk, key_part1, key_part2 FROM t1 ORDER BY key_part1, key_part2;
+```
 
 - **Filesort排序，对返回的数据进行排序**
 
@@ -1906,7 +1910,7 @@ select city,name,age from t where city = '杭州' order by name limit 1000;
 
 
 > tips，sort_buffer是MySQL分配给每个线程用于排序的内存。
-sort_buffer是MySQL分配给每个线程用于排序的内存。sort_buffer_size是sort_buffer的大小，如果要排序的数据量小于sort_buffer_size，排序就在内存中完成，如果排序数据量过大，就得使用磁盘临时文件辅助排序。外部排序一般使用**归并排序算法**。
+sort_buffer是MySQL分配给每个线程用于排序的内存。sort_buffer_size是sort_buffer的大小，如果要排序的数据量小于sort_buffer_size，排序就在内存中完成，如果排序数据量过大，就得使用外部文件（一般磁盘临时文件）辅助排序。外部排序一般使用**归并排序算法**。
 
 
 简单说，就是通过索引字段查找符合条件的记录之后，然后把整行数据都加载到内存。最后再排序。
@@ -1925,10 +1929,25 @@ sort_buffer是MySQL分配给每个线程用于排序的内存。sort_buffer_size
 
 ### rowid排序
 
+rowId 就是 MySQL 对每行数据的唯一标识符。
+
+当数据表有主键时，rowId 就是表主键；当数据表没有主键或者主键被删除时，MySQL 会自动生成一个长度为 6 字节的 rowId 为作为 rowId。
+
+「rowId 排序是指只将与排序相关的字段和 rowId 放入 sort buffer，其余结果集需要用到的数据在排序完成后，通过 rowId 回表取得。」
+
+全字段排序的流程看着已经十分合理，为什么还需要有个 rowId 排序？
+
+这是我们只需要输出三个字段的情况，假如我们有上百个字段需要返回呢？sort buffer 默认只有 256 kb。能够装下多少行的原始数据行？
+
+所以当待排序的数据行很大的时候，使用全字段排序必然会导致"外部排序"。而且是使用很多临时文件的"外部排序"，效率很低下。
+
+相比全字段排序，rowId 排序的好处是在`sort buffer`大小固定的情况下，`sort buffer`能够容纳更多的数据行，能够避免使用或者少使用"外部排序文件"。
+
+缺点是最终返回结果集的时候，需要再次进行**回表**。
 
 
 
-
+[参考](https://cloud.tencent.com/developer/article/1788764)
 
 
 # MySQL count 优化
