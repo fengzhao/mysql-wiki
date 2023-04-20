@@ -1960,6 +1960,37 @@ rowId 就是 MySQL 对每行数据的唯一标识符。
 
 [参考2](https://juejin.cn/post/7215736946253430844)
 
+
+
+
+### orderby中的一些小坑
+
+MySQL中，order by 和 limit 使用时有一些小坑，一定要注意。
+
+问题：ORDER BY 排序后，用LIMIT取前几条，发现返回的结果集的顺序与预期的不一样。
+
+
+```SQL
+--先说现象：当order by排序字段存在重复时，不带limit可以正常排序。带了limit发现乱序了。
+
+select * from ratings order by category;
+select * from ratings order by category limit 5
+```
+
+关于这个现象，官网中有一段描述。
+
+> 在使用ORDER BY对列进行排序时，如果对应（ORDER BY的列）列存在多行相同数据，MySQL Server会按照任意顺序返回这些行，并且可能会根据整体执行计划以不同的方式返回。
+
+对于这种情况，为了保证每次都返回的顺序一致可以额外增加一个排序字段（比如：id），用两个字段来尽可能减少重复的概率。于是，改成 order by status, id;
+
+
+
+
+
+
+
+
+
 # MySQL count 优化
 
 
