@@ -122,7 +122,8 @@ nav:
           - "1.1.0.InnoDB——简介": advanced/1.1.0.InnoDB——简介.md
           - "1.1.1.InnoDB——关键特性": advanced/1.1.1.InnoDB——关键特性.md
           - "1.2.0.InnoDB内存结构——缓冲池": advanced/1.2.0.InnoDB内存结构——缓冲池.md
-      - "Ansible 架构": dev/ansible-architecture.md
+      - "OLAP": 
+          - "1.0.OLAP概述": olap/01.OLAP概述.md
       - "使用 PyCharm 远程开发": dev/pycharm-remote-development.md
       - "Ansible 调试":
           - "详细输出": dev/debug/verbose-debug.md
