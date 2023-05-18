@@ -880,6 +880,104 @@ select * FROM test where last_name like '张%' and age=10 ;
 
 
 
+
+### 索引合并
+
+
+[官网](https://dev.mysql.com/doc/refman/8.0/en/index-merge-optimization.html)
+
+MySQL5.0之前，一个表一次只能使用一个索引，无法同时使用多个索引分别进行条件扫描。
+
+但是从5.1开始，引入了 index merge 优化技术，对同一个表可以使用多个索引分别进行条件扫描。
+
+当单表使用了多个索引，每个索引查找都可能返回一个结果集，mysql会将其求交集或者并集，或者是交集和并集的组合。
+
+也就是说一次查询中可以使用多个索引。
+
+
+
+```sql
+-- 可以使用索引合并的语句示例
+
+SELECT * FROM tbl_name WHERE key1 = 10 OR key2 = 20;
+
+SELECT * FROM tbl_name
+  WHERE (key1 = 10 OR key2 = 20) AND non_key = 30;
+
+SELECT * FROM t1, t2
+  WHERE (t1.key1 IN (1,2) OR t1.key2 LIKE 'value%')
+  AND t2.key1 = t1.some_col;
+
+SELECT * FROM t1, t2
+  WHERE t1.key1 = 1
+  AND (t2.key1 = t1.some_col OR t2.key2 = t1.some_col2);
+  
+-- 对于第一条语句：使用索引并集访问算法，得到key1=10的主键有序集合，得到key2=20的主键有序集合，再进行求并集；最后回表查找。
+
+-- 对于第二条语句：先丢弃non_key=30,因为它使用不到索引，where子句就变成了where key10 or key2=20，使用索引先根据索引合并并集访问算法。
+-- 先通过索引查找算法查找后缩小结果集，在小表中再进行全表匹配查询。
+
+-- 
+```
+
+> 
+>
+> **注意：**
+>
+> 索引合并优化算法具有以下已知限制：
+>
+> - 如果您的查询具有深度 AND/OR 嵌套的复杂 WHERE 子句，并且 MySQL 没有选择最佳计划，请尝试使用以下转换后表达方式来满足条件：
+>
+>   ```sql
+>   (x AND y) OR z => (x OR z) AND (y OR z)
+>   (x OR y) AND z => (x AND z) OR (y AND z)
+>   ```
+>
+> - 索引合并不适用于全文索引。
+
+
+
+索引合并访问方法有几个算法，这些算法显示在 EXPLAIN 输出的 `Extra` 字段中：
+
+- `Using intersect(...)`
+- `Using union(...)`
+- `Using sort_union(...)`
+
+ 
+
+
+
+### index merge intersection access algorithm（索引合并-交集访问算法）
+
+对于每一个使用到的索引进行查询，查询主键值集合，然后进行合并，求交集，也就是 and 运算。下面是使用到该算法的两种必要条件：
+
+
+
+- **在二级索引列上进行等值查询**；如果是组合索引，组合索引的每一位都必须覆盖到，不能只是部分
+
+  ```sql
+  --所有查询的字段都有索引，并且都是等值查询
+  key_part1 = const1 AND key_part2 = const2 ... AND key_partN = constN
+  ```
+
+  
+
+- InnoDB表上的主键范围查询条件
+
+
+
+```sql
+-- 例子
+
+-- 主键可以是范围查询，二级索引只能是等值查询
+SELECT * FROM innodb_table  WHERE primary_key < 10 AND key_col1 = 20;
+
+-- 没有主键的情况
+SELECT * FROM tbl_name  WHERE key1_part1 = 1 AND key1_part2 = 2 AND key2 = 2;
+```
+
+
+
 ## 优化器提示（Optimizer Hints）
 
 
@@ -1778,7 +1876,7 @@ SELECT * FROM ref_table,other_table  WHERE ref_table.key_column_part1=other_tabl
 
 **单表中最多有一条匹配行，查询起来非常迅速，所以这个匹配行的其他列的值可以被优化器在当前查询中当作常量来处理。**
 
-场景：将唯一索引或主键，跟常量匹配查找。
+场景：将唯一索引或主键，跟常量进行等值匹配查找。
 
 ```shell
 SELECT * FROM tbl_name WHERE primary_key=1;
