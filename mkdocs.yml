@@ -169,6 +169,7 @@ nav:
       - "1. PogreSQL安装": postgresql/02.postgresql安装.md
       - "2. PogreSQL体系架构": postgresql/03.体系架构.md
       - "3. 常用SQL": postgresql/04.常用SQL.md
+      - "4. 继承": postgresql/05.继承表.md
 
 
   - "MongoDB":
