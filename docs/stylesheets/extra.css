@@ -21,12 +21,12 @@ h1 {
   
   p {
     font-family:"Arial","Microsoft YaHei","黑体","宋体","sans-serif";  /* 段落的字体 */
-    font-size:14px;      /* 段落字体的大小  */
+    font-size:16px;      /* 段落字体的大小  */
     line-height:150%;    /* 段落行间距  */
   }
   
   ul {
       line-height:180%;  /* 无序列表行间距 */
-      font-size:14px;    /* 无序列表字体大小  */
+      font-size:16px;    /* 无序列表字体大小  */
 
   }
