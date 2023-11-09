@@ -418,7 +418,14 @@ select id, SUM(cnt) from t group by id  asc;
 4 rows in set (0.00 sec)
 
 -- 从 MySQL8.0 开始，不支持 GROUP BY隐式排序 和 GROUP BY显式排序
+https://dev.mysql.com/blog-archive/removal-of-implicit-and-explicit-sorting-for-group-by/
 ```
+要对一组数据进行分组，MySQL优化器会选择不同的方法。其中之一是分组之前对数据排序。这使得连续分组变得很容易。
+
+如果有一个索引可用于获取排序的数据，那么使用它的成本会非常低廉。
+
+如果没有索引，MySQL优化器仍然可以决定在分组之前进行外部（filesort）排序。
+
 
 
 
