@@ -118,7 +118,7 @@ nav:
       - "使用 Ansible-cmdb": advanced/ansible-cmdb.md
   - "MySQL高级":
       - "深入理解innoDB存储引擎":
-          - "1.0.MySQL架构到innoDB架构": advanced/1.0.MySQL架构到innoDB架构.md
+          - "1.0.MySQL架构到innoDB架构": advanced/1.0.MySQL架构到InnoDB架构.md
           - "1.1.0.InnoDB——简介": advanced/1.1.0.InnoDB——简介.md
           - "1.1.1.InnoDB——关键特性": advanced/1.1.1.InnoDB——关键特性.md
           - "1.2.0.InnoDB内存结构——缓冲池": advanced/1.2.0.InnoDB内存结构——缓冲池.md
