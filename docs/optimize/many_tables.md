@@ -53,3 +53,39 @@ MySQL是一个多线程服务，所以可能存在多个线程同时访问一张
 
 但是在查找要关闭的描述符中，查找时间会随着cache中的缓存数量增加而增加（O(n),n为cache的items数量），文件打开的时间等于文件关闭的时间，从而导致了性能上的下降。
 
+
+
+
+- 参数`table_open_cache`定义了MySQL缓存中可以存放的表描述符的最大数量。默认值是4000
+
+- 参数`table_open_cache_instances`存储了表缓存实例的数量。默认值是16。它将table_open_cache分成多个实例，从而减少会话之间的竞争。 
+
+
+MySQL会创建16个独立的内存buffer instance，其中每个instance可以存放4000/16=250个表描述符。这些表缓存instance可以被并发访问，这样dml在使用表描述符的时候不会互相阻塞。
+
+
+缓存访问在实例之间被分割开来，当有许多会话访问表时，使用缓存的操作可以获得更高的性能。(DDL 语句仍然需要对整个缓存加锁，但这种语句比 DML 语句要少得多）。
+
+
+对于经常使用 16 个或更多内核的系统，建议使用 8 或 16 的值。
+
+但是如果表中有许多大型触发器，导致内存负荷过高，那么 table_open_cache_instances 的默认设置可能会导致内存使用过多。
+
+在这种情况下，将 table_open_cache_instances 设置为 1 可能会对限制内存使用有所帮助。[参考](https://www.cnblogs.com/abclife/p/15704729.html)
+
+
+
+
+```SQL
+--关闭所有打开的表
+FLUSH TABLES;
+
+
+--关闭所有打开的表，并使用全局读锁锁定所有数据库的所有表。
+--执行后，整个实例全局只读。全局读锁(lock_global_read_lock) 会导致所有的更新操作被堵塞
+FLUSH TABLES WITH READ LOCK;
+
+
+--关闭多个打开的表
+FLUSH TABLES tbl_name [, tbl_name] ...
+```
