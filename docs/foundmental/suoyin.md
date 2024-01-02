@@ -623,7 +623,7 @@ ALTER TABLE table_name ADD UNIQUE (column);
 
 ------
 
-在 secondary index 上进行范围查询或等值查询时，返回的主键索引值可能是无序的。后续的回表查询就变成了随机读。
+在 secondary index 上进行范围查询或等值查询时，返回的一系列主键索引值可能是无序的。后续的回表查询就变成了随机读。
 
 MRR 要把主键排序，这样之后对磁盘的操作就是由顺序读代替之前的随机读。
 
@@ -2130,6 +2130,10 @@ select * from ratings order by category limit 5
 > 在使用ORDER BY对列进行排序时，如果对应（ORDER BY的列）列存在多行相同数据，MySQL Server会按照任意顺序返回这些行，并且可能会根据整体执行计划以不同的方式返回。
 
 对于这种情况，为了保证每次都返回的顺序一致可以额外增加一个排序字段（比如：id），用两个字段来尽可能减少重复的概率。于是，改成 order by status, id;
+
+
+# group by 优化
+
 
 
 
