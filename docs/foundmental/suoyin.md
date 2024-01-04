@@ -345,6 +345,17 @@ Create Table: CREATE TABLE `t1` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1
 1 row in set (0.00 sec)
 
+
+-- 在t1表中，针对b,c,d三个字段创建一个联合索引。其实等价于下面的语句
+create index idx_t1_bcd on t1(b,c,d); 
+
+create index idx_t1_bcd on t1(b asc,c asc,d asc); 
+
+-- asc表示的是升序，使用这种语法创建出来的索引叫做升序索引。也就是我们平时在创建索引的时候，创建的都是升序索引。
+
+
+
+
 -- MySQL8.0
 mysql> show create table slowtech.t1\G
 *************************** 1. row ***************************
@@ -355,6 +366,7 @@ Create Table: CREATE TABLE `t1` (
   KEY `idx_c1_c2` (`c1`,`c2` DESC) --保留了desc子句
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 1 row in set (0.00 sec)
+
 
 ```
 
