@@ -328,6 +328,8 @@ MySQL8.0开始真正支持降序索引，只有 InnoDB 引擎支持降序索引�
 
 MySQL 支持降序索引：索引定义中的 DESC 不再被忽略，而是按降序存储键值。以前，可以以相反的顺序扫描索引，但是会导致性能损失。
 
+当只有索引只包含一个字段时，无论是使用降序索引还是升序索引，整个查询过程的性能是一样的。
+
 
 
 ```sql
@@ -452,7 +454,7 @@ https://dev.mysql.com/blog-archive/removal-of-implicit-and-explicit-sorting-for-
 因为在 InnoDB 中，数据文件本身就是根据**主键索引**排序的 B+Tree 的数据结构进行存储，其中叶子节点包含了完整的数据记录。
 
 
-== 堆表中的数据无序存放， 数据的排序完全依赖于索引（Oracle、Microsoft SQL Server、PostgreSQL 早期默认支持的数据存储都是堆表结构）。
+==堆表中的数据无序存放，数据的排序完全依赖于索引（Oracle、Microsoft SQL Server、PostgreSQL 早期默认支持的数据存储都是堆表结构）。
 堆表的组织结构中，数据和索引分开存储。索引是排序后的数据，而堆表中的数据是无序的，索引的叶子节点存放了数据在堆表中的地址，当堆表的数据发生改变，且位置发生了变更，所有索引中的地址都要更新，这非常影响性能，特别是对于 OLTP 业务。==
 
 ==而索引组织表，数据根据主键排序存放在索引中，主键索引也叫聚集索引（Clustered Index）。在索引组织表中，数据即索引，索引即数据。MySQL InnoDB 存储引擎就是这样的数据组织方式；Oracle、Microsoft SQL Server 后期也推出了支持索引组织表的存储方式。但是，PostgreSQL 数据库因为只支持堆表存储，不适合 OLTP 的访问特性，虽然它后期对堆表有一定的优化，但本质是通过空间换时间，对海量并发的 OLTP 业务支持依然存在局限性。==
@@ -555,6 +557,63 @@ mysql> select _rowid from test;
 alter table T engine=InnoDB;
 
 ```
+
+### 索引扩展
+
+MySQL InnoDB的二级索引（Secondary Index）会自动补齐主键，将主键列追加到二级索引列后面。
+
+InnoDB的二级索引（Secondary Index）除了存储索引列key值，还存储着主键的值(而不是指向主键的指针)。
+
+
+```SQL
+
+CREATE TABLE t1 (
+  i1 INT NOT NULL DEFAULT 0,
+  i2 INT NOT NULL DEFAULT 0,
+  d DATE DEFAULT NULL,
+  PRIMARY KEY (i1, i2),
+  INDEX k_d (d)
+) ENGINE = InnoDB;
+-- 这个t1表包含主键和二级索引k_d，二级索引k_d（d）的元组在InnoDB内部实际被扩展成（d,i1,i2），即包含主键值。
+-- 因此在设计主键的时候，常见的一条设计原则是要求主键字段尽量简短，以避免二级索引过大(因为二级索引会自动补齐主键字段)。
+```
+
+默认情况下，索引扩展（use_index_extensions）选项是开启的。可以在当前会话通过修改优化器开关optimizer_switch开启、关闭此选项。
+
+```SQL
+INSERT INTO t1 VALUES
+(1, 1, '1998-01-01'), (1, 2, '1999-01-01'),
+(1, 3, '2000-01-01'), (1, 4, '2001-01-01'),
+(1, 5, '2002-01-01'), (2, 1, '1998-01-01'),
+(2, 2, '1999-01-01'), (2, 3, '2000-01-01'),
+(2, 4, '2001-01-01'), (2, 5, '2002-01-01'),
+(3, 1, '1998-01-01'), (3, 2, '1999-01-01'),
+(3, 3, '2000-01-01'), (3, 4, '2001-01-01'),
+(3, 5, '2002-01-01'), (4, 1, '1998-01-01'),
+(4, 2, '1999-01-01'), (4, 3, '2000-01-01'),
+(4, 4, '2001-01-01'), (4, 5, '2002-01-01'),
+(5, 1, '1998-01-01'), (5, 2, '1999-01-01'),
+(5, 3, '2000-01-01'), (5, 4, '2001-01-01'),
+(5, 5, '2002-01-01');
+
+
+show variables like '%optimizer_switch%';
+
+SET optimizer_switch = 'use_index_extensions=off';
+
+-- 这种情况下，优化器不会使用主键，因为主键由字段（i1,i2）组成，但是该查询中没有引用t2字段;优化器会选择二级索引 k_d(d) 。
+
+-- 这个查询，忽略了
+EXPLAIN  SELECT COUNT(*) FROM t1 WHERE i1 = 3 AND d = '2000-01-01';
+
+
+SET optimizer_switch = 'use_index_extensions=on';
+
+
+
+```
+
+
 
 ### 如何正确选择主键
 
@@ -1933,9 +1992,9 @@ Extra 描述了MySQL内部如何进行额外的处理。
 
 
 
-**Using where**
+#### **Using where**
 
-  表示MySQL Server在存储引擎收到记录后进行“后过滤”（Post-filter）。
+  表示MySQL Server在存储引擎收到记录后进行"后过滤"（Post-filter）。
 
 如果查询未能使用索引，Using where的作用只是提醒我们MySQL将用where子句来过滤结果集。这个一般发生在MySQL服务器，而不是存储引擎层。
 
@@ -1947,24 +2006,25 @@ Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后�
 
  不管SQL语句的执行计划是全表扫描（type=ALL)或非唯一性索引扫描（type=ref)。
 
-网上有种说法“Using where：表示优化器需要通过索引回表查询数据" ，上面实验可以证实这种说法完全不正确。
+网上有种说法"Using where：表示优化器需要通过索引回表查询数据" ，上面实验可以证实这种说法完全不正确。
 
 
 
-**Using Index**
+#### **Using Index**
 
  [覆盖索引](###索引覆盖)：表示直接访问索引就能够获取到所需要的数据（），不需要通过回表查询。
 
 注意：执行计划中的Extra列的“Using index”跟type列的“index”不要混淆。Extra列的“Using index”表示索引覆盖。而type列的“index”表示Full Index Scan。
 
+表示where 和select中需要的字段都能够直接通过一个索引字段获取，无需再实际回表查询，当查询涉及的列都是某一单独索引的组成部分时即为此种情况，这实际上就是索引类型中覆盖索引。
 
-
-**Using Index Condition**
+#### **Using Index Condition**
 
 [索引下推](###索引下推ICP)：会先条件过滤索引，过滤完索引后找到所有符合索引条件的数据行，随后用 WHERE 子句中的其他条件去过滤这些数据行；
 
 
 
+#### 
 
 
 
