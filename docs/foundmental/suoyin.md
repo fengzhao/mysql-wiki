@@ -321,6 +321,172 @@ SELECT INDEX_NAME, IS_VISIBLE FROM INFORMATION_SCHEMA.STATISTICS  WHERE TABLE_SC
 全文索引通过建立`倒排索引`来快速匹配文档（仅在mysql5.6版本以上支持），全文索引将连续的`字母、数字和下划线`当做一个单词，分割单词一般用空格/逗号/句号。
 
 
+MySQL 中的InnoDB存储引擎中对于表索引的管理是采用B+树结构的，所以我们可以通过索引字段的前缀进行查找。
+
+```SQL
+-- 下述sql语句可以在blog中查找内容以xxx开头的文章，并且只要content添加了B+树索引，那么就可以利用索引快速的进行查询。
+SELECT * FROM blog WHERE content like "xxx%";
+
+```
+
+
+
+问题：
+
+但是在实际的用户查询操作中，上述查询并不符合用户的要求。因为在大多数的情况下，用户需要查询的是包含xxx的文章，而不是以xxx开头的文章。
+
+```SQL
+-- 实际上，这种查询并不是B+树索引所能很好的完成的工作。
+SELECT * FROM blog WHERE content like "%xxx%";
+```
+
+全文检索的一般实现————倒排索引
+
+
+
+什么是全文查询的“分词机制”？
+
+
+分词机制，也常称为“分词”或“词条化”（Tokenization），是将一段连续的文本切分成若干独立的词汇或词条的过程。在很多文本处理和信息检索的任务中，分词是首要且关键的步骤。
+
+分词机制的重要性主要体现在以下几个方面：
+
+- 信息检索：搜索引擎在索引和查询时，需要对文本内容进行分词，以便快速定位和检索相关内容。
+- 文本分析：在自然语言处理中，很多任务（如词性标注、命名实体识别等）在进行前，需要对文本进行分词处理。
+- 数据压缩：在某些情况下，通过分词可以更有效地压缩文本数据。
+
+分词的难度和具体方法取决于所处理的语言特性：
+
+- 英文分词：英文等使用空格作为单词分隔符的语言，分词相对简单。通常可以使用空格和一些标点符号来分割文本。
+
+- 中文分词：中文和其他不使用空格分隔的语言，分词就变得比较复杂。中文分词通常需要借助特定的算法和大量的词库资源，如基于统计的分词方法、基于规则的分词方法等。
+
+在MySQL的FULLTEXT索引中，分词机制的工作是由特定的分词系统完成的。这个分词系统会根据不同的语言和字符集来处理和索引文本。例如，英文文本通常会根据空格、标点和其他特殊字符进行分词，而对于其他语言，如中文或日文，则可能需要特定的插件或工具来实现分词。
+
+
+
+全文索引的理念和普通 B 树索引的理念刚好相反，B 树索引的构建是基于某个字段值的全部或者一部分；
+
+全文索引是把某个字段值的全部数据按照一定的分隔符（停止词）与字符长度（也叫分词长度）一起组成各种排列，进而在索引中记录这些字符出现的位置，次数等静态信息。
+
+
+全文索引（也叫倒排索引）有点类似于 HASH 索引的存储，只不过 KEY 为单词，VALUE 为关键词所属的文档 ID 与对应位置信息。
+
+比如 "YTT" 一词出现在 4 个文档里的某个位置，也就是 4 行记录里某个位置，`FTS_DOC_ID` 指的是文档的 ID，每条记录对应一个 ID，类似于表的主键。
+
+
+```SQL
+CREATE SCHEMA test_fulltext;
+	
+	
+	
+CREATE TABLE test_fulltext.opening_lines (
+    id INT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    opening_line TEXT(500),
+    author VARCHAR(200),
+    title VARCHAR(200),
+    FULLTEXT idx (opening_line)
+) ENGINE=InnoDB;
+	
+
+-- 对表建立全文索引后，MySQL 用一些辅助表来保存全文索引字段的相关数据指向。如果表 opening_lines 不属于共享表空间，那对应磁盘目录上也能看到这些表。
+SELECT table_id, name, space FROM INFORMATION_SCHEMA.INNODB_TABLES  WHERE name LIKE 'test/%';
+11171	test_fulltext/opening_lines	                                10114
+11172	test_fulltext/fts_0000000000002ba3_being_deleted	        10115
+11173	test_fulltext/fts_0000000000002ba3_being_deleted_cache	    10116
+11174	test_fulltext/fts_0000000000002ba3_config	                10117
+11175	test_fulltext/fts_0000000000002ba3_deleted	                10118
+11176	test_fulltext/fts_0000000000002ba3_deleted_cache	        10119
+11177	test_fulltext/fts_0000000000002ba3_000000000000a964_index_1	10120
+11178	test_fulltext/fts_0000000000002ba3_000000000000a964_index_2	10121
+11179	test_fulltext/fts_0000000000002ba3_000000000000a964_index_3	10122
+11180	test_fulltext/fts_0000000000002ba3_000000000000a964_index_4	10123
+11181	test_fulltext/fts_0000000000002ba3_000000000000a964_index_5	10124
+11182	test_fulltext/fts_0000000000002ba3_000000000000a964_index_6	10125
+```
+
+
+其中，以 _index_1-6 为后缀的被称为辅助表，里面顺序存放倒排索引的真实数据。至于分了六张表的原因，可以理解为对字段添加全文索引并且对数据分词的并行化。参考参数`innodb_ft_sort_pll_degree`，可以控制并发数量。
+
+例如，表名 `test/fts_0000000000002ba3_000000000000a964_index_1` ，其中 test 代表数据库名，fts_ 开头和 _index_1 结尾表示辅助表，0000000000002ba3 代表对应的表ID的十六进制值，000000000000a964 代表加 fulltext 索引字段ID 对应的十六进制值。
+
+
+<details>
+  <summary>SQL</summary>
+
+```SQL	
+	SELECT 
+    a.table_id,
+    HEX(a.table_id),
+    a.index_id,
+    HEX(a.index_id),
+    a.name
+FROM
+    information_schema.innodb_indexes a,
+    information_schema.innodb_tables b
+WHERE
+    a.table_id = b.table_id
+        AND b.name = 'test_fulltext/opening_lines'
+        AND a.name = 'idx';
+```
+
+</details>
+
+
+剩下的不包含全文索引字段 ID 的表为通用辅助表，记录索引表的配置信息、以及有关索引删除的信息。
+
+带有`delete`的这四张表存在的意义在于可以避免在全文索引字段频繁的写入操作导致对应的六张磁盘索引表成为热点。由此带来的问题是删除的记录被保存多份，没有及时的删除，占用额外的磁盘空间。不过可以用 MySQL 语句 `optimize table` 来手动提前释放这些空间，这个语句默认只对 B+ 树聚簇索引进行整理，不会对全文索引做整理。这里MySQL 提供了一个参数 `innodb_optimize_fulltext_only`，默认关闭，打开这个参数后，语句 optimize table 只会对全文索引整理磁盘空间。
+
+
+
+全文索引有一个缓冲池：information_schema.innodb_ft_index_cache。用来缓存全文索引字段的写入操作（insert/update），标记分词以及其他相关信息，和 MySQL 其他的缓存一样，目的是把多次频繁刷盘变为按照定义的缓冲池大小写满后合并一次性刷盘（刷新到之前的六张辅助表）。
+
+刷盘后表 information_schema.innodb_ft_index_cache 被清空，下次根据全文索引字段来过滤时，直接查询对应的磁盘索引表；如果此时对全文索引字段值有更新但是还没有触发刷盘，MySQL 会把缓冲池的数据和磁盘索引表的数据一起返回给客户端。
+
+其中控制单表缓冲池大小的变量为：`innodb_ft_cache_size`，默认8MB，最小 1.6MB，最大 80MB。
+
+控制整个 MySQL 实例缓冲池大小的变量为：`innodb_ft_total_cache_size`，默认 640M，最小 32MB，最大 1.6GB。
+
+
+
+DOC_ID 是关键词映射的索引表记录 ID，每条记录被当作一个文档， 映射为 MySQL 全文索引表的一个字段 `FTS_DOC_ID`。
+
+如果全文索引表没有显式指定这个字段，MySQL 默认建立一个隐藏字段。为了避免后期加列的开销，这个字段不会随着全文索引的销毁而删除。也就是说这个字段会一直存在，除非这张表被删掉。
+
+```SQL
+mysql> 
+mysql> SHOW EXTENDED COLUMNS FROM test_fulltext.opening_lines;
++--------------+--------------+------+-----+---------+----------------+
+| Field        | Type         | Null | Key | Default | Extra          |
++--------------+--------------+------+-----+---------+----------------+
+| id           | int unsigned | NO   | PRI | NULL    | auto_increment |
+| opening_line | text         | YES  | MUL | NULL    |                |
+| author       | varchar(200) | YES  |     | NULL    |                |
+| title        | varchar(200) | YES  |     | NULL    |                |
+| FTS_DOC_ID   |              | NO   |     | NULL    |                |
+| DB_TRX_ID    |              | NO   |     | NULL    |                |
+| DB_ROLL_PTR  |              | NO   |     | NULL    |                |
++--------------+--------------+------+-----+---------+----------------+
+7 rows in set (0.00 sec)
+
+mysql> 
+
+
+-- 如果想显式自定义这个字段，并且手动维护值的唯一性，在建表的时候，或者是在全文索引没有建立之前，可以指定一个名字为 FTS_DOC_ID 字段，类型为无符号 INT64（注意，这个字段必须为大写）
+
+```
+
+
+
+
+在全文索引底层是有一个切词的概念的，比如 "祝中国越来越强大" 这样的词，全文索引按照一个规则切词，有可能会被切成 祝 、 中国、 越来越强大。
+
+那么切词的依据是什么呢？全文索引又是怎么切词的呢？？
+
+
+
+
+
 
 ### 降序索引
 
