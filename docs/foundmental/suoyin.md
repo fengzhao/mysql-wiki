@@ -376,10 +376,7 @@ SELECT * FROM blog WHERE content like "%xxx%";
 
 
 ```SQL
-CREATE SCHEMA test_fulltext;
-	
-	
-	
+CREATE SCHEMA test_fulltext;	
 CREATE TABLE test_fulltext.opening_lines (
     id INT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
     opening_line TEXT(500),
@@ -388,9 +385,8 @@ CREATE TABLE test_fulltext.opening_lines (
     FULLTEXT idx (opening_line)
 ) ENGINE=InnoDB;
 	
-
 -- 对表建立全文索引后，MySQL 用一些辅助表来保存全文索引字段的相关数据指向。如果表 opening_lines 不属于共享表空间，那对应磁盘目录上也能看到这些表。
-SELECT table_id, name, space FROM INFORMATION_SCHEMA.INNODB_TABLES  WHERE name LIKE 'test/%';
+SELECT table_id, name, space FROM INFORMATION_SCHEMA.INNODB_TABLES  WHERE name LIKE 'test_fulltext/%';
 11171	test_fulltext/opening_lines	                                10114
 11172	test_fulltext/fts_0000000000002ba3_being_deleted	        10115
 11173	test_fulltext/fts_0000000000002ba3_being_deleted_cache	    10116
@@ -410,19 +406,22 @@ SELECT table_id, name, space FROM INFORMATION_SCHEMA.INNODB_TABLES  WHERE name L
 
 至于分了六张表的原因，可以理解为对字段添加全文索引并且对数据分词的并行化。参考参数`innodb_ft_sort_pll_degree`，可以控制并发数量。
 
-例如，表名 `test/fts_0000000000002ba3_000000000000a964_index_1` ，其中 test 代表数据库名，fts_ 开头和 _index_1 结尾表示辅助表，0000000000002ba3 代表对应的表ID的十六进制值，000000000000a964 代表加 fulltext 索引字段ID 对应的十六进制值。
+例如，表名 `test/fts_0000000000002ba3_000000000000a964_index_1` ，其中 test 代表数据库名，fts_ 开头和 _index_n 结尾表示辅助表。
+
+0000000000002ba3 代表对应的表ID的十六进制值，000000000000a964 代表加 `fulltext索引ID` 对应的十六进制值。
 
 
 <details>
   <summary>SQL</summary>
 
 ```SQL	
-	SELECT 
+SELECT 
+	b.name as table_name,
     a.table_id,
     HEX(a.table_id),
+	a.name as index_name
     a.index_id,
     HEX(a.index_id),
-    a.name
 FROM
     information_schema.innodb_indexes a,
     information_schema.innodb_tables b
