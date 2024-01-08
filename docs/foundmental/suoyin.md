@@ -406,7 +406,9 @@ SELECT table_id, name, space FROM INFORMATION_SCHEMA.INNODB_TABLES  WHERE name L
 ```
 
 
-其中，以 _index_1-6 为后缀的被称为辅助表，里面顺序存放倒排索引的真实数据。至于分了六张表的原因，可以理解为对字段添加全文索引并且对数据分词的并行化。参考参数`innodb_ft_sort_pll_degree`，可以控制并发数量。
+其中，以 _index_1-6 为后缀的被称为辅助表`Auxiliary Table `，也会被持久化道磁盘中。里面顺序存放倒排索引的真实数据。
+
+至于分了六张表的原因，可以理解为对字段添加全文索引并且对数据分词的并行化。参考参数`innodb_ft_sort_pll_degree`，可以控制并发数量。
 
 例如，表名 `test/fts_0000000000002ba3_000000000000a964_index_1` ，其中 test 代表数据库名，fts_ 开头和 _index_1 结尾表示辅助表，0000000000002ba3 代表对应的表ID的十六进制值，000000000000a964 代表加 fulltext 索引字段ID 对应的十六进制值。
 
@@ -428,6 +430,16 @@ WHERE
     a.table_id = b.table_id
         AND b.name = 'test_fulltext/opening_lines'
         AND a.name = 'idx';
+
+--Innodb 存储引擎允许用户查看指定倒排索引的Auxiliary Table中分词的信息，可以通过设置参数 innodb_ft_aux_table 来观察倒排索引的 Auxiliary Table。
+
+SET GLOBAL innodb_ft_aux_table="test_fulltext/opening_lines";
+
+--查看分词情况
+SELECT * FROM INFORMATION_SCHEMA.INNODB_FT_INDEX_TABLE ORDER BY doc_id, position;
+
+
+
 ```
 
 </details>
@@ -478,10 +490,115 @@ mysql>
 
 
 
+```SQL
+
+-- ----------------------------
+-- Table structure for t_article
+-- ----------------------------
+CREATE TABLE `t_article`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `content` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  FULLTEXT INDEX `fulltext_title_content`(`title`, `content`) WITH PARSER `ngram`
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of t_article
+-- ----------------------------
+INSERT INTO `t_article` VALUES (1, '八荣八耻 1', '以热爱祖国为荣、以危害祖国为耻');
+INSERT INTO `t_article` VALUES (2, '八荣八耻 2', '以服务人民为荣、以背离人民为耻');
+INSERT INTO `t_article` VALUES (3, '八荣八耻 3', '以崇尚科学为荣，以愚昧无知为耻');
+INSERT INTO `t_article` VALUES (4, '八荣八耻 4', '以辛勤劳动为荣，以好逸恶劳为耻');
+INSERT INTO `t_article` VALUES (5, '八荣八耻 5', '以团结互助为荣，以损人利己为耻');
+INSERT INTO `t_article` VALUES (6, '八荣八耻 6', '以诚实守信为荣，以见利忘义为耻');
+INSERT INTO `t_article` VALUES (7, '八荣八耻 7', '以遵纪守法为荣，以违法乱纪为耻');
+INSERT INTO `t_article` VALUES (8, '八荣八耻 8', '以艰苦奋斗为荣，以骄奢淫逸为耻');
+INSERT INTO `t_article` VALUES (9, '满江红', '靖康耻，尤未雪');
+INSERT INTO `t_article` VALUES (10, '第一生产力', '科学技术是第一 生产力');
+INSERT INTO `t_article` VALUES (11, '团结互助', '团结就是力量');
+INSERT INTO `t_article` VALUES (12, 'Blue Red', 'Red Black');
+INSERT INTO `t_article` VALUES (13, '我是奇迹 1', '你好，我是奇迹2');
+INSERT INTO `t_article` VALUES (14, '恭喜发财', '你好');
+
+-- 添加全文索引
+
+-- 可以多字段联合索引
+ALTER TABLE `t_article` ADD FULLTEXT INDEX fulltext_title_content(`title`,`content`) WITH PARSER ngram; 
+
+-- 可以单字段索引
+ALTER TABLE `t_article` add FULLTEXT INDEX fulltext_content(`content`) WITH PARSER ngram;
+
+
+--------------------------------------------------------------------------------------------------------
+-- 自然语言检索IN NATURAL LANGUAGE MODE
+-- 自然语言模式是 MySQL 默认的全文检索模式。自然语言模式不能使用操作符，不能指定关键词必须出现或者必须不能出现等复杂查询。
+
+-- 查询 title 或者 content 中包含"祖国"的记录
+SELECT *, MATCH (title, content) AGAINST ('祖国')  AS score
+    FROM t_article WHERE MATCH (title, content) AGAINST ('祖国' IN NATURAL LANGUAGE MODE);
+
+
+-- 查询 title 或者 content 中包含"团结劳动"的记录
+-- 查询结果，默认会按照得分 score ，从高到低排序
+SELECT *, MATCH (title, content) AGAINST ('团结劳动') AS score
+    FROM t_article WHERE MATCH (title, content) AGAINST ('团结劳动' IN NATURAL LANGUAGE MODE);
+
+
+-- 查询 title 或者 content 中包含"团"的记录
+SELECT *, MATCH (title, content) AGAINST ('团') AS score
+    FROM t_article WHERE MATCH (title, content) AGAINST ('团' IN NATURAL LANGUAGE MODE);
+-- 查不到结果。原因是设置的全局变量 ngram_token_size 的值为 2
+--------------------------------------------------------------------------------------------------------
+
+
+
+--------------------------------------------------------------------------------------------------------
+-- 布尔检索（IN BOOLEAN MODE）剔除一半匹配行以上都有的词
+
+-- 每行都有this这个词的话，那用this去查时，会找不到任何结果，这在记录条数特别多时很有用，原因是数据库认为把所有行都找出来是没有意义的，这时，this几乎被当作是stopword(中断词)；
+
+
+
+
+-- 查询 content 中包含"诚实守信"和"见利忘义"的语句
+SELECT  * , MATCH (content) AGAINST ('+诚实守信 +见利忘义') as score 
+    FROM  t_article where MATCH (content) AGAINST ('+诚实守信 +见利忘义' IN BOOLEAN MODE);
+
+```
+
+
+**布尔检索**
+
+
+   ● IN BOOLEAN MODE的特色： 
+      ·不剔除50%以上符合的row。 
+      ·不自动以相关性反向排序。 
+      ·可以对没有FULLTEXT index的字段进行搜寻，但会非常慢。 
+      ·限制最长与最短的字符串。 
+      ·套用Stopwords。
+
+   ● 搜索语法规则：
+     +   一定要有(不含有该关键词的数据条均被忽略)。 
+     -   不可以有(排除指定关键词，含有该关键词的均被忽略)。 
+     >   提高该条匹配数据的权重值。 
+     <   降低该条匹配数据的权重值。
+     ~   将其相关性由正转负，表示拥有该字会降低相关性(但不像-将之排除)，只是排在较后面权重值降低。 
+     *   万用字，不像其他语法放在前面，这个要接在字符串后面。 
+     " " 用双引号将一段句子包起来表示要完全相符，不可拆字。
+
+
 
 在全文索引底层是有一个切词的概念的，比如 "祝中国越来越强大" 这样的词，全文索引按照一个规则切词，有可能会被切成 祝 、 中国、 越来越强大。
 
 那么切词的依据是什么呢？全文索引又是怎么切词的呢？？
+
+
+MySQL 中使用全局变量 `ngram_token_size` 来配置 ngram 中 n 的大小，它的取值范围是1到10，默认值是 2。
+
+通常`ngram_token_size`设置为要查询的单词的最小字数。如果需要搜索单字，就要设置为1。在默认值是2的情况下，搜索单字是得不到任何结果的。
+
+因为中文单词最少是两个汉字，推荐使用默认值2。
 
 
 
