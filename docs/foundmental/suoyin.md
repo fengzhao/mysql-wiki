@@ -2016,7 +2016,7 @@ Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后�
 
 注意：执行计划中的Extra列的“Using index”跟type列的“index”不要混淆。Extra列的“Using index”表示索引覆盖。而type列的“index”表示Full Index Scan。
 
-表示where 和select中需要的字段都能够直接通过一个索引字段获取，无需再实际回表查询，当查询涉及的列都是某一单独索引的组成部分时即为此种情况，这实际上就是索引类型中覆盖索引。
+
 
 #### **Using Index Condition**
 
