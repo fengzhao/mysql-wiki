@@ -2067,6 +2067,19 @@ Explain 可以使用在` SELECT, DELETE, INSERT, REPLACE, and UPDATE` 语句中�
 简单语句可能结果就只有一行，但是复杂的查询语句会有很多行数据。
 
 
+MySQL 8.0.18 推荐使用 EXPLAIN ANALYZE，该语句可以输出语句的执行时间和以下信息:
+
+
+- 预计执行时间
+- 预计返回的行数
+- 返回第一行的时间
+- 迭代器的执行时间，单位毫秒
+- 迭代器返回的行数
+- 执行循环的次数
+
+查询信息以 TREE 的形式输出，每个节点代表一个迭代器。EXPLAIN ANALYZE 可以用于 SELECT 语句，以及多表的 UPDATE 和 DELETE 语句，MySQL 8.0.19 以后也可以用于 TABLE 语句。EXPLAIN ANALYZE 不能使用 FOR CONNECTION 。MySQL 8.0.20 以后可以通过 KILL QUERY 或 CTRL-C 终止该语句的执行。
+
+
 
 ### `Explain` 的使用
 
