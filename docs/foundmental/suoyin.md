@@ -2333,9 +2333,9 @@ Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后�
 
 - **通过有序索引顺序扫描直接返回有序数据**
 
-  因为索引的结构是B+树，索引中的数据是按照一定顺序进行排列的，所以在排序查询中如果能利用索引，就能避免额外的排序操作。
+因为索引的数据结构是B+树，索引中的数据是有序得，所以通过where过滤后的结果集如果已经有序，就能避免额外的排序开销操作。
 
-  EXPLAIN分析查询时，Extra显示为Using index。
+使用`EXPLAIN`分析查询时，Extra显示为Using index。
 
 比如这样的例子：
 
@@ -2348,19 +2348,24 @@ CREATE TABLE `user` (
   KEY `nameIndex` (`name`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
+-- MySQL在查询时最多只能使用一个索引。因此，如果WHERE条件已经占用了索引字段，那么在排序中就不使用索引了。
 select name from user order by name asc;
+
+select * from user order by name asc;
+
+
 ```
 
 - **Filesort排序，对返回的数据进行排序**
 
-  所有不是通过索引直接返回排序结果的操作都是Filesort排序，也就是说进行了额外的排序操作。EXPLAIN分析查询时，Extra显示为Using filesort。
+
+所有不是通过索引直接返回的已排好序结果的操作都是Filesort排序，也就是说进行了额外的排序操作。
+
+EXPLAIN分析查询时，Extra显示为Using filesort。
 
   
 
-  
-
-**其实 MySQL 会给每个线程分配一块内存用于排序，称为 sort_buffer，由sort_buffer_size这个参数控制**。
+**其实 MySQL 会给每个线程分配一块内存用于排序，称为 sort_buffer，由sort_buffer_size这个参数控制，默认是256KB**。
 
 
 
@@ -2371,8 +2376,6 @@ select name from user order by name asc;
 
 
 ## ORDER BY优化的核心原则
-
-
 
 
 
