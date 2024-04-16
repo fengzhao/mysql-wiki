@@ -2328,50 +2328,45 @@ Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后�
 # MySQL排序优化
 
 
-order by 排序是一个常见的业务功能，将结果根据指定的字段排序，满足前端展示的需求。
+`order by`排序是一个常见的业务功能，将结果根据指定的字段排序，满足前端展示的需求。
 
 
 - **通过有序索引顺序扫描直接返回有序数据**
 
 因为索引的数据结构是B+树，索引中的数据是有序的，所以通过where过滤后的结果集如果已经有序，就能避免额外的排序开销操作。
 
-使用`EXPLAIN`分析查询时，Extra显示为Using index。
+==使用`EXPLAIN`分析查询时，Extra显示为`Using index`表示用到了索引的排序==
 
 比如这样的例子：
 
 ```SQL
-CREATE TABLE `user` (
-  `id` int(11) NOT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `age` int(255) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `nameIndex` (`name`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- MySQL在查询时最多只能使用一个索引。因此，如果WHERE条件已经占用了索引字段，那么在排序中就不使用索引了。
-select name from user order by name asc;
+-- 索引列(key_part1 , key_part2)
 
-select * from user order by name asc;
+--如果是InnoDB表，那么主键也是索引的一部分，这种查询可以使用索引排序
+SELECT pk, key_part1, key_part2 FROM t1
+  ORDER BY key_part1, key_part2;
 
+-- key_part1是常量，所有通过索引访问到的记录都会按照key_part2 来排序，并且如果where子句有足够的选择性使得索引范围扫描比全表扫描开销更小的话，那么覆盖了(key_part1, key_part2)的复合索引就可以避免排序操作。
+SELECT * FROM t1
+  WHERE key_part1 = constant
+  ORDER BY key_part2;
 
 ```
 
 - **Filesort排序，对返回的数据进行排序**
 
+不是通过索引直接返回的已排好序结果的操作都是Filesort排序，也就是说进行了额外的排序操作。
 
-所有不是通过索引直接返回的已排好序结果的操作都是Filesort排序，也就是说进行了额外的排序操作。
+为了获取用于 filesort 操作的内存，优化器会预先分配一个固定大小为`sort_buffer_size`个字节。每个 session 会话可以通过改变这个值来避免过度的内存消耗，或者在必要时分配更多内存。
 
-EXPLAIN分析查询时，Extra显示为Using filesort。
+
+
+==使用`EXPLAIN`分析查询时，Extra显示为`Using filesort`表示没有用到索引，用到了额外的排序==
 
   
 
 **其实 MySQL 会给每个线程分配一块内存用于排序，称为 sort_buffer，由sort_buffer_size这个参数控制，默认是256KB**。
-
-
-
-
-
-
 
 
 
@@ -2421,7 +2416,7 @@ select city,name,age from t where city = '杭州' order by name limit 1000;
 sort_buffer是MySQL分配给每个线程用于排序的内存。sort_buffer_size是sort_buffer的大小，如果要排序的数据量小于sort_buffer_size，排序就在内存中完成，如果排序数据量过大，就得使用外部文件（一般磁盘临时文件）辅助排序。外部排序一般使用**归并排序算法**。
 
 
-简单说，就是通过索引字段查找符合条件的记录之后，然后把整行数据都加载到内存。最后再排序。
+简单说，就是通过索引字段查找符合条件的记录之后，然后把结果集需要的全部字段都加载到内存。最后再排序。
 
 显而易见，全字段排序方法缺点：单行大的话占用内存空间。
 
@@ -2465,10 +2460,10 @@ ORDER BY nick_name;
 
 rowId 排序全过程：
 
-1、从 city 索引树上找到第一条值为深圳的数据，取得 id 之后回表（回到主键索引）取得 nick_name 这个与排序相关的字段和主键 id 一起放入 sort buffer
-2、从 city 索引树取下一条值为深圳的数据，重复 1 过程，直到下一条数据不满足值为深圳条件
-3、这时候，所有 city = 深圳 的数据都在 sort buffer 了（sort buffer 里面的数据包含两个字段：id 和 nick_name）。对 nick_name 执行快速排序
-4、利用排序好的数据，使用主键 id 再次回表取其他字段，将结果返回
+1. 从 city 索引树上找到第一条值为深圳的数据，取得 id 之后回表（回到主键索引）取得 nick_name 这个与排序相关的字段和主键 id 一起放入 sort buffer
+2. 从 city 索引树取下一条值为深圳的数据，重复 1 过程，直到下一条数据不满足值为深圳条件
+3. 这时候，所有 city = 深圳 的数据都在 sort buffer 了（sort buffer 里面的数据包含两个字段：id 和 nick_name）。对 nick_name 执行快速排序
+4. 利用排序好的数据，使用主键 id 再次回表取其他字段，将结果返回
 
 > 注意：在步骤 4 中不会等所有排序好的 id 回表完再返回，而是每个 id 回表一次，取得该行数据之后立即返回，所以不会消耗额外的内存。
 
@@ -2502,11 +2497,18 @@ rowId 排序全过程：
 
 那么什么情况下 MySQL 会选择 rowId 排序呢，是否有具体的值可以量度？
 
-答案是有的，通过参数 max_length_for_sort_data 可以控制用于排序的行数据最大长度，默认值为 1024 字节。
+
+
+
+答案是有的，通过参数`max_length_for_sort_data`可以控制用于排序的行数据最大长度，默认值为 1024 字节。
 
 当单行数据长度超过该值，MySQL 就会觉得如果还用全字段排序，会导致 sort buffer 容纳下的行数太少，从而转为使用 rowId 排序。
 
+==max_length_for_sort_data 只对8.0.20之前的有效==
 
+如果你使用的是其之后的版本，那么无论怎么修改 max_length_for_sort_data 
+
+大部分正常情况下 MySQL 就两种排序方式。如果 sort_buffer_size 够用，那么就在内存中使用快速排序完成排序。
 
 
 ### 临时表排序
