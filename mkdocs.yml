@@ -97,6 +97,8 @@ nav:
           - "5. Ansible 配置": basic/Reference/Config.md
       - "Windows":
           - "1. 管理 Windows 主机": basic/Windows/manager-windows.md
+  - "SQL特性":
+      - "1.SQL2023新特性": sql/sql2023.md
   - "MySQL基础":
       - "1.索引相关": foundmental/suoyin.md
       - "2.数据库设计": dev/02.数据库设计.md
