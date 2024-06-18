@@ -1298,6 +1298,8 @@ select * FROM test where last_name like '张%' and age=10 ;
 
 **索引下推**的下推其实就是指将部分上层（服务层）负责的事情，交给了下层（引擎层）去处理。
 
+**索引下推的目的是为了减少回表次数，也就是要减少IO操作。对于InnoDB的聚簇索引来说，数据和索引是在一起的，不存在回表这一说。**
+
 在没有使用ICP的情况下，MySQL的查询：
 
 - 存储引擎读取索引记录；
@@ -1311,6 +1313,19 @@ select * FROM test where last_name like '张%' and age=10 ;
 - 条件满足，使用索引中的主键去定位并读取完整的行记录（就是所谓的回表）；
 - 存储引擎把记录交给Server层，Server层检测该记录是否满足WHERE条件的其余部分。
 
+在二级索引是复合索引且前面的条件过滤性较低的情况下，打开 ICP 可以有效的降低 server 层和 engine 层之间交互的次数，从而有效的降低运行时间。
+
+但是，对于多个普通单列索引构成的 where 过滤条件，无论是否启用 ICP，优化器都会将过滤性高的索引条件下推到 engine 层执行 index range scan，因此，收益不大。
+
+**使用限制 & 适用条件**
+
+- 当需要访问全表记录时，ICP 可用于  range（范围扫描）、ref（非唯一索引的”=”操作）、eq_ref（唯一索引的”=”操作） 和 ref_or_null（ref + 支持空值，比如：WHERE col = … OR col IS NULL） 访问方法。
+- ICP 可以用于 InnoDB 和 MyISAM 引擎表（包括分区表）。
+- 对于 InnoDB 表，ICP 仅支持二级索引。而对于 InnoDB 聚簇索引，由于完整的记录会被读到 InnoDB 缓冲区，在这种情况下，使用 ICP 不会减少 I/O 操作。
+- 虚拟列上创建的二级索引不支持 ICP。
+- 使用子查询的 where 条件不支持 ICP。
+- 由于引擎层无法调用位于 server 层的存储过程，因此，调用存储过程的 SQL 不支持 ICP。
+- 触发器不支持 ICP。
 
 [参考](https://www.cnblogs.com/three-fighter/p/15246577.html)
 
