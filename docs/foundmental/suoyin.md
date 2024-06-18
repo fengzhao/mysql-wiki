@@ -1458,43 +1458,51 @@ SELECT * FROM users WHERE age = 30 OR city = 'Los Angeles';
 
 ## 索引提示(index hint)
 
-MySQL 可以使用索引提示（Index Hints）， 用于告诉**查询优化器**在查询中如何选择索引。
+MySQL 可以使用索引提示（Index Hints）， 用于告诉**优化器**在查询中如何选择索引。
 
-索引提示只能用于 select 和 update 语句中。MySQL 共有三种索引提示，分别是：USE INDEX、IGNORE INDEX和FORCE INDEX。
+索引提示只能用于 `SELECT` 和 `UPDATE` 语句中。`MySQL` 共有三种索引提示，分别是：`USE INDEX`、`IGNORE INDEX`和`FORCE INDEX`。
 
-- use index(index_list)  告诉MySQL用索引列表中的其中一个索引去做本次查询
+- `use index(index_list)`  告诉MySQL用索引列表中的索引去做本次查询
 
-  - ```sql
+    ```sql
     -- 强制使用这两个索引去进行查找
     SELECT * FROM table1 USE INDEX (col1_index,col2_index)
       WHERE col1=1 AND col2=2 AND col3=3;
     ```
 
-- ignore index：ignore index告诉mysql不要使用某些索引去做本次查询
+- `ignore index(index_list)`  告诉MySQL不要使用某些索引去做本次查询
 
-  - ```sql
+    ```sql
     SELECT * FROM table1 IGNORE INDEX (col3_index)
     WHERE col1=1 AND col2=2 AND col3=3;
     ```
 
-- force index：force index和use index功能类似，都是告诉mySQL去使用某些索引。
+- `force index`  `force index`和`use index`功能类似，都是告诉MySQL去使用某些索引。
 
-  - force index 和 use index 的区别是，如果使用force index，那么全表扫描就会被假定为需要很高代价，除非不能使用索引，否则不会考虑全表扫描；
+  - 区别在于，如果使用force index，那么全表扫描就会被假定为需要很高代价，除非不能使用索引，否则不会考虑全表扫描；而使用 `use index` 的话，如果MySQL觉得全表扫描代价更低的话，仍然会使用全表扫描。
 
-  - 而使用 use index 的话，如果MySQL觉得全表扫描代价更低的话，仍然会使用全表扫描。
-
-  - ```sql
+ ```SQL
     SELECT * FROM table1 FORCE INDEX (col3_index)
     WHERE col1=1 AND col2=2 AND col3=3;
-    ```
+ ```
+ 
 
 
 
 
 
-### 索引提示的用途
+###  索引提示的用途
 
-可以在索引提示的后边使用FOR语句指定提示的范围，索引提示共有三种适用范围，分别是FOR JOIN、FOR ORDER BY、FOR GROUP BY：
+可以在索引提示的后边使用`FOR`语句指定`INDEX HINT`的范围，索引提示共有三种适用范围，分别是`FOR JOIN`、`FOR ORDER BY`、`FOR GROUP BY`
+
+注意，如果在`MySQL5.0`版本及以下，如果不指定`FOR`语句，那么`MySQL`只会用它来查找行。而在新版本的`MySQL`，如果不指定`FOR`语句，那么`MySQL`会把索引用于所有用途。
+
+```SQL
+SELECT * FROM t1 USE INDEX (i1)  IGNORE INDEX FOR ORDER BY (i2)  ORDER BY a;
+
+SELECT * FROM t1 USE INDEX FOR JOIN (i1) FORCE INDEX FOR JOIN (i2);
+
+```
 
   
 
