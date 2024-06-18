@@ -1477,13 +1477,10 @@ MySQL 可以使用索引提示（Index Hints）， 用于告诉**优化器**在�
     WHERE col1=1 AND col2=2 AND col3=3;
     ```
 
-- `force index`  `force index`和`use index`功能类似，都是告诉MySQL去使用某些索引。
-
-  - 区别在于，如果使用force index，那么全表扫描就会被假定为需要很高代价，除非不能使用索引，否则不会考虑全表扫描；而使用 `use index` 的话，如果MySQL觉得全表扫描代价更低的话，仍然会使用全表扫描。
+- `force index`  `force index`和`use index`功能类似，都是告诉MySQL去使用某些索引。区别在于，如果使用`force index`，那么全表扫描就会被假定为需要很高代价，除非不能使用索引，否则不会考虑全表扫描；而使用 `use index` 的话，如果MySQL觉得全表扫描代价更低的话，仍然会使用全表扫描。
 
  ```SQL
-    SELECT * FROM table1 FORCE INDEX (col3_index)
-    WHERE col1=1 AND col2=2 AND col3=3;
+    SELECT * FROM table1 FORCE INDEX (col3_index) WHERE col1=1 AND col2=2 AND col3=3;
  ```
  
 
