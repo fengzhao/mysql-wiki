@@ -1034,18 +1034,21 @@ ALTER TABLE table_name ADD UNIQUE (column);
 
 ------
 
-在 secondary index 上进行范围查询或等值查询时，返回的一系列主键索引值可能是无序的。后续的回表查询就变成了随机读。
+在 `secondary index` 上进行范围查询或等值查询时，返回的一系列主键索引值可能是无序的，后续的回表查询就变成了随机读。如果回表前把主键值在内存中给它排一下序，那么在回表的时候就可以用顺序IO取代原本的随机IO。
 
 MRR 要把主键排序，这样之后对磁盘的操作就是由顺序读代替之前的随机读。
 
 从资源的使用情况上来看就是让 CPU 和内存多做点事，来换磁盘的顺序读。然而排序是需要内存的，这块内存的大小就由参数 read_rnd_buffer_size 来控制。
 
-MRR在通过二级索引获取到主键ID后，将ID值放入read_rnd_buffer中，然后对其进行排序，利用排序后的ID数组遍历主键索引查找记录并返回结果集，优化了回表性能。
+MRR在通过二级索引获取到主键ID后，将ID值放入`read_rnd_buffer`中，然后对其进行排序，利用排序后的ID数组遍历主键索引查找记录并返回结果集，优化了回表性能。
 
-read_rnd_buffer_size  这是一个内存中的buffer用于分配给每个客户端用的。默认值是0.25MB，最大值为 2GB
+`read_rnd_buffer_size`这是一个内存中的buffer用于分配给每个客户端用的。默认值是0.25MB，最大值为2GB
 
 所以不能设置 global 全局变量太大，所以只能客户端自己运行大查询时进行设置。
 
+MRR能够提升性能的核心在于，这条查询语句在索引a上做的是一个范围查询（也就是说，这是一个多值查询），可以得到足够多的主键id。这样通过排序以后，再去主键索引查数据，才能体现出“顺序性”的优势。
+
+> MRR 的核心思想就是通过把「随机磁盘读」，转化为「顺序磁盘读」，从而提高了索引查询的性能。本质上是一种用「空间换时间」的做法。
 
 
 https://opensource.actionsky.com/20200616-mysql/
@@ -1294,9 +1297,11 @@ select * FROM test where last_name like '张%' and age=10 ;
 
 在 5.6 之前，这个语句在搜索索引树的时候，使用第一个字段的条件去匹配。找到所有匹配的行，逐行去主键索引上找到数据行，对比后面的条件。
 
-在 5.6 之后，MySQL 引入了**索引下推**优化，可以在索引遍历的过程中，对索引包含的字段先做判断，过滤掉不满足要求的行，减少回表次数。
+在 5.6 之后，MySQL 引入了 **索引下推** 优化，可以在索引遍历的过程中，对索引包含的字段先做判断，过滤掉不满足要求的行，减少回表次数。
 
-**索引下推**的下推其实就是指将部分上层（服务层）负责的事情，交给了下层（引擎层）去处理。
+**索引下推** 其实就是指将部分上层（服务层）负责的事情，交给了下层（引擎层）去处理。
+
+**索引下推的目的是为了减少回表次数，也就是要减少IO操作。对于InnoDB的聚簇索引来说，数据和索引是在一起的，不存在回表这一说。**
 
 在没有使用ICP的情况下，MySQL的查询：
 
@@ -1311,11 +1316,34 @@ select * FROM test where last_name like '张%' and age=10 ;
 - 条件满足，使用索引中的主键去定位并读取完整的行记录（就是所谓的回表）；
 - 存储引擎把记录交给Server层，Server层检测该记录是否满足WHERE条件的其余部分。
 
+在二级索引是复合索引且前面的条件过滤性较低的情况下，打开 ICP 可以有效的降低 server 层和 engine 层之间交互的次数，从而有效的降低运行时间。
+
+但是，对于多个普通单列索引构成的 where 过滤条件，无论是否启用 ICP，优化器都会将过滤性高的索引条件下推到 engine 层执行 index range scan，因此，收益不大。
+
+**使用限制 & 适用条件**
+
+- 当需要访问全表记录时，ICP 可用于  range（范围扫描）、ref（非唯一索引的”=”操作）、eq_ref（唯一索引的”=”操作） 和 ref_or_null（ref + 支持空值，比如：WHERE col = … OR col IS NULL） 访问方法。
+- ICP 可以用于 InnoDB 和 MyISAM 引擎表（包括分区表）。
+- 对于 InnoDB 表，ICP 仅支持二级索引。而对于 InnoDB 聚簇索引，由于完整的记录会被读到 InnoDB 缓冲区，在这种情况下，使用 ICP 不会减少 I/O 操作。
+- 虚拟列上创建的二级索引不支持 ICP。
+- 使用子查询的 where 条件不支持 ICP。
+- 由于引擎层无法调用位于 server 层的存储过程，因此，调用存储过程的 SQL 不支持 ICP。
+- 触发器不支持 ICP。
+
+即使查询满足上述条件，MySQL的优化器也不一定会选择使用ICP。优化器会根据查询成本估算来决定是否使用ICP。如果优化器认为全表扫描或者其他访问方法更快，它可能不会选择ICP。
+
+要充分利用ICP优化，除了满足上述条件外，还需要合理地设计数据库模式和索引，以及编写高效的SQL查询。同时，定期分析查询性能和执行计划，根据实际的数据分布和查询负载来调整和优化数据库设计也是非常重要的。
+
 
 [参考](https://www.cnblogs.com/three-fighter/p/15246577.html)
 
 ### 索引合并
 
+在某些情况下，单独使用任何一个索引都无法高效地获取到完整的结果集。而通过合并多个索引的扫描结果，我们可以更精确地定位到满足所有条件的记录，从而提高查询效率。
+
+考虑一个场景，你有一个大型的电子商务数据库，其中包含商品信息。你可能需要根据商品的名称、价格、分类等多个条件来检索商品。如果只依赖单个字段的索引。那么查询效率可能会很低，因为你需要扫描大量的不相关记录。
+
+通过索引合并，MySQL可以利用多个字段上的索引来加速查询。它首先分别扫描每个索引，获取满足相应条件的记录集，然后再将这些记录集合并，得到最终的结果。
 
 [官网](https://dev.mysql.com/doc/refman/8.0/en/index-merge-optimization.html)
 
@@ -1327,31 +1355,43 @@ MySQL5.0之前，一个表一次只能使用一个索引，无法同时使用多
 
 当单表使用了多个索引，每个索引查找都可能返回一个结果集，MySQL会将其求交集或者并集，或者是交集和并集的组合。==也就是说一次查询中可以同时使用多个索引==
 
+工作原理流程主要如下：
+
+- 条件分析：MySQL 优化器首先分析查询的 WHERE 子句，确定其中有多少个独立的条件。
+- 索引选择：对于 WHERE 子句中的每个独立条件，优化器检查是否存在可用的索引。如果存在，它会评估使用这些索引的成本。
+- 索引扫描：优化器决定使用哪些索引后，它会分别对这些索引进行扫描，获取满足每个条件的记录集。
+- 结果合并：扫描完所有选定的索引后，MySQL 将这些记录集合并，以产生最终的结果集。合并的方式可以是交集（Intersection）、并集（Union）或排序并集（Sort-Union），具体取决于查询的条件和所需的结果。
+- 返回结果：最终，优化器将合并后的结果集返回给客户端。
+
+索引合并通常应用于以下场景：
+
+- 多条件查询: 当查询的WHERE子句中包含多个独立的条件时，每个条件都可以利用不同的索引。
+
+- 复合索引不完全匹配:即使你有一个复合索引（例如，INDEX(col1, col2)），但查询条件只涉及col1或col2时，MySQL可能会选择使用单列索引，并通过索引合并来优化查询。
+
+- 排序和限制:当查询需要排序或限制结果集大小时，索引合并可以帮助快速定位到满足条件的记录。
+
 
 ```sql
 -- 可以使用索引合并的语句示例
 
 SELECT * FROM tbl_name WHERE key1 = 10 OR key2 = 20;
+-- 对于第一条语句：使用索引并集访问算法，得到key1=10的主键有序集合，得到key2=20的主键有序集合。再对这两个集合求并集；最后回表查找。
 
 SELECT * FROM tbl_name
   WHERE (key1 = 10 OR key2 = 20) AND non_key = 30;
+-- 对于第二条语句：先丢弃non_key=30,因为它使用不到索引，where子句就变成了where key10 or key2=20，使用索引先根据索引合并并集访问算法。
 
 SELECT * FROM t1, t2
   WHERE (t1.key1 IN (1,2) OR t1.key2 LIKE 'value%')
   AND t2.key1 = t1.some_col;
 
+
 SELECT * FROM t1, t2
   WHERE t1.key1 = 1
   AND (t2.key1 = t1.some_col OR t2.key2 = t1.some_col2);
   
--- 对于第一条语句：使用索引并集访问算法，得到key1=10的主键有序集合，得到key2=20的主键有序集合。再对这两个集合求并集；最后回表查找。
-
--- 对于第二条语句：先丢弃non_key=30,因为它使用不到索引，where子句就变成了where key10 or key2=20，使用索引先根据索引合并并集访问算法。
-
-
-
 -- 先通过索引查找算法查找后缩小结果集，在小表中再进行全表匹配查询。
-
 -- 
 ```
 
@@ -1377,8 +1417,6 @@ SELECT * FROM t1, t2
 - `Using intersect(...)`
 - `Using union(...)`
 - `Using sort_union(...)`
-
- 
 
 
 
@@ -1410,61 +1448,69 @@ SELECT * FROM tbl_name  WHERE key1_part1 = 1 AND key1_part2 = 2 AND key2 = 2;
 
 ### index merge union access algorithm（索引合并并集访问算法）
 
+在某些情况下，查询可能只需要满足多个条件中的任意一个（使用 OR 连接）。MySQL会分别扫描这些索引，然后取结果的并集。
 
+案例：使用上面的users表，查询语句如下：
+```SQL
+SELECT * FROM users WHERE age = 30 OR city = 'Los Angeles';
+```
+在这个查询中，只要满足age = 30或city = 'Los Angeles’中的任意一个条件，记录就会被选中。MySQL可能会使用并集合并策略，分别扫描age索引和city索引，然后合并结果集，返回满足任一条件的用户记录。
 
-
-
-## 优化器提示（Optimizer Hints）
 
 
 
 ## 索引提示(index hint)
 
+MySQL 可以使用索引提示（Index Hints）， 用于告诉**优化器**在查询中如何选择索引。
 
+索引提示只能用于 `SELECT` 和 `UPDATE` 语句中。`MySQL` 共有三种索引提示，分别是：`USE INDEX`、`IGNORE INDEX`和`FORCE INDEX`。
 
-MySQL 可以使用索引提示（Index Hints）， 用于告诉**查询优化器**在查询中如何选择索引。
+- `use index(index_list)`  告诉MySQL用索引列表中的索引去做本次查询
 
-索引提示只能用于 select 和 update 语句中。MySQL 共有三种索引提示，分别是：USE INDEX、IGNORE INDEX和FORCE INDEX。
-
-- use index(index_list)  告诉MySQL用索引列表中的其中一个索引去做本次查询
-
-  - ```sql
+    ```sql
     -- 强制使用这两个索引去进行查找
     SELECT * FROM table1 USE INDEX (col1_index,col2_index)
       WHERE col1=1 AND col2=2 AND col3=3;
     ```
 
-- ignore index：ignore index告诉mysql不要使用某些索引去做本次查询
+- `ignore index(index_list)`  告诉MySQL不要使用某些索引去做本次查询
 
-  - ```sql
+    ```sql
     SELECT * FROM table1 IGNORE INDEX (col3_index)
     WHERE col1=1 AND col2=2 AND col3=3;
     ```
 
-- force index：force index和use index功能类似，都是告诉mySQL去使用某些索引。
+- `force index`  `force index`和`use index`功能类似，都是告诉MySQL去使用某些索引。区别在于，如果使用`force index`，那么全表扫描就会被假定为需要很高代价，除非不能使用索引，否则不会考虑全表扫描；而使用 `use index` 的话，如果MySQL觉得全表扫描代价更低的话，仍然会使用全表扫描。
 
-  - force index 和 use index 的区别是，如果使用force index，那么全表扫描就会被假定为需要很高代价，除非不能使用索引，否则不会考虑全表扫描；
-
-  - 而使用 use index 的话，如果MySQL觉得全表扫描代价更低的话，仍然会使用全表扫描。
-
-  - ```sql
-    SELECT * FROM table1 FORCE INDEX (col3_index)
-    WHERE col1=1 AND col2=2 AND col3=3;
-    ```
+ ```SQL
+    SELECT * FROM table1 FORCE INDEX (col3_index) WHERE col1=1 AND col2=2 AND col3=3;
+ ```
+ 
 
 
 
 
 
-### 索引提示的用途
+###  索引提示的用途
 
-可以在索引提示的后边使用FOR语句指定提示的范围，索引提示共有三种适用范围，分别是FOR JOIN、FOR ORDER BY、FOR GROUP BY：
+可以在索引提示的后边使用`FOR`语句指定`INDEX HINT`的范围，索引提示共有三种适用范围，分别是`FOR JOIN`、`FOR ORDER BY`、`FOR GROUP BY`
+
+注意，如果在`MySQL5.0`版本及以下，如果不指定`FOR`语句，那么`MySQL`只会用它来查找行。而在新版本的`MySQL`，如果不指定`FOR`语句，那么`MySQL`会把索引用于所有用途。
+
+```SQL
+SELECT * FROM t1 USE INDEX (i1)  IGNORE INDEX FOR ORDER BY (i2)  ORDER BY a;
+
+SELECT * FROM t1 USE INDEX FOR JOIN (i1) FORCE INDEX FOR JOIN (i2);
+
+```
 
   
 
 ## MySQL优化器开关
 
+`optimizer_switch`系统变量可以控制优化器行为。它的值是一组标志，每个标志都有一个on或off值，用于指示相应的优化器行为是启用还是禁用。
 
+此变量具有全局值和会话值，可以在运行时更改。全局默认值可以在服务器启动时设置。
 
 ```sql
 SELECT @@optimizer_switch;
@@ -1493,6 +1539,7 @@ skip_scan=on,
 hash_join=on
 
 
+-- 要修改optimizer_switch的值，指定一个由一个或多个命令组成的逗号分隔的值
 -- 修改优化器
 SET [GLOBAL|SESSION] optimizer_switch='command[,command]...';
 
@@ -1504,11 +1551,32 @@ SET [GLOBAL|SESSION] optimizer_switch='command[,command]...';
 
 ```
 
+该值中命令的顺序并不重要，但如果存在，默认命令将首先执行。将opt_name标志设置为default将其设置为on或off中的任意一个为其默认值。
+
+不允许在值中多次指定任何给定的opt_name，这会导致错误。该值中的任何错误都会导致赋值失败，并导致optimizer_switch的值保持不变。
+
+
+控制优化器策略的一种方法是设置optimizer_switch系统变量。对该变量的更改将影响所有后续查询的执行;为了对不同的查询产生不同的影响，必须在每个查询之前更改optimizer_switch。
+
+控制优化器的另一种方法是使用优化器提示，这些提示可以在单独的语句中指定。因为优化器提示是针对每条语句应用的，所以它们对语句执行计划提供了比使用optimizer_switch更精细的控制。例如，可以对语句中的一个表启用优化，而对另一个表禁用优化。语句中的提示优先于optimizer_switch标志。
 
 
 
 
+## 优化器提示（Optimizer Hints）
 
+Optimizer Hints (下文简称 Hints ) 是一套干预优化器的实用机制，不同数据库厂商都有各自的实现方式。
+
+Oracle 可能是将 Hints 机制发挥到极致的数据库大厂。而即使像 PostgreSQL 这样拒绝 hints 的学院派数据库，社区也自发搞了个 pg_hint_plan 插件 ，让大家能够尽快地解决执行计划走错的问题。
+
+Hints 的干预方式是向优化器提供现成的优化决策，从而缩小执行计划的选择范围。通常在人为干预优化器时，只需要在关键决策点提供具体决策，就可以规避错误的执行计划；当然也可以提供所有决策，这样可以产生确定的执行计划。
+
+控制优化器策略的一种方法是设置`optimizer_switch`系统变量。对该变量的更改将影响所有后续查询的执行;为了对不同的查询产生不同的影响，必须在每个查询之前更改`optimizer_switch`。
+
+控制优化器的另一种方法是使用优化器提示，这些提示可以在单独的语句中指定。因为优化器提示是针对每条语句应用的，所以它们对语句执行计划提供了比使用`optimizer_switch`更精细的控制。例如，可以对语句中的一个表启用优化，而对另一个表禁用优化。语句中的提示优先于`optimizer_switch`标志。
+
+
+优化器提示必须在`/+… /`注释。也就是说，优化器提示使用`/…/` c风格的注释语法，在`/*`注释开始序列后面有一个`+`字符。
 
 
 
