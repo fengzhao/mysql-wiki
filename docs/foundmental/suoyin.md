@@ -2372,12 +2372,13 @@ id, select_type, table, partitions, type, possible_keys, key, key_len, ref, rows
 
 表示MySQL在表中找到所需行的方式，或者叫访问类型。常见访问类型如下，从上到下，性能由差到最好：
 
-|         ALL         |         全表扫描         | 一般是没有where条件或者where条件没有使用索引的查询语句       |
-| :-----------------: | :----------------------: | ------------------------------------------------------------ |
+|         TYPE         |         访问类型         | 一般是没有where条件或者where条件没有使用索引的查询语句       |
+| :-----------------: | :----------------------: | -------------------------------------------------- |
+|         **ALL**     |         **全表扫描**     | **一般是没有where条件或者where条件没有使用索引的查询语句**       |
 |      **index**      |      **索引全扫描**      | **MySQL遍历整个索引来查询匹配行，并不会扫描表，一般是查询的字段有索引的语句** |
 |      **range**      |     **索引范围扫描**     | **索引范围扫描，常用于对索引字段进行 <、<=、>、>=、between等查询操作**          |
 | **index_subquery**  |      **索引子查询**      |                                                              |
-| **unique_subquery** |    **唯一索引子查询**    |   value IN (SELECT primary_key FROM single_table WHERE some_expr)                                                           |
+| **unique_subquery** |    **唯一索引子查询**    | value IN (SELECT primary_key FROM single_table WHERE some_expr)    |
 |   **index_merge**   |       **索引合并**       |                                                              |
 |   **ref_or_null**   |                          |                                                              |
 |    **fulltext**     |     **全文索引扫描**     |                                                              |
