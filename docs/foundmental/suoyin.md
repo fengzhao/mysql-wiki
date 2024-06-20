@@ -905,7 +905,7 @@ alter table T engine=InnoDB;
 
 ### 索引扩展
 
-MySQL InnoDB的二级索引（Secondary Index）会自动补齐主键，将主键列追加到二级索引列后面。
+`InnoDB`的二级索引（Secondary Index）会自动补齐主键，将主键列追加到二级索引列后面。
 
 InnoDB的二级索引（Secondary Index）除了存储索引列key值，还存储着主键的值(而不是指向主键的指针)。
 
@@ -1435,7 +1435,7 @@ SELECT * FROM t1, t2
 
 
 
-### index merge intersection access algorithm（索引合并-交集访问算法）
+#### index merge intersection access algorithm（索引合并-交集访问算法）
 
 对于每一个使用到的索引进行查询，查询主键值集合，然后进行合并，求交集，也就是 AND 运算。下面是使用到该算法的两种必要条件：
 
@@ -1461,7 +1461,7 @@ SELECT * FROM tbl_name  WHERE key1_part1 = 1 AND key1_part2 = 2 AND key2 = 2;
 ```
 
 
-### index merge union access algorithm（索引合并并集访问算法）
+#### index merge union access algorithm（索引合并并集访问算法）
 
 在某些情况下，查询可能只需要满足多个条件中的任意一个（使用 OR 连接）。MySQL会分别扫描这些索引，然后取结果的并集。
 
@@ -1472,7 +1472,37 @@ SELECT * FROM users WHERE age = 30 OR city = 'Los Angeles';
 在这个查询中，只要满足age = 30或city = 'Los Angeles’中的任意一个条件，记录就会被选中。MySQL可能会使用并集合并策略，分别扫描age索引和city索引，然后合并结果集，返回满足任一条件的用户记录。
 
 
+### 索引跳跃扫描
 
+以前，索引使用规则有一项是索引左前缀，假如说有一个索引idx_abc(a,b,c)，能用到索引的情况只有查询条件为a、ab、abc、ac这四种，对于只有字段b的where条件是无法用到这个`idx_abcf`索引的。这里再强调一下，这里的顺序并不是在where中字段出现的顺序。
+
+```SQL
+-- 创建了一个t1表，其中主键为(f1,f2)，这里是两个字段。执行完这个sql语句后表里有160条记录
+CREATE TABLE t1 (f1 INT NOT NULL, f2 INT NOT NULL, PRIMARY KEY(f1, f2));
+INSERT INTO t1 VALUES
+  (1,1), (1,2), (1,3), (1,4), (1,5),
+  (2,1), (2,2), (2,3), (2,4), (2,5);
+INSERT INTO t1 SELECT f1, f2 + 5 FROM t1;
+INSERT INTO t1 SELECT f1, f2 + 10 FROM t1;
+INSERT INTO t1 SELECT f1, f2 + 20 FROM t1;
+INSERT INTO t1 SELECT f1, f2 + 40 FROM t1;
+ANALYZE TABLE t1;
+
+EXPLAIN SELECT f1, f2 FROM t1 WHERE f2 > 40;
+
+
+mysql> EXPLAIN SELECT f1, f2 FROM t1 WHERE f2 > 40;
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------+
+| id | select_type | table | partitions | type  | possible_keys | key     | key_len | ref  | rows | filtered | Extra                                  |
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------+
+|  1 | SIMPLE      | t1    | NULL       | range | PRIMARY       | PRIMARY | 8       | NULL |   53 |   100.00 | Using where; Using index for skip scan |
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+
+https://dev.mysql.com/doc/refman/8.0/en/range-optimization.html#range-access-skip-scan
 
 ## 索引提示(index hint)
 
@@ -2216,16 +2246,16 @@ explain select count(*) from t1  join t2 on  t1.id != t2.id
 
 # MySQL 执行计划
 
-在MySQL中，我们可以通过 **EXPLAIN** 命令获取MySQL如何执行 SELECT 语句的信息，包括在 SELECT 语句执行过程中表如何连接和连接的顺序。
+在MySQL中，我们可以通过 **EXPLAIN** 命令获取`MySQL`如何执行`SELECT`语句的信息，包括在`SELECT`语句执行过程中表如何连接和连接的顺序。
 
-Explain 可以使用在` SELECT, DELETE, INSERT, REPLACE, and UPDATE` 语句中，执行的结果会在每一行显示用到的每一个表的详细信息。
+EXPLAIN 可以使用在` SELECT, DELETE, INSERT, REPLACE, and UPDATE` 语句中，执行的结果会在每一行显示用到的每一个表的详细信息。
 
 
 
 简单语句可能结果就只有一行，但是复杂的查询语句会有很多行数据。
 
 
-MySQL 8.0.18 推荐使用 EXPLAIN ANALYZE，该语句可以输出语句的执行时间和以下信息:
+`MySQL 8.0.16`引入一个实验特性：`explain format=tree` ，树状的输出执行过程，以及预估成本和预估返回行数。在 `MySQL 8.0.18` 又引入了 `EXPLAIN ANALYZE`，在 `format=tree` 基础上，使用时，会执行 SQL ，并输出迭代器（感觉这里用算子更容易理解）相关的实际信息，比如执行成本、返回行数、执行时间，循环次数。
 
 
 - 预计执行时间
@@ -2235,13 +2265,14 @@ MySQL 8.0.18 推荐使用 EXPLAIN ANALYZE，该语句可以输出语句的执行
 - 迭代器返回的行数
 - 执行循环的次数
 
-查询信息以 TREE 的形式输出，每个节点代表一个迭代器。EXPLAIN ANALYZE 可以用于 SELECT 语句，以及多表的 UPDATE 和 DELETE 语句，MySQL 8.0.19 以后也可以用于 TABLE 语句。EXPLAIN ANALYZE 不能使用 FOR CONNECTION 。MySQL 8.0.20 以后可以通过 KILL QUERY 或 CTRL-C 终止该语句的执行。
+查询信息以 TREE 的形式输出，每个节点代表一个迭代器。`EXPLAIN ANALYZE` 可以用于 SELECT 语句，以及多表的 `UPDATE` 和 `DELETE` 语句，`MySQL 8.0.19` 以后也可以用于 `TABLE` 语句。`EXPLAIN ANALYZE` 不能使用 `FOR CONNECTION` 。`MySQL 8.0.20` 以后可以通过 `KILL QUERY` 或 `CTRL-C` 终止该语句的执行。
+
+与传统的执行计划相比，展示了比较清晰的执行过程。而 `explain analyze` 则会在此基础上多输出实际的执行时间、返回行数和循环次数。
 
 
+### `EXPLAIN` 的使用
 
-### `Explain` 的使用
-
-在 SQL 语句前面加上 `explain `，如：` EXPLAIN SELECT * FROM a;`
+在 SQL 语句前面加上 `EXPLAIN`，如：` EXPLAIN SELECT * FROM a;`
 
 
 ```SQL
@@ -2446,39 +2477,59 @@ Extra 描述了MySQL内部如何进行额外的处理。
 
 
 
-#### **Using where**
-
-  表示MySQL Server在存储引擎收到记录后进行"后过滤"（Post-filter）。
-
-如果查询未能使用索引，Using where的作用只是提醒我们MySQL将用where子句来过滤结果集。这个一般发生在MySQL服务器，而不是存储引擎层。
-
-**一般发生在不能走索引扫描的情况下或者走索引扫描，但是有些查询条件不在索引当中的情况下。**
-
-注意，Using where过滤元组和执行计划是否走全表扫描或走索引查找没有关系。
-
-Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后进行“后过滤”（Post-filter）。
-
- 不管SQL语句的执行计划是全表扫描（type=ALL)或非唯一性索引扫描（type=ref)。
-
-网上有种说法"Using where：表示优化器需要通过索引回表查询数据" ，上面实验可以证实这种说法完全不正确。
-
 
 
 #### **Using Index**
 
  [覆盖索引](###索引覆盖)：表示直接访问索引就能够获取到所需要的数据（），不需要通过回表查询。
 
-注意：执行计划中的Extra列的“Using index”跟type列的“index”不要混淆。Extra列的“Using index”表示索引覆盖。而type列的“index”表示Full Index Scan。
+注意：执行计划中的`Extra`列的`Using index`跟type列的`index`不要混淆。Extra列的`Using index`表示索引覆盖。而type列的“index”表示Full Index Scan。
 
 
+仅使用索引树中的信息就能获取查询语句的列的信息, 而不必进行其他额外查找（seek）去读取实际的行记录。当查询的列是单个索引的部分的列时, 可以使用此策略。（简单的翻译就是：使用索引来直接获取列的数据，而不需回表）。对于具有用户定义的聚集索引的 InnoDB 表, 即使从Extra列中没有使用索引, 也可以使用该索引。如果type是index并且Key是主键, 则会出现这种情况。
 
 #### **Using Index Condition**
 
-[索引下推](###索引下推ICP)：会先条件过滤索引，过滤完索引后找到所有符合索引条件的数据行，随后用 WHERE 子句中的其他条件去过滤这些数据行；
+[索引下推](###索引下推ICP)：会先条件过滤索引，过滤完索引后找到所有符合索引条件的数据行，随后用`WHERE`子句中的其他条件去过滤这些数据行；
+
+`Index Condition Pushdown`是一种在存储引擎层使用索引过滤数据的一种优化方式。ICP开启时的执行计划含有`Using index condition`标示 ，表示优化器使用了ICP对数据访问进行优化。
+
+当关闭`ICP`时，`Index`仅仅是`data access`的一种访问方式，存储引擎通过索引回表获取的数据会传递到`MySQL Server`层进行`WHERE`条件过滤
+
+当打开`ICP`时，如果部分`WHERE`条件能使用索引中的字段，`MySQL Server`会把这部分下推到引擎层，可以利用`Index`过滤的`WHERE`条件在存储引擎层进行数据过滤,而非将所有通过`Index Access`的结果传递到`MySQL Server`层进行`WHERE`过滤。
+
+
+#### **Using where**
+
+  表示`MySQL Server`在存储引擎收到记录后进行"后过滤"（Post-filter）。
+
+如果查询未能使用索引，`Using where`的作用只是提醒我们`MySQL`将用`where`子句来过滤结果集。这个一般发生在`MySQL`服务器，而不是存储引擎层。
+
+**一般发生在不能走索引扫描的情况下或者走索引扫描，但是有些查询条件不在索引当中的情况下。**
+
+> 注意: `Using where`过滤元组和执行计划是否走全表扫描或走索引查找没有关系。
+
+不管SQL语句的执行计划是全表扫描`type=ALL`或非唯一性索引扫描`type=ref`。
+
+网上有种说法"Using where：表示优化器需要通过索引回表查询数据" ，上面实验可以证实这种说法完全不正确。
 
 
 
-#### 
+所有`SQL`语句皆准的`WHERE`查询条件的提取规则：Index Key (First Key & Last Key)，Index Filter，Table Filter
+
+所有`SQL`语句中的`WHERE`查询条件，最终都会被提取到 `Index Key (First Key & Last Key)`，`Index Filter` 与 `Table Filter` 之中，那么 `where` 条件的应用，其实就是  `Index Key (First Key & Last Key)`，`Index Filter` 与 `Table Filter` 的应用
+
+　`Index First Key`，只是用来定位索引的起始点，因此只在索引第一次`Search Path`(沿着索引B+树的根节点一直遍历，到索引正确的叶节点位置)时使用，只会判断一次
+
+　　`Index Last Key`，用来定位索引的终止点，因此对于起始点之后读到的每一条索引记录，均需要判断是否满足`Index Last Key`，若不满足，则当前查询结束
+
+　　`Index Filter`，用于过滤索引范围中不满足条件的索引项，因此对于索引范围中的每一条索引项，均需要与 `Index Filter` 进行匹对，若不满足 Index Filter 则直接丢弃，继续读取索引下一条记录
+
+　　`Table Filter`，用于过滤不能被索引过滤的条件，此时的索引项已经满足了 `Index First Key` 与 `Index Last Key` 构成的范围，并且满足 `Index Filter` 的条件，但是索引项无法过滤 `Table Filter` 中的条件，所以回表读取完整的数据记录。判断完整记录是否满足`Table Filter`中的查询条件，若不满足，跳过当前记录，继续读取索引项的下一条索引项，若满足，则返回记录，此记录满足了 where 的所有条件，可以返回给客户端
+
+#### Backward index scan
+
+在MySQL中我们创建的索引，默认索引的叶子节点是从小到大排序的，而此时我们降序查询排序时，是从大到小。所以在扫描时，就是反向扫描，就会出现 `Backward index scan`。 在`MySQL8.0`版本中，支持降序索引，我们也可以创建降序索引。
 
 
 
