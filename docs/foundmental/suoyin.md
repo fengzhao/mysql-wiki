@@ -2514,13 +2514,18 @@ SELECT * FROM t1
   WHERE key_part1 = constant
   ORDER BY key_part2;
 
+
+  SELECT * FROM t1
+  WHERE key_part1 > constant
+  ORDER BY key_part1 ASC;
+
 ```
 
 - **Filesort排序，对返回的数据进行排序**
 
-不是通过索引直接返回的已排好序结果的操作都是Filesort排序，也就是说进行了额外的排序操作。
+不是通过索引直接返回的已排好序结果的操作都是`Filesort`排序，也就是说进行了额外的排序操作。
 
-为了获取用于 filesort 操作的内存，优化器会预先分配一个固定大小为`sort_buffer_size`个字节。每个 session 会话可以通过改变这个值来避免过度的内存消耗，或者在必要时分配更多内存。
+为了获取用于 `filesort` 操作的内存，优化器会预先分配一个固定大小为`sort_buffer_size`个字节。每个 `session` 会话可以通过改变这个值来避免过度的内存消耗，或者在必要时分配更多内存。
 
 
 
@@ -2528,7 +2533,7 @@ SELECT * FROM t1
 
   
 
-**其实 MySQL 会给每个线程分配一块内存用于排序，称为 sort_buffer，由sort_buffer_size这个参数控制，默认是256KB**。
+**其实 MySQL 会给每个线程分配一块内存用于排序，称为 sort_buffer，由`sort_buffer_size`这个参数控制，默认是256KB**。
 
 
 
@@ -2540,7 +2545,7 @@ SELECT * FROM t1
 
 
 
-**「全字段排序是指，只要与最终结果集有关的字段都会被放进 sort buffer，而不管该字段本身是否参与排序。」**
+**「全字段排序是指，只要与最终结果集有关的字段都会被放进`sort buffer`，而不管该字段本身是否参与排序。」**
 
 
 
@@ -2559,23 +2564,23 @@ create table 't' (
 select city,name,age from t where city = '杭州' order by name limit 1000;
 ```
 
-为了避免全表扫描，需要在city字段上加上索引
+为了避免全表扫描，需要在`city`字段上加上索引
 
-假设满足`city = '杭州'`条件的行是从ID_X到ID_(X+N)的这些记录。
+假设满足`city = '杭州'`条件的行是从`ID_X`到`ID_(X+N)`的这些记录。
 
 执行流程：
 
-1. 初始化sort_buffer，确定放入name、city、age三个字段;
-2. 从索引city找到第一个满足 `city = '杭州'` 条件的主键id，也就是ID_X;
+1. 初始化sort_buffer，确定放入`name`、`city`、`age`三个字段;
+2. 从索引city找到第一个满足 `city = '杭州'` 条件的主键`id`，其值也就是`ID_X`;
 3. 到主键id索引取出整行，取name、city、age三个字段值，存入sort_buffer;
 4. 从索引city取下一个记录的主键id;
 5. 重复step3、4直到city的值不满足查询条件为止，对应的ID(X+N);
-6. 对sort_buffer中的数据按照字段name做快速排序（MySQL内部使用是的**快排算法**）
+6. 对`sort_buffer`中的数据按照字段`name`做快速排序（MySQL内部使用是的**快排算法**）
 7. 按照排序结果取前1000行返回给客户端
 
 
 > tips，sort_buffer是MySQL分配给每个线程用于排序的内存。
-sort_buffer是MySQL分配给每个线程用于排序的内存。sort_buffer_size是sort_buffer的大小，如果要排序的数据量小于sort_buffer_size，排序就在内存中完成，如果排序数据量过大，就得使用外部文件（一般磁盘临时文件）辅助排序。外部排序一般使用**归并排序算法**。
+`sort_buffer`是MySQL分配给每个线程用于排序的内存。由参数`sort_buffer_size`控制其大小，如果要排序的数据量小于`sort_buffer_size，`排序就在内存中完成，如果排序数据量过大，就得使用外部文件（一般磁盘临时文件）辅助排序。外部排序一般使用**归并排序算法**。
 
 
 简单说，就是通过索引字段查找符合条件的记录之后，然后把结果集需要的全部字段都加载到内存。最后再排序。
