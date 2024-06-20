@@ -1469,12 +1469,20 @@ SELECT * FROM tbl_name  WHERE key1_part1 = 1 AND key1_part2 = 2 AND key2 = 2;
 ```SQL
 SELECT * FROM users WHERE age = 30 OR city = 'Los Angeles';
 ```
-在这个查询中，只要满足age = 30或city = 'Los Angeles’中的任意一个条件，记录就会被选中。MySQL可能会使用并集合并策略，分别扫描age索引和city索引，然后合并结果集，返回满足任一条件的用户记录。
+在这个查询中，只要满足`age = 30`或`city = 'Los Angeles'`中的任意一个条件，记录就会被选中。MySQL可能会使用并集合并策略，分别扫描age索引和city索引，然后合并结果集，返回满足任一条件的用户记录。
 
 
 ### 索引跳跃扫描
 
 以前，索引使用规则有一项是索引左前缀，假如说有一个索引idx_abc(a,b,c)，能用到索引的情况只有查询条件为a、ab、abc、ac这四种，对于只有字段b的where条件是无法用到这个`idx_abcf`索引的。这里再强调一下，这里的顺序并不是在where中字段出现的顺序。
+
+
+MySQL从8.0.13版本开始支持一种新的range scan方式，称为`range-access-skip-scan`。该特性由Facebook贡献。索引跳跃扫描（Index Skip Scan）
+在某些索引查询场景下能够显著提高查询效率。
+
+索引跳跃扫描技术是在使用多列索引查询时，通过跳过一部分索引列而直接进入上下文扫描阶段，以减少扫描的数据行数，从而提高查询效率的一种优化手段。
+
+具体来说，就是通过构建一个覆盖某些索引列的联合索引，然后将查询条件分为两个部分：一部分匹配联合索引的前缀列，一部分匹配联合索引的后缀列。这样就可以跳过索引前缀列扫描，直接进入后缀列扫描，称之为索引跳跃扫描。
 
 ```SQL
 -- 创建了一个t1表，其中主键为(f1,f2)，这里是两个字段。执行完这个sql语句后表里有160条记录
@@ -1500,9 +1508,30 @@ mysql> EXPLAIN SELECT f1, f2 FROM t1 WHERE f2 > 40;
 1 row in set, 1 warning (0.00 sec)
 ```
 
-
+> A range scan is more efficient than a full index scan, but cannot be used in this case because there is no condition on f1, the first index column. However, as of MySQL 8.0.13, the optimizer can perform multiple range scans, one for each value of f1, using a method called Skip Scan that is similar to Loose Index Scan。
 
 https://dev.mysql.com/doc/refman/8.0/en/range-optimization.html#range-access-skip-scan
+
+
+在MySQL内部这个 skip scan 它又是如何执行的呢，我们可以理解以下几步
+
+- 先统计一下索引前缀字段 f1 字段值有几个唯一值，这里一共有1 和2
+- 对其余索引部分上的f2> 40条件的每个不同的前缀值执行子范围扫描
+
+对于详细的执行流程如下：
+
+- 获取f1的第一个唯一值（f1=1)
+- 组合能用到索引的sql语句(f1=1 AND f2>40)
+- 执行组合后的sql语句，进行范围扫描，并将结果放入记录集
+- 重复上面的步骤，获取f1的第二个唯一值(f1=2)
+- 组合能用到索引的sql语句(f1=2 AND f2>40)
+- 执行组合后的sql语句，进行范围扫描，并将结果放入记录集
+- 全部执行完毕，返回记录集给客户端
+
+不错，原理很简单，就是将f1字段拆分成不同的值，将每个值带入到适合左前缀索引的`SQL`语句中，最后再合并记录集并返回即可，类似`UNION`操作。
+
+
+主要还要看左前缀有字段值的分散情况，如果值过多的话，性能还是比较差的。系统会进行全表扫描，这里就需要单独为这个字段创建一个单独的索引。
 
 ## 索引提示(index hint)
 
