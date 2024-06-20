@@ -607,11 +607,11 @@ MySQL 中使用全局变量 `ngram_token_size` 来配置 ngram 中 n 的大小�
 
 ### 降序索引
 
-MySQL8.0开始真正支持降序索引，只有 InnoDB 引擎支持降序索引，且必须是 BTREE 降序索引，MySQL8.0不再对 group by 操作进行隐式排序。
+MySQL8.0开始真正支持降序索引，只有`InnoDB`引擎支持降序索引，且必须是`BTREE`降序索引，`MySQL8.0`不再对 group by 操作进行隐式排序。
 
-MySQL 支持降序索引：索引定义中的 DESC 不再被忽略，而是按降序存储键值。以前，可以以相反的顺序扫描索引，但是会导致性能损失。
+MySQL 支持降序索引：索引定义中的`DESC`不再被忽略，而是按降序存储键值。以前，可以以相反的顺序扫描索引，但是会导致性能损失。
 
-当只有索引只包含一个字段时，无论是使用降序索引还是升序索引，整个查询过程的性能是一样的。
+**当只有索引只包含一个字段时，无论是使用降序索引还是升序索引，整个查询过程的性能是一样的。**
 
 
 
@@ -639,8 +639,6 @@ create index idx_t1_bcd on t1(b asc,c asc,d asc);
 -- asc表示的是升序，使用这种语法创建出来的索引叫做升序索引。也就是我们平时在创建索引的时候，创建的都是升序索引。
 
 
-
-
 -- MySQL8.0
 mysql> show create table slowtech.t1\G
 *************************** 1. row ***************************
@@ -659,7 +657,14 @@ Create Table: CREATE TABLE `t1` (
 
 #### 降序索引的意义
 
-如果一个查询，需要对多个列进行排序，且顺序要求不一致。在这种场景下，要想避免数据库额外的排序- "filesort"，只能使用降序索引。
+当一个查询 SQL，需要按多个字段，以不同的顺序进行排序时，8.0 之前无法使用索引已排序的特性，因为 `order by` 的顺序与索引的顺序不一致，而使用降序索引，就能够指定联合索引中每一个字段的顺序，以适应 `SQL` 语句中的 `order by` 顺序，让 `SQL` 能够充分使用索引已排序的特性，提升 SQL 性能
+
+
+
+对于普通的升序索引，从根节点到叶子节点是升序排列的，所有索引节点从左到右也是升序排列的，但是如果要得到升序索引排在后面的数据(例如主键id字段，默认升序，`select * from test where id < 1000 order by id desc`)，就需要对这个索引逆向查找，就使用了`backward index scan`，这就是基于双向链表的机制。
+
+
+如果一个查询，需要对多个列进行排序，且顺序要求不一致。在这种场景下，要想避免数据库额外的排序-"filesort"，只能使用降序索引。
 
 比如，先按 c1 升序，然后按照 c2 降序
 
@@ -682,13 +687,13 @@ mysql> explain select * from slowtech.t1 order by c1,c2 desc;
 
 
 
-在 MySQL5.7 中，group by 子句会隐式排序。
+在 MySQL5.7 中，`GROUP BY` 子句会隐式排序。
 
-默认情况下 GROUP BY 会隐式排序（即 group by id 后面没有 asc 和 desc 关键字）。但是 group by 自己会排序 
+默认情况下 `GROUP BY` 会隐式排序（即 `GROUP BY id` 后面没有 `ASC/DESC` 关键字）。但是 `group by` 自己会排序 
 
-- 不推荐 **GROUP BY 隐式排序（group by id）**  或**GROUP BY 显式排序( group by id desc)**。
+- 不推荐 **GROUP BY 隐式排序`group by id`**  或**GROUP BY 显式排序`group by id desc`**。
 
-- 要生成给定的排序 ORDER，请提供ORDER BY子句。`group by id order by id `
+- 要生成给定的排序，请提供`ORDER BY`子句。`GROUP BY id ORDER BY id `
 
 ```sql
  CREATE TABLE t (id INTEGER,  cnt INTEGER);
@@ -699,7 +704,7 @@ INSERT INTO t VALUES (4,1),(3,2),(1,4),(2,2),(1,1),(1,5),(2,6),(2,1),(1,3),(3,4)
 
 -- 推荐，5.7和8.0效果一致
 select id, SUM(cnt) from t group by id order by id; 
--- 不推荐  --8.0中不会排序
+-- 不推荐  --8.0中不会排序，结果不保证有序
 select id, SUM(cnt) from t group by id ; 
 -- 不推荐  --8.0中直接报错
 select id, SUM(cnt) from t group by id  asc; 
@@ -1038,7 +1043,7 @@ ALTER TABLE table_name ADD UNIQUE (column);
 
 MRR 要把主键排序，这样之后对磁盘的操作就是由顺序读代替之前的随机读。
 
-从资源的使用情况上来看就是让 CPU 和内存多做点事，来换磁盘的顺序读。然而排序是需要内存的，这块内存的大小就由参数 read_rnd_buffer_size 来控制。
+从资源的使用情况上来看就是让 CPU 和内存多做点事，来换磁盘的顺序读。然而排序是需要内存的，这块内存的大小就由参数`read_rnd_buffer_size`来控制。
 
 MRR在通过二级索引获取到主键ID后，将ID值放入`read_rnd_buffer`中，然后对其进行排序，利用排序后的ID数组遍历主键索引查找记录并返回结果集，优化了回表性能。
 
@@ -1046,7 +1051,7 @@ MRR在通过二级索引获取到主键ID后，将ID值放入`read_rnd_buffer`�
 
 所以不能设置 global 全局变量太大，所以只能客户端自己运行大查询时进行设置。
 
-MRR能够提升性能的核心在于，这条查询语句在索引a上做的是一个范围查询（也就是说，这是一个多值查询），可以得到足够多的主键id。这样通过排序以后，再去主键索引查数据，才能体现出“顺序性”的优势。
+MRR能够提升性能的核心在于，这条查询语句在索引a上做的是一个范围查询（也就是说，这是一个多值查询），可以得到足够多的主键id。这样通过排序以后，再去主键索引查数据，才能体现出"顺序性"的优势。
 
 > MRR 的核心思想就是通过把「随机磁盘读」，转化为「顺序磁盘读」，从而提高了索引查询的性能。本质上是一种用「空间换时间」的做法。
 
@@ -1054,6 +1059,16 @@ MRR能够提升性能的核心在于，这条查询语句在索引a上做的是�
 https://opensource.actionsky.com/20200616-mysql/
 
 
+引申出来的一个经典问题。MySQL中的Innodb总是聚集索引表，或者SqlServer中的聚集表。**非聚集索引为什么要拿聚集索引键（而非物理地址）作为其行指针？**
+
+
+对于聚集表，表中数据的物理位置因为需要保证按聚集索引建有序，同时意味着其真正的物理的`rowid`可能会发生变化（比如聚集索引非线性写入的时候，会导致叶分裂，页分裂会导致原始记录的物理位置变化），此时非聚集索引的行指针`rowid`也要做修改，这样会导致聚集表中的数据发生物理位置变化的时候，非聚集索引也要做相应的变化，如果非聚集索引用对应的聚集索引键做指针的话，就不会发生该问题。
+
+
+postgresql表的数据都是以堆表`heap`的形式存储的，因此`Postgresql`中不存在所谓的聚集索引，同时意味着其记录在物理结构上可以是无序存储，不会产生所谓的页分裂`page split`。
+那么`Postgresql`中的行指针，这里称作`rowid`，正常情况是不会因为新数据的写入导致类似于MySQL或者sqlserver中的页拆分（page split）。
+
+然后再说`Postgresql`的`bitmap scan`，`bitmap scan`的作用就是通过建立位图的方式，将回表过程中对标访问随机性IO的转换为顺行性行为，从而减少查询过程中IO的消耗。
 
 ### **索引覆盖**
 
@@ -2476,21 +2491,25 @@ Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后�
 
 - **通过有序索引顺序扫描直接返回有序数据**
 
-因为索引的数据结构是B+树，索引中的数据是有序的，所以通过where过滤后的结果集如果已经有序，就能避免额外的排序开销操作。
+因为索引的数据结构是B+树，索引中的数据是天然有序的，所以通过where过滤后的结果集如果已经有序，就能避免额外的排序开销操作。
 
 ==使用`EXPLAIN`分析查询时，Extra显示为`Using index`表示用到了索引的排序==
 
 比如这样的例子：
 
 ```SQL
+-- 扫描整个索引回表来查找索引中没有的列，可能比扫描表并对结果进行排序开销更高，可能不会用索引。
+SELECT * FROM t1
+  ORDER BY key_part1, key_part2;
+
 
 -- 索引列(key_part1 , key_part2)
 
---如果是InnoDB表，那么主键也是索引的一部分，这种查询可以使用索引排序
+--如果是InnoDB表，那么主键值也隐含在是索引中，无需回表，这种查询可以使用索引直接排序
 SELECT pk, key_part1, key_part2 FROM t1
   ORDER BY key_part1, key_part2;
 
--- key_part1是常量，所有通过索引访问到的记录都会按照key_part2 来排序，并且如果where子句有足够的选择性使得索引范围扫描比全表扫描开销更小的话，那么覆盖了(key_part1, key_part2)的复合索引就可以避免排序操作。
+-- key_part1是常量，所有通过索引访问到的记录都会按照key_part2来排序，并且如果where子句有足够的选择性使得索引范围扫描比全表扫描开销更小的话，那么覆盖了(key_part1, key_part2)的复合索引就可以避免排序操作。
 SELECT * FROM t1
   WHERE key_part1 = constant
   ORDER BY key_part2;
