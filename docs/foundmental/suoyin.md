@@ -67,8 +67,19 @@
 
 - B+Tree叶子节点是顺序排列的，并且相邻的节点具有顺序引用(有指针)的关系。（提高区间查找访问能力）
 
+
+
+B+ 树与 B 树差异的点，主要是以下这几点：
+
+- 叶子节点（最底部的节点）才会存放实际数据（索引+记录），非叶子节点只会存放索引；
+- 所有索引都会在叶子节点出现，叶子节点之间构成一个有序链表；
+- 非叶子节点的索引也会同时存在在子节点中，并且是在子节点中所有索引的最大（或最小）。
+- 非叶子节点中有多少个子节点，就有多少个索引；
+
 - **B+Tree叶子节点包含所有索引字段**
 
+InnoDB存储引擎最小储存单元是页，一页大小就是16k。
+B+树叶子存的是数据，内部节点存的是键值+指针。索引组织表通过非叶子节点的二分查找法以及指针确定数据在哪个页中，进而再去数据页中找到需要的数据；
 
 
 
@@ -96,6 +107,15 @@ MySQL 最常用存储引擎 InnoDB 和 MyISAM 都不支持 Hash 索引，它们�
 > 自适应hash索引特性使InnoDB能够在具有适当的工作负载和足够的缓冲池内存的系统上执行更像内存中的数据库，而不牺牲事务特性或可靠性。
 
 总的来说就是提高了查询性能。**这里的自适应指的是不需要人工来制定，而是系统根据情况来自动完成的。**
+
+
+哈希hash查找非常快，一般情况下时间复杂度为 O(1)，一般仅需要一次查找就能定位。而 B+ 树的查找次数，取决于 B+ 树的高度，B+ 树的高度一般为 34层，因此便需要查询34次。
+
+`InnoDB`储引擎通过观察表上索引页的查询，如果发现建立哈希索引可以提升查询效率，则会自动建立哈希索引，称之为自适应哈希索引`Adaptive Hash Index`。
+
+`AHI`是基于缓冲池的B+树构造的索引，因此速度非常快，而且不需要对整张表建立索引。`InnoDB`存储引擎会自动根据访问的频率和模式来自动为某些热点页建立哈希索引。
+
+考虑到不同系统的差异，有些系统开启自适应哈希索引可能会导致性能提升不明显，而且为监控索引页查询次数增加了多余的性能损耗，`MySQL5.7`更改了 AHI 实现机制，每个 AHI 都分配了特定分区，每个索引都绑定到特定分区，并且每个分区均受单独的锁存器保护。分区由 `innodb_adaptive_hash_index_parts` 变量控制。默认情况下，`innodb_adaptive_hash_index_parts` 变量值为8，最大值为 512。
 
 那什么情况下才会使用自适应Hash索引呢？如果某个数据经常会访问到，当满足一定条件的时候，就会将这个数据页的地址存放到Hash表中。这样下次查询的时候，就可以直接找到这个页面的所在位置。需要说明的是： 
 
@@ -607,11 +627,11 @@ MySQL 中使用全局变量 `ngram_token_size` 来配置 ngram 中 n 的大小�
 
 ### 降序索引
 
-MySQL8.0开始真正支持降序索引，只有 InnoDB 引擎支持降序索引，且必须是 BTREE 降序索引，MySQL8.0不再对 group by 操作进行隐式排序。
+MySQL8.0开始真正支持降序索引，只有`InnoDB`引擎支持降序索引，且必须是`BTREE`降序索引，`MySQL8.0`不再对 group by 操作进行隐式排序。
 
-MySQL 支持降序索引：索引定义中的 DESC 不再被忽略，而是按降序存储键值。以前，可以以相反的顺序扫描索引，但是会导致性能损失。
+MySQL 支持降序索引：索引定义中的`DESC`不再被忽略，而是按降序存储键值。以前，可以以相反的顺序扫描索引，但是会导致性能损失。
 
-当只有索引只包含一个字段时，无论是使用降序索引还是升序索引，整个查询过程的性能是一样的。
+**当只有索引只包含一个字段时，无论是使用降序索引还是升序索引，整个查询过程的性能是一样的。**
 
 
 
@@ -639,8 +659,6 @@ create index idx_t1_bcd on t1(b asc,c asc,d asc);
 -- asc表示的是升序，使用这种语法创建出来的索引叫做升序索引。也就是我们平时在创建索引的时候，创建的都是升序索引。
 
 
-
-
 -- MySQL8.0
 mysql> show create table slowtech.t1\G
 *************************** 1. row ***************************
@@ -659,7 +677,14 @@ Create Table: CREATE TABLE `t1` (
 
 #### 降序索引的意义
 
-如果一个查询，需要对多个列进行排序，且顺序要求不一致。在这种场景下，要想避免数据库额外的排序- "filesort"，只能使用降序索引。
+当一个查询 SQL，需要按多个字段，以不同的顺序进行排序时，8.0 之前无法使用索引已排序的特性，因为 `order by` 的顺序与索引的顺序不一致，而使用降序索引，就能够指定联合索引中每一个字段的顺序，以适应 `SQL` 语句中的 `order by` 顺序，让 `SQL` 能够充分使用索引已排序的特性，提升 SQL 性能
+
+
+
+对于普通的升序索引，从根节点到叶子节点是升序排列的，所有索引节点从左到右也是升序排列的，但是如果要得到升序索引排在后面的数据(例如主键id字段，默认升序，`select * from test where id < 1000 order by id desc`)，就需要对这个索引逆向查找，就使用了`backward index scan`，这就是基于双向链表的机制。
+
+
+如果一个查询，需要对多个列进行排序，且顺序要求不一致。在这种场景下，要想避免数据库额外的排序-"filesort"，只能使用降序索引。
 
 比如，先按 c1 升序，然后按照 c2 降序
 
@@ -682,13 +707,13 @@ mysql> explain select * from slowtech.t1 order by c1,c2 desc;
 
 
 
-在 MySQL5.7 中，group by 子句会隐式排序。
+在 MySQL5.7 中，`GROUP BY` 子句会隐式排序。
 
-默认情况下 GROUP BY 会隐式排序（即 group by id 后面没有 asc 和 desc 关键字）。但是 group by 自己会排序 
+默认情况下 `GROUP BY` 会隐式排序（即 `GROUP BY id` 后面没有 `ASC/DESC` 关键字）。但是 `group by` 自己会排序 
 
-- 不推荐 **GROUP BY 隐式排序（group by id）**  或**GROUP BY 显式排序( group by id desc)**。
+- 不推荐 **GROUP BY 隐式排序`group by id`**  或**GROUP BY 显式排序`group by id desc`**。
 
-- 要生成给定的排序 ORDER，请提供ORDER BY子句。`group by id order by id `
+- 要生成给定的排序，请提供`ORDER BY`子句。`GROUP BY id ORDER BY id `
 
 ```sql
  CREATE TABLE t (id INTEGER,  cnt INTEGER);
@@ -699,7 +724,7 @@ INSERT INTO t VALUES (4,1),(3,2),(1,4),(2,2),(1,1),(1,5),(2,6),(2,1),(1,3),(3,4)
 
 -- 推荐，5.7和8.0效果一致
 select id, SUM(cnt) from t group by id order by id; 
--- 不推荐  --8.0中不会排序
+-- 不推荐  --8.0中不会排序，结果不保证有序
 select id, SUM(cnt) from t group by id ; 
 -- 不推荐  --8.0中直接报错
 select id, SUM(cnt) from t group by id  asc; 
@@ -900,7 +925,7 @@ alter table T engine=InnoDB;
 
 ### 索引扩展
 
-MySQL InnoDB的二级索引（Secondary Index）会自动补齐主键，将主键列追加到二级索引列后面。
+`InnoDB`的二级索引（Secondary Index）会自动补齐主键，将主键列追加到二级索引列后面。
 
 InnoDB的二级索引（Secondary Index）除了存储索引列key值，还存储着主键的值(而不是指向主键的指针)。
 
@@ -1038,7 +1063,7 @@ ALTER TABLE table_name ADD UNIQUE (column);
 
 MRR 要把主键排序，这样之后对磁盘的操作就是由顺序读代替之前的随机读。
 
-从资源的使用情况上来看就是让 CPU 和内存多做点事，来换磁盘的顺序读。然而排序是需要内存的，这块内存的大小就由参数 read_rnd_buffer_size 来控制。
+从资源的使用情况上来看就是让 CPU 和内存多做点事，来换磁盘的顺序读。然而排序是需要内存的，这块内存的大小就由参数`read_rnd_buffer_size`来控制。
 
 MRR在通过二级索引获取到主键ID后，将ID值放入`read_rnd_buffer`中，然后对其进行排序，利用排序后的ID数组遍历主键索引查找记录并返回结果集，优化了回表性能。
 
@@ -1046,7 +1071,7 @@ MRR在通过二级索引获取到主键ID后，将ID值放入`read_rnd_buffer`�
 
 所以不能设置 global 全局变量太大，所以只能客户端自己运行大查询时进行设置。
 
-MRR能够提升性能的核心在于，这条查询语句在索引a上做的是一个范围查询（也就是说，这是一个多值查询），可以得到足够多的主键id。这样通过排序以后，再去主键索引查数据，才能体现出“顺序性”的优势。
+MRR能够提升性能的核心在于，这条查询语句在索引a上做的是一个范围查询（也就是说，这是一个多值查询），可以得到足够多的主键id。这样通过排序以后，再去主键索引查数据，才能体现出"顺序性"的优势。
 
 > MRR 的核心思想就是通过把「随机磁盘读」，转化为「顺序磁盘读」，从而提高了索引查询的性能。本质上是一种用「空间换时间」的做法。
 
@@ -1054,6 +1079,16 @@ MRR能够提升性能的核心在于，这条查询语句在索引a上做的是�
 https://opensource.actionsky.com/20200616-mysql/
 
 
+引申出来的一个经典问题。MySQL中的Innodb总是聚集索引表，或者SqlServer中的聚集表。**非聚集索引为什么要拿聚集索引键（而非物理地址）作为其行指针？**
+
+
+对于聚集表，表中数据的物理位置因为需要保证按聚集索引建有序，同时意味着其真正的物理的`rowid`可能会发生变化（比如聚集索引非线性写入的时候，会导致叶分裂，页分裂会导致原始记录的物理位置变化），此时非聚集索引的行指针`rowid`也要做修改，这样会导致聚集表中的数据发生物理位置变化的时候，非聚集索引也要做相应的变化，如果非聚集索引用对应的聚集索引键做指针的话，就不会发生该问题。
+
+
+postgresql表的数据都是以堆表`heap`的形式存储的，因此`Postgresql`中不存在所谓的聚集索引，同时意味着其记录在物理结构上可以是无序存储，不会产生所谓的页分裂`page split`。
+那么`Postgresql`中的行指针，这里称作`rowid`，正常情况是不会因为新数据的写入导致类似于MySQL或者sqlserver中的页拆分（page split）。
+
+然后再说`Postgresql`的`bitmap scan`，`bitmap scan`的作用就是通过建立位图的方式，将回表过程中对标访问随机性IO的转换为顺行性行为，从而减少查询过程中IO的消耗。
 
 ### **索引覆盖**
 
@@ -1423,7 +1458,7 @@ SELECT * FROM t1, t2
 
 
 
-### index merge intersection access algorithm（索引合并-交集访问算法）
+#### index merge intersection access algorithm（索引合并-交集访问算法）
 
 对于每一个使用到的索引进行查询，查询主键值集合，然后进行合并，求交集，也就是 AND 运算。下面是使用到该算法的两种必要条件：
 
@@ -1449,7 +1484,7 @@ SELECT * FROM tbl_name  WHERE key1_part1 = 1 AND key1_part2 = 2 AND key2 = 2;
 ```
 
 
-### index merge union access algorithm（索引合并并集访问算法）
+#### index merge union access algorithm（索引合并并集访问算法）
 
 在某些情况下，查询可能只需要满足多个条件中的任意一个（使用 OR 连接）。MySQL会分别扫描这些索引，然后取结果的并集。
 
@@ -1457,10 +1492,69 @@ SELECT * FROM tbl_name  WHERE key1_part1 = 1 AND key1_part2 = 2 AND key2 = 2;
 ```SQL
 SELECT * FROM users WHERE age = 30 OR city = 'Los Angeles';
 ```
-在这个查询中，只要满足age = 30或city = 'Los Angeles’中的任意一个条件，记录就会被选中。MySQL可能会使用并集合并策略，分别扫描age索引和city索引，然后合并结果集，返回满足任一条件的用户记录。
+在这个查询中，只要满足`age = 30`或`city = 'Los Angeles'`中的任意一个条件，记录就会被选中。MySQL可能会使用并集合并策略，分别扫描age索引和city索引，然后合并结果集，返回满足任一条件的用户记录。
 
 
+### 索引跳跃扫描
 
+以前，索引使用规则有一项是索引左前缀，假如说有一个索引idx_abc(a,b,c)，能用到索引的情况只有查询条件为a、ab、abc、ac这四种，对于只有字段b的where条件是无法用到这个`idx_abcf`索引的。这里再强调一下，这里的顺序并不是在where中字段出现的顺序。
+
+
+MySQL从8.0.13版本开始支持一种新的range scan方式，称为`range-access-skip-scan`。该特性由Facebook贡献。索引跳跃扫描（Index Skip Scan）
+在某些索引查询场景下能够显著提高查询效率。
+
+索引跳跃扫描技术是在使用多列索引查询时，通过跳过一部分索引列而直接进入上下文扫描阶段，以减少扫描的数据行数，从而提高查询效率的一种优化手段。
+
+具体来说，就是通过构建一个覆盖某些索引列的联合索引，然后将查询条件分为两个部分：一部分匹配联合索引的前缀列，一部分匹配联合索引的后缀列。这样就可以跳过索引前缀列扫描，直接进入后缀列扫描，称之为索引跳跃扫描。
+
+```SQL
+-- 创建了一个t1表，其中主键为(f1,f2)，这里是两个字段。执行完这个sql语句后表里有160条记录
+CREATE TABLE t1 (f1 INT NOT NULL, f2 INT NOT NULL, PRIMARY KEY(f1, f2));
+INSERT INTO t1 VALUES
+  (1,1), (1,2), (1,3), (1,4), (1,5),
+  (2,1), (2,2), (2,3), (2,4), (2,5);
+INSERT INTO t1 SELECT f1, f2 + 5 FROM t1;
+INSERT INTO t1 SELECT f1, f2 + 10 FROM t1;
+INSERT INTO t1 SELECT f1, f2 + 20 FROM t1;
+INSERT INTO t1 SELECT f1, f2 + 40 FROM t1;
+ANALYZE TABLE t1;
+
+EXPLAIN SELECT f1, f2 FROM t1 WHERE f2 > 40;
+
+
+mysql> EXPLAIN SELECT f1, f2 FROM t1 WHERE f2 > 40;
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------+
+| id | select_type | table | partitions | type  | possible_keys | key     | key_len | ref  | rows | filtered | Extra                                  |
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------+
+|  1 | SIMPLE      | t1    | NULL       | range | PRIMARY       | PRIMARY | 8       | NULL |   53 |   100.00 | Using where; Using index for skip scan |
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+> A range scan is more efficient than a full index scan, but cannot be used in this case because there is no condition on f1, the first index column. However, as of MySQL 8.0.13, the optimizer can perform multiple range scans, one for each value of f1, using a method called Skip Scan that is similar to Loose Index Scan。
+
+https://dev.mysql.com/doc/refman/8.0/en/range-optimization.html#range-access-skip-scan
+
+
+在MySQL内部这个 skip scan 它又是如何执行的呢，我们可以理解以下几步
+
+- 先统计一下索引前缀字段 f1 字段值有几个唯一值，这里一共有1 和2
+- 对其余索引部分上的f2> 40条件的每个不同的前缀值执行子范围扫描
+
+对于详细的执行流程如下：
+
+- 获取f1的第一个唯一值（f1=1)
+- 组合能用到索引的sql语句(f1=1 AND f2>40)
+- 执行组合后的sql语句，进行范围扫描，并将结果放入记录集
+- 重复上面的步骤，获取f1的第二个唯一值(f1=2)
+- 组合能用到索引的sql语句(f1=2 AND f2>40)
+- 执行组合后的sql语句，进行范围扫描，并将结果放入记录集
+- 全部执行完毕，返回记录集给客户端
+
+不错，原理很简单，就是将f1字段拆分成不同的值，将每个值带入到适合左前缀索引的`SQL`语句中，最后再合并记录集并返回即可，类似`UNION`操作。
+
+
+主要还要看左前缀有字段值的分散情况，如果值过多的话，性能还是比较差的。系统会进行全表扫描，这里就需要单独为这个字段创建一个单独的索引。
 
 ## 索引提示(index hint)
 
@@ -2204,16 +2298,16 @@ explain select count(*) from t1  join t2 on  t1.id != t2.id
 
 # MySQL 执行计划
 
-在MySQL中，我们可以通过 **EXPLAIN** 命令获取MySQL如何执行 SELECT 语句的信息，包括在 SELECT 语句执行过程中表如何连接和连接的顺序。
+在MySQL中，我们可以通过 **EXPLAIN** 命令获取`MySQL`如何执行`SELECT`语句的信息，包括在`SELECT`语句执行过程中表如何连接和连接的顺序。
 
-Explain 可以使用在` SELECT, DELETE, INSERT, REPLACE, and UPDATE` 语句中，执行的结果会在每一行显示用到的每一个表的详细信息。
+EXPLAIN 可以使用在` SELECT, DELETE, INSERT, REPLACE, and UPDATE` 语句中，执行的结果会在每一行显示用到的每一个表的详细信息。
 
 
 
 简单语句可能结果就只有一行，但是复杂的查询语句会有很多行数据。
 
 
-MySQL 8.0.18 推荐使用 EXPLAIN ANALYZE，该语句可以输出语句的执行时间和以下信息:
+`MySQL 8.0.16`引入一个实验特性：`explain format=tree` ，树状的输出执行过程，以及预估成本和预估返回行数。在 `MySQL 8.0.18` 又引入了 `EXPLAIN ANALYZE`，在 `format=tree` 基础上，使用时，会执行 SQL ，并输出迭代器（感觉这里用算子更容易理解）相关的实际信息，比如执行成本、返回行数、执行时间，循环次数。
 
 
 - 预计执行时间
@@ -2223,13 +2317,14 @@ MySQL 8.0.18 推荐使用 EXPLAIN ANALYZE，该语句可以输出语句的执行
 - 迭代器返回的行数
 - 执行循环的次数
 
-查询信息以 TREE 的形式输出，每个节点代表一个迭代器。EXPLAIN ANALYZE 可以用于 SELECT 语句，以及多表的 UPDATE 和 DELETE 语句，MySQL 8.0.19 以后也可以用于 TABLE 语句。EXPLAIN ANALYZE 不能使用 FOR CONNECTION 。MySQL 8.0.20 以后可以通过 KILL QUERY 或 CTRL-C 终止该语句的执行。
+查询信息以 TREE 的形式输出，每个节点代表一个迭代器。`EXPLAIN ANALYZE` 可以用于 SELECT 语句，以及多表的 `UPDATE` 和 `DELETE` 语句，`MySQL 8.0.19` 以后也可以用于 `TABLE` 语句。`EXPLAIN ANALYZE` 不能使用 `FOR CONNECTION` 。`MySQL 8.0.20` 以后可以通过 `KILL QUERY` 或 `CTRL-C` 终止该语句的执行。
+
+与传统的执行计划相比，展示了比较清晰的执行过程。而 `explain analyze` 则会在此基础上多输出实际的执行时间、返回行数和循环次数。
 
 
+### `EXPLAIN` 的使用
 
-### `Explain` 的使用
-
-在 SQL 语句前面加上 `explain `，如：` EXPLAIN SELECT * FROM a;`
+在 SQL 语句前面加上 `EXPLAIN`，如：` EXPLAIN SELECT * FROM a;`
 
 
 ```SQL
@@ -2300,12 +2395,13 @@ id, select_type, table, partitions, type, possible_keys, key, key_len, ref, rows
 
 表示MySQL在表中找到所需行的方式，或者叫访问类型。常见访问类型如下，从上到下，性能由差到最好：
 
-|         ALL         |         全表扫描         | 一般是没有where条件或者where条件没有使用索引的查询语句       |
-| :-----------------: | :----------------------: | ------------------------------------------------------------ |
+|         TYPE         |         访问类型         | 一般是没有where条件或者where条件没有使用索引的查询语句       |
+| :-----------------: | :----------------------: | -------------------------------------------------- |
+|         **ALL**     |         **全表扫描**     | **一般是没有where条件或者where条件没有使用索引的查询语句**       |
 |      **index**      |      **索引全扫描**      | **MySQL遍历整个索引来查询匹配行，并不会扫描表，一般是查询的字段有索引的语句** |
 |      **range**      |     **索引范围扫描**     | **索引范围扫描，常用于对索引字段进行 <、<=、>、>=、between等查询操作**          |
 | **index_subquery**  |      **索引子查询**      |                                                              |
-| **unique_subquery** |    **唯一索引子查询**    |   value IN (SELECT primary_key FROM single_table WHERE some_expr)                                                           |
+| **unique_subquery** |    **唯一索引子查询**    | value IN (SELECT primary_key FROM single_table WHERE some_expr)    |
 |   **index_merge**   |       **索引合并**       |                                                              |
 |   **ref_or_null**   |                          |                                                              |
 |    **fulltext**     |     **全文索引扫描**     |                                                              |
@@ -2434,39 +2530,59 @@ Extra 描述了MySQL内部如何进行额外的处理。
 
 
 
-#### **Using where**
-
-  表示MySQL Server在存储引擎收到记录后进行"后过滤"（Post-filter）。
-
-如果查询未能使用索引，Using where的作用只是提醒我们MySQL将用where子句来过滤结果集。这个一般发生在MySQL服务器，而不是存储引擎层。
-
-**一般发生在不能走索引扫描的情况下或者走索引扫描，但是有些查询条件不在索引当中的情况下。**
-
-注意，Using where过滤元组和执行计划是否走全表扫描或走索引查找没有关系。
-
-Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后进行“后过滤”（Post-filter）。
-
- 不管SQL语句的执行计划是全表扫描（type=ALL)或非唯一性索引扫描（type=ref)。
-
-网上有种说法"Using where：表示优化器需要通过索引回表查询数据" ，上面实验可以证实这种说法完全不正确。
-
 
 
 #### **Using Index**
 
  [覆盖索引](###索引覆盖)：表示直接访问索引就能够获取到所需要的数据（），不需要通过回表查询。
 
-注意：执行计划中的Extra列的“Using index”跟type列的“index”不要混淆。Extra列的“Using index”表示索引覆盖。而type列的“index”表示Full Index Scan。
+注意：执行计划中的`Extra`列的`Using index`跟type列的`index`不要混淆。Extra列的`Using index`表示索引覆盖。而type列的“index”表示Full Index Scan。
 
 
+仅使用索引树中的信息就能获取查询语句的列的信息, 而不必进行其他额外查找（seek）去读取实际的行记录。当查询的列是单个索引的部分的列时, 可以使用此策略。（简单的翻译就是：使用索引来直接获取列的数据，而不需回表）。对于具有用户定义的聚集索引的 InnoDB 表, 即使从Extra列中没有使用索引, 也可以使用该索引。如果type是index并且Key是主键, 则会出现这种情况。
 
 #### **Using Index Condition**
 
-[索引下推](###索引下推ICP)：会先条件过滤索引，过滤完索引后找到所有符合索引条件的数据行，随后用 WHERE 子句中的其他条件去过滤这些数据行；
+[索引下推](###索引下推ICP)：会先条件过滤索引，过滤完索引后找到所有符合索引条件的数据行，随后用`WHERE`子句中的其他条件去过滤这些数据行；
+
+`Index Condition Pushdown`是一种在存储引擎层使用索引过滤数据的一种优化方式。ICP开启时的执行计划含有`Using index condition`标示 ，表示优化器使用了ICP对数据访问进行优化。
+
+当关闭`ICP`时，`Index`仅仅是`data access`的一种访问方式，存储引擎通过索引回表获取的数据会传递到`MySQL Server`层进行`WHERE`条件过滤
+
+当打开`ICP`时，如果部分`WHERE`条件能使用索引中的字段，`MySQL Server`会把这部分下推到引擎层，可以利用`Index`过滤的`WHERE`条件在存储引擎层进行数据过滤,而非将所有通过`Index Access`的结果传递到`MySQL Server`层进行`WHERE`过滤。
+
+
+#### **Using where**
+
+  表示`MySQL Server`在存储引擎收到记录后进行"后过滤"（Post-filter）。
+
+如果查询未能使用索引，`Using where`的作用只是提醒我们`MySQL`将用`where`子句来过滤结果集。这个一般发生在`MySQL`服务器，而不是存储引擎层。
+
+**一般发生在不能走索引扫描的情况下或者走索引扫描，但是有些查询条件不在索引当中的情况下。**
+
+> 注意: `Using where`过滤元组和执行计划是否走全表扫描或走索引查找没有关系。
+
+不管SQL语句的执行计划是全表扫描`type=ALL`或非唯一性索引扫描`type=ref`。
+
+网上有种说法"Using where：表示优化器需要通过索引回表查询数据" ，上面实验可以证实这种说法完全不正确。
 
 
 
-#### 
+所有`SQL`语句皆准的`WHERE`查询条件的提取规则：Index Key (First Key & Last Key)，Index Filter，Table Filter
+
+所有`SQL`语句中的`WHERE`查询条件，最终都会被提取到 `Index Key (First Key & Last Key)`，`Index Filter` 与 `Table Filter` 之中，那么 `where` 条件的应用，其实就是  `Index Key (First Key & Last Key)`，`Index Filter` 与 `Table Filter` 的应用
+
+　`Index First Key`，只是用来定位索引的起始点，因此只在索引第一次`Search Path`(沿着索引B+树的根节点一直遍历，到索引正确的叶节点位置)时使用，只会判断一次
+
+　　`Index Last Key`，用来定位索引的终止点，因此对于起始点之后读到的每一条索引记录，均需要判断是否满足`Index Last Key`，若不满足，则当前查询结束
+
+　　`Index Filter`，用于过滤索引范围中不满足条件的索引项，因此对于索引范围中的每一条索引项，均需要与 `Index Filter` 进行匹对，若不满足 Index Filter 则直接丢弃，继续读取索引下一条记录
+
+　　`Table Filter`，用于过滤不能被索引过滤的条件，此时的索引项已经满足了 `Index First Key` 与 `Index Last Key` 构成的范围，并且满足 `Index Filter` 的条件，但是索引项无法过滤 `Table Filter` 中的条件，所以回表读取完整的数据记录。判断完整记录是否满足`Table Filter`中的查询条件，若不满足，跳过当前记录，继续读取索引项的下一条索引项，若满足，则返回记录，此记录满足了 where 的所有条件，可以返回给客户端
+
+#### Backward index scan
+
+在MySQL中我们创建的索引，默认索引的叶子节点是从小到大排序的，而此时我们降序查询排序时，是从大到小。所以在扫描时，就是反向扫描，就会出现 `Backward index scan`。 在`MySQL8.0`版本中，支持降序索引，我们也可以创建降序索引。
 
 
 
@@ -2479,32 +2595,41 @@ Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后�
 
 - **通过有序索引顺序扫描直接返回有序数据**
 
-因为索引的数据结构是B+树，索引中的数据是有序的，所以通过where过滤后的结果集如果已经有序，就能避免额外的排序开销操作。
+因为索引的数据结构是B+树，索引中的数据是天然有序的，所以通过where过滤后的结果集如果已经有序，就能避免额外的排序开销操作。
 
 ==使用`EXPLAIN`分析查询时，Extra显示为`Using index`表示用到了索引的排序==
 
 比如这样的例子：
 
 ```SQL
+-- 扫描整个索引回表来查找索引中没有的列，可能比扫描表并对结果进行排序开销更高，可能不会用索引。
+SELECT * FROM t1
+  ORDER BY key_part1, key_part2;
+
 
 -- 索引列(key_part1 , key_part2)
 
---如果是InnoDB表，那么主键也是索引的一部分，这种查询可以使用索引排序
+--如果是InnoDB表，那么主键值也隐含在是索引中，无需回表，这种查询可以使用索引直接排序
 SELECT pk, key_part1, key_part2 FROM t1
   ORDER BY key_part1, key_part2;
 
--- key_part1是常量，所有通过索引访问到的记录都会按照key_part2 来排序，并且如果where子句有足够的选择性使得索引范围扫描比全表扫描开销更小的话，那么覆盖了(key_part1, key_part2)的复合索引就可以避免排序操作。
+-- key_part1是常量，所有通过索引访问到的记录都会按照key_part2来排序，并且如果where子句有足够的选择性使得索引范围扫描比全表扫描开销更小的话，那么覆盖了(key_part1, key_part2)的复合索引就可以避免排序操作。
 SELECT * FROM t1
   WHERE key_part1 = constant
   ORDER BY key_part2;
+
+
+  SELECT * FROM t1
+  WHERE key_part1 > constant
+  ORDER BY key_part1 ASC;
 
 ```
 
 - **Filesort排序，对返回的数据进行排序**
 
-不是通过索引直接返回的已排好序结果的操作都是Filesort排序，也就是说进行了额外的排序操作。
+不是通过索引直接返回的已排好序结果的操作都是`Filesort`排序，也就是说进行了额外的排序操作。
 
-为了获取用于 filesort 操作的内存，优化器会预先分配一个固定大小为`sort_buffer_size`个字节。每个 session 会话可以通过改变这个值来避免过度的内存消耗，或者在必要时分配更多内存。
+为了获取用于 `filesort` 操作的内存，优化器会预先分配一个固定大小为`sort_buffer_size`个字节。每个 `session` 会话可以通过改变这个值来避免过度的内存消耗，或者在必要时分配更多内存。
 
 
 
@@ -2512,7 +2637,7 @@ SELECT * FROM t1
 
   
 
-**其实 MySQL 会给每个线程分配一块内存用于排序，称为 sort_buffer，由sort_buffer_size这个参数控制，默认是256KB**。
+**其实 MySQL 会给每个线程分配一块内存用于排序，称为 sort_buffer，由`sort_buffer_size`这个参数控制，默认是256KB**。
 
 
 
@@ -2520,11 +2645,11 @@ SELECT * FROM t1
 
 
 
-### 全字段排序
+### 全字段排序/单路排序
 
 
 
-**「全字段排序是指，只要与最终结果集有关的字段都会被放进 sort buffer，而不管该字段本身是否参与排序。」**
+**「全字段排序是指，只要与最终结果集有关的字段都会被放进`sort buffer`，而不管该字段本身是否参与排序。」**
 
 
 
@@ -2543,23 +2668,23 @@ create table 't' (
 select city,name,age from t where city = '杭州' order by name limit 1000;
 ```
 
-为了避免全表扫描，需要在city字段上加上索引
+为了避免全表扫描，需要在`city`字段上加上索引
 
-假设满足`city = '杭州'`条件的行是从ID_X到ID_(X+N)的这些记录。
+假设满足`city = '杭州'`条件的行是从`ID_X`到`ID_(X+N)`的这些记录。
 
 执行流程：
 
-1. 初始化sort_buffer，确定放入name、city、age三个字段;
-2. 从索引city找到第一个满足 `city = '杭州'` 条件的主键id，也就是ID_X;
+1. 初始化sort_buffer，确定放入`name`、`city`、`age`三个字段;
+2. 从索引city找到第一个满足 `city = '杭州'` 条件的主键`id`，其值也就是`ID_X`;
 3. 到主键id索引取出整行，取name、city、age三个字段值，存入sort_buffer;
 4. 从索引city取下一个记录的主键id;
 5. 重复step3、4直到city的值不满足查询条件为止，对应的ID(X+N);
-6. 对sort_buffer中的数据按照字段name做快速排序（MySQL内部使用是的**快排算法**）
+6. 对`sort_buffer`中的数据按照字段`name`做快速排序（MySQL内部使用是的**快排算法**）
 7. 按照排序结果取前1000行返回给客户端
 
 
 > tips，sort_buffer是MySQL分配给每个线程用于排序的内存。
-sort_buffer是MySQL分配给每个线程用于排序的内存。sort_buffer_size是sort_buffer的大小，如果要排序的数据量小于sort_buffer_size，排序就在内存中完成，如果排序数据量过大，就得使用外部文件（一般磁盘临时文件）辅助排序。外部排序一般使用**归并排序算法**。
+`sort_buffer`是MySQL分配给每个线程用于排序的内存。由参数`sort_buffer_size`控制其大小，如果要排序的数据量小于`sort_buffer_size，`排序就在内存中完成，如果排序数据量过大，就得使用外部文件（一般磁盘临时文件）辅助排序。外部排序一般使用**归并排序算法**。
 
 
 简单说，就是通过索引字段查找符合条件的记录之后，然后把结果集需要的全部字段都加载到内存。最后再排序。
@@ -2576,7 +2701,7 @@ sort_buffer是MySQL分配给每个线程用于排序的内存。sort_buffer_size
 
 
 
-### rowid排序
+### rowid排序/双路排序
 
 rowId 就是 MySQL 对每行数据的唯一标识符。
 
@@ -2621,7 +2746,7 @@ rowId 排序全过程：
 
 ### 优先队列排序
 
-无论是使用全字段排序还是 rowId 排序，都不可避免了对所有符合 WHRER 条件的数据进行了排序。如果我们还搭配着 LIMIT 使用呢？
+无论是使用全字段排序还是 `rowId` 排序，都不可避免了对所有符合 `WHRER` 条件的数据进行了排序。如果我们还搭配着 LIMIT 使用呢？
 
 例如我们在排序语句后添加 LIMIT 3 ，哪怕查出来的数据有 10W 行，我们也只需要前 3 行有序。
 
@@ -2635,13 +2760,13 @@ rowId 排序全过程：
 
 ### 如何选择?
 
-现在我们知道有全字段排序和 rowId 排序，那么 MySQL 是如何在这两种排序方案中做选择呢？
+现在我们知道有全字段排序和 `rowId` 排序，那么 `MySQL` 是如何在这两种排序方案中做选择呢？
 
-由于 rowId 排序相对于全字段排序，不可避免的多了一次回表操作，回表操作意味着随机读，而随机 IO 是数据库中最昂贵的操作。
+由于 `rowId` 排序相对于全字段排序，不可避免的多了一次回表操作，回表操作意味着随机读，而随机 IO 是数据库中最昂贵的操作。
 
-所以 MySQL 会在尽可能的情况下选择全字段排序。
+所以 `MySQL` 会在尽可能的情况下选择全字段排序。
 
-那么什么情况下 MySQL 会选择 rowId 排序呢，是否有具体的值可以量度？
+那么什么情况下 `MySQL` 会选择 `rowId` 排序呢，是否有具体的值可以量度？
 
 
 
@@ -2650,9 +2775,14 @@ rowId 排序全过程：
 
 当单行数据长度超过该值，MySQL 就会觉得如果还用全字段排序，会导致 sort buffer 容纳下的行数太少，从而转为使用 rowId 排序。
 
-==max_length_for_sort_data 只对8.0.20之前的有效==
+`max_length_for_sort_data`是为了让MySQL选择`< sort_key, rowid >`还是`< sort_key, additional_fields >`的模式。
 
-如果你使用的是其之后的版本，那么无论怎么修改 max_length_for_sort_data 
+==由于优化器的修改，导致该参数不再起作用，在8.0.20版本被废弃。max_length_for_sort_data 只对8.0.20之前的有效==
+
+
+那如果需要排序的字段长度很大或者当不得不对text、blob列进行排序时，会怎么样呢？
+
+通过`max_sort_length`参数用于设置排序时字符串的最大长度。如果排序的字符串长度超过了该参数设置的长度，则会被截断。该参数默认值为1024。
 
 大部分正常情况下 MySQL 就两种排序方式。如果 sort_buffer_size 够用，那么就在内存中使用快速排序完成排序。
 
