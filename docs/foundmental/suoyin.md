@@ -641,7 +641,7 @@ select id, SUM(cnt) from t group by id  asc;
 https://dev.mysql.com/blog-archive/removal-of-implicit-and-explicit-sorting-for-group-by/
 ```
 
-要对一组数据进行分组，MySQL 优化器会选择不同的方法。其中之一是分组之前对数据排序。这使得连续分组变得很容易。
+<span style="color:blue"> 要对一组数据进行分组，MySQL 优化器会选择不同的方法。其中之一是分组之前对数据排序。这使得连续分组变得很容易。</span>
 
 如果已经有一个索引可用于获取排序的数据，那么使用它的成本会非常低廉。如果没有索引，MySQL 优化器仍然可以决定在分组之前进行外部（filesort）排序。
 
