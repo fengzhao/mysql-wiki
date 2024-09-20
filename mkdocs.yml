@@ -124,7 +124,8 @@ nav:
           - "2.InnoDB——简介": advanced/2.InnoDB——简介.md
           - "3.InnoDB关键特性": advanced/3.InnoDB——关键特性.md
           - "4.InnoDB内存结构——缓冲池": advanced/4.InnoDB内存结构——缓冲池.md
-      - "OLAP": 
+          - "5.搭建MySQL源代码调试debug环境": advanced/5.MySQL源代码调试环境.md
+      - "OLAP":
           - "1.0.OLAP概述": olap/01.OLAP概述.md
       - "使用 PyCharm 远程开发": dev/pycharm-remote-development.md
       - "Ansible 调试":
@@ -161,11 +162,11 @@ nav:
   - "MySQL调优":
       #- "Ansible 架构": dev/ansible-architecture.md
       - "调优概述": optimize/1.overview.md
-      - "数据大小": optimize/many_tables.md     
-      
+      - "数据大小": optimize/many_tables.md
+
       - "Ansible Awx": ui/awx.md
       - "数据库结构调优": optimize/.md
-      
+
   - "PostgreSQL":
       - "0. PostgreSQL简介": postgresql/01.postgresql简介.md
       - "1. PogreSQL安装": postgresql/02.postgresql安装.md
@@ -174,7 +175,6 @@ nav:
       - "4. 常用SQL": postgresql/05.常用SQL.md
 
       - "4. 继承": postgresql/05.继承表.md
-
 
   - "MongoDB":
       - "0. MongoDB概述": mongodb/01.简介.md
@@ -191,7 +191,6 @@ nav:
           - kerberos-server: roles/auth/kerberos-server.md
           - openldap: roles/auth/openldap.md
 
-
   - "算法":
       - "0. 算法概述": 算法/01.算法和数据结构概述.md
       - "2. redis客户端": redis/02.redis客户端.md
@@ -199,12 +198,6 @@ nav:
           - kerberos-client: roles/auth/kerberos-client.md
           - kerberos-server: roles/auth/kerberos-server.md
           - openldap: roles/auth/openldap.md
-
-
-
-
-
-
 
 extra_css:
   - stylesheets/extra.css
