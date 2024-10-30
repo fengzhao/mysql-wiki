@@ -127,9 +127,8 @@ nav:
           - "5.搭建MySQL源代码调试debug环境": advanced/5.MySQL源代码调试环境.md
       - "OLAP":
           - "1.0.OLAP概述": olap/01.OLAP概述.md
-      - "使用 PyCharm 远程开发": dev/pycharm-remote-development.md
-      - "Ansible 调试":
-          - "详细输出": dev/debug/verbose-debug.md
+      - "MySQL协议分析":
+          - "1.协议分析概述": foundmental/1.MySQL协议分析与抓包概述.md
           - "pdb 本地调试": dev/debug/pdb.md
           - "PyCharm 远程调试": dev/debug/pycharm.md
           - "模块调试": dev/debug/module-debug.md
