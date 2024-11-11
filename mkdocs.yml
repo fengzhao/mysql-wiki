@@ -86,7 +86,7 @@ nav:
       - "10. 数据库事务和锁": basic/10.sql-Transaction.md
       - "11. Facts 数据": basic/Facts.md
       - "12. MySQL内存概述": basic/12.MySQL内存概述.md
-      - "13. 条件判断与循环": basic/Conditionals-loop.md
+      - "13. MySQL数据字典": basic/14.MySQL数据字典.md
       - "14. Blocks": basic/Blocks.md
       - "15. Playbook 高级特性": basic/Playbook-features.md
       - "扩展阅读(深入必读)":
