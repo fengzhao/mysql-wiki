@@ -793,6 +793,9 @@ B+TREE 索引的三大性质：有序性，非空性，连续性
 
 ![IOT](./image-1.png)
 
+https://blog.csdn.net/xuejianxinokok/article/details/118354964?spm=1001.2014.3001.5502
+
+
 ### 聚集索引(clustered index)
 
 **innodb 表中的主键，就是聚簇索引（或者说聚集索引）。**
