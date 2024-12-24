@@ -1383,9 +1383,10 @@ SELECT * FROM users WHERE age = 30 OR city = 'Los Angeles';
 
 ### 索引跳跃扫描
 
-以前，索引使用规则有一项是索引左前缀，假如说有一个索引 idx_abc(a,b,c)，能用到索引的情况只有查询条件为 a、ab、abc、ac 这四种，对于只有字段 b 的 where 条件是无法用到这个`idx_abcf`索引的。这里再强调一下，这里的顺序并不是在 where 中字段出现的顺序。
+回顾一下 **联合索引最左前缀** ：假设有一个索引 idx_abc(a,b,c)，能用到索引的情况只有查询条件为 a、ab、abc、ac 这四种，对于只有字段 b 的 where 条件是无法用到这个`idx_abcf`索引的。这里再强调一下，这里的顺序并不是在 where 中字段出现的顺序。
 
-MySQL 从 8.0.13 版本开始支持一种新的 range scan 方式，称为`range-access-skip-scan`。该特性由 Facebook 贡献。索引跳跃扫描（Index Skip Scan）
+MySQL 从 8.0.13 版本开始支持一种新的 `range scan` 方式，称为`range-access-skip-scan`。该特性由 Facebook 贡献。索引跳跃扫描（Index Skip Scan）
+
 在某些索引查询场景下能够显著提高查询效率。
 
 索引跳跃扫描技术是在使用多列索引查询时，通过跳过一部分索引列而直接进入上下文扫描阶段，以减少扫描的数据行数，从而提高查询效率的一种优化手段。
@@ -1420,7 +1421,7 @@ mysql> EXPLAIN SELECT f1, f2 FROM t1 WHERE f2 > 40;
 
 https://dev.mysql.com/doc/refman/8.0/en/range-optimization.html#range-access-skip-scan
 
-在 MySQL 内部这个 skip scan 它又是如何执行的呢，我们可以理解以下几步
+在 MySQL 内部这个 `skip scan` 它又是如何执行的呢，我们可以理解以下几步
 
 - 先统计一下索引前缀字段 f1 字段值有几个唯一值，这里一共有 1 和 2
 - 对其余索引部分上的 f2> 40 条件的每个不同的前缀值执行子范围扫描
@@ -1560,7 +1561,6 @@ SQL 优化的一条最基本的原则就是，当真正出现性能问题时或�
 
 - 表足够小，数据量足够少，全表扫描的速度甚至比索引查找还要快。通常是 10 行之内的表。
 - on 连接的字段，或者 where 条件的字段没有索引列，或者根本不带 where 条件。
--
 
 ## MySQL 优化准则
 
@@ -2495,7 +2495,20 @@ select * from ratings order by category limit 5
 
 对于这种情况，为了保证每次都返回的顺序一致可以额外增加一个排序字段（比如：id），用两个字段来尽可能减少重复的概率。于是，改成 order by status, id;
 
-# group by 优化
+# MySQL 聚合优化
+
+
+
+聚合算子。聚合算子和聚合语句类型一一对应，那常见的聚合语句又有哪些呢？
+
+首先是单项聚合(scalar aggregation), 指聚合后的结果集是一个单一值(线性代数里称标量)。
+
+其次就是组队聚合(group aggregation)，其结果是先对所有数据根据 group by 键分组，然后对每个组分别计算聚合值。
+
+在日常查询中，包含 `GROUP BY` 子句的查询效率往往较低，主要原因是 `GROUP BY` 操作涉及临时表的构建，这会引发频繁的磁盘 I/O 操作，或是在计算聚合函数时增加了额外的计算开销。
+
+
+乍看之下，似乎是单项聚合因为结果集是一个标量，求总共有多少个不同的班级。但其实，这个语句可以看成是一个单项聚合和组队聚合的叠加
 
 # MySQL count 优化
 
