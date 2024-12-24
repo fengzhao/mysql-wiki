@@ -2334,7 +2334,7 @@ CREATE TABLE 't' (
 )ENGINE = InnoDB;
 
 -- 查询city是"杭州"的所有人名字，并且按照name排序返回前 1000 个人的name、age
-select city,name,age from t where city = '杭州' order by name limit 1000;
+SELECT city,name,age FROM t WHERE city = '杭州' ORDER BY  name LIMIT 1000;
 ```
 
 为了避免全表扫描，需要在`city`字段上加上索引
