@@ -2289,11 +2289,12 @@ SELECT * FROM t1
 
 -- 索引列(key_part1 , key_part2)
 
---如果是InnoDB表，那么主键值也隐含在是索引中，无需回表，这种查询可以使用索引直接排序
+--如果是InnoDB表，那么主键值也隐含在是索引中，无需回表，这种查询一般都可以使用索引直接排序
 SELECT pk, key_part1, key_part2 FROM t1
   ORDER BY key_part1, key_part2;
 
--- key_part1是常量，所有通过索引访问到的记录都会按照key_part2来排序，并且如果where子句有足够的选择性使得索引范围扫描比全表扫描开销更小的话，那么覆盖了(key_part1, key_part2)的复合索引就可以避免排序操作。
+-- key_part1是常量查找，所有通过索引访问到的记录都会按照key_part2来排序。
+-- 并且如果where子句有足够的选择性使得索引范围扫描比全表扫描开销更小的话，那么覆盖了(key_part1, key_part2)的复合索引就可以避免排序操作。
 SELECT * FROM t1
   WHERE key_part1 = constant
   ORDER BY key_part2;
