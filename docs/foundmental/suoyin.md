@@ -2320,18 +2320,18 @@ SELECT * FROM t1
 
 ### 全字段排序/单路排序
 
-**「全字段排序是指，只要与最终结果集有关的字段都会被放进`sort buffer`，而不管该字段本身是否参与排序。」**
+**「全字段排序是指，只要与最终结果集有关的字段都会被放进`sort_buffer`，而不管该字段本身是否参与排序。」**
 
 ```sql
-create table 't' (
-	'id' int(11) not null,
-	'city' vachar(16) not null,
-	'name' vachar(16) not null,
-	'age' vachar(16) not null,
-	'addr' varchar(128) default null,
-	primary key('id'),
-	key 'city'('city')
-)engine = InnoDB;
+CREATE TABLE 't' (
+	'id' INT(11) NOT NULL ,
+	'city' VARCHAR(16) NOT NULL,
+	'name' VARCHAR(16) NOT NULL,
+	'age' VARCHAR(16) NOT NULL,
+	'addr' VARCHAR(128) DEFAULT NOT NULL ,
+	PRIMARY KEY('id'),
+	KEY 'city'('city')
+)ENGINE = InnoDB;
 
 -- 查询city是"杭州"的所有人名字，并且按照name排序返回前 1000 个人的name、age
 select city,name,age from t where city = '杭州' order by name limit 1000;
