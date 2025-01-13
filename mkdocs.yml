@@ -100,7 +100,7 @@ nav:
   - "SQL特性":
       - "1.SQL2023新特性": sql/sql2023.md
   - "MySQL基础":
-      - "1.索引相关": foundmental/suoyin.md
+      - "1.索引相关": foundmental/2.MySQL索引.md
       - "2.数据库设计": dev/02.数据库设计.md
       - "3.在线DDL": dev/03.在线DDL.md
       - "4.联表算法": dev/04.MySQL连表查询算法.md
