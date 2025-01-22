@@ -41,3 +41,10 @@
 [11.数据库系统概论_第十一章_并发控制](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/11.pdf)
 
 
+# 数据库学习博客
+
+
+https://blog.bcmeng.com/
+
+
+[OLAP性能优化指南](https://perf.bcmeng.com/)
