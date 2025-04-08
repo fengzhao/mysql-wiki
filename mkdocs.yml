@@ -204,7 +204,7 @@ nav:
       - "3.Oracle体系架构": oracle/03.Oracle体系架构.md
       - "4.Oracle访问控制": oracle/04.oracle访问控制.md
       - "5.常用SQL": oracle/05.常用SQL.md
-      - "6.Oracle优化": oracle/06.达梦优化.md
+      - "6.达梦优化": oracle/06.达梦优化.md
 
 
 extra_css:
