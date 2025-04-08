@@ -199,11 +199,11 @@ nav:
           - openldap: roles/auth/openldap.md
 
   - "Oracle":
-      - "0. Oracle概述": oracle/01.Oracle概述.md
-      - "1. Oracle安装": oracle/02.oracle安装.md
-      - "2. Oracle体系架构": oracle/03.Oracle体系架构.md
-      - "3. Oracle访问控制": oracle/04.oracle访问控制.md
-      - "4. 常用SQL": oracle/05.常用SQL.md
+      - "1.Oracle概述": oracle/01.Oracle概述.md
+      - "2.Oracle安装": oracle/02.oracle安装.md
+      - "3.Oracle体系架构": oracle/03.Oracle体系架构.md
+      - "4.Oracle访问控制": oracle/04.oracle访问控制.md
+      - "5.常用SQL": oracle/05.常用SQL.md
 
 
 extra_css:
