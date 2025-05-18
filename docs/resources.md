@@ -38,11 +38,13 @@
 
 [11.数据库系统概论*第十一章*并发控制](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/11.pdf)
 
-
-
 # 数据库学习资料
 
-[15-445 Introduction to Database System](https://15445.courses.cs.cmu.edu/spring2024/)可能是数据库领域最出名的一门经典课程。这主要是因为是这门课的授课老师`Andy Pavlo`多年来一直坚持将这门课几乎所有的资源都开放出来供全世界所有对数据库感兴趣的人学习。该课程以 `Database System Concepts` 为教材，提供随堂讲义、笔记和视频，精心准备了几个互相勾连的小实验。该课程十分注重系统设计和编程实现，用主讲教授 `Andy Pavlo` 的话说，这是一门可以写在简历上、并且能帮你拿到好 offer 的课程。
+[15-445 Introduction to Database System](https://15445.courses.cs.cmu.edu/spring2024/)可能是数据库领域最出名的一门经典课程。
+
+这主要是因为是这门课的授课老师`Andy Pavlo`多年来一直坚持将这门课几乎所有的资源都开放出来供全世界所有对数据库感兴趣的人学习。该课程以 `Database System Concepts` 为教材，提供随堂讲义、笔记和视频，精心准备了几个互相勾连的小实验。
+
+该课程十分注重系统设计和编程实现，用主讲教授 `Andy Pavlo` 的话说，这是一门可以写在简历上、并且能帮你拿到好 offer 的课程。
 
 简单介绍下 cmu15445 的教学大纲，该课以 Database System Concepts 为辅助教材， 讲述了数据库管理系统（DBMS）设计和实现的方方面面，包括：
 
