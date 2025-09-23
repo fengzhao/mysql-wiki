@@ -83,11 +83,14 @@ nav:
       - "7. MySQL数据类型": basic/7.MySQL数据类型.md
       - "8. MySQL字符集和排序规则": basic/8.MySQL字符集和排序规则.md
       - "9. MySQL逻辑架构和性能优化概述": basic/9.mysql_architecture.md
-      - "10. 数据库事务和锁": basic/10.sql-Transaction.md
-      - "11. Facts 数据": basic/Facts.md
+      - "10. MySQL存储引擎": basic/10.MySQL存储引擎.md
+      - "11. MySQL事务和锁": basic/11.sql-Transaction.md
       - "12. MySQL内存概述": basic/12.MySQL内存概述.md
-      - "13. MySQL数据字典": basic/14.MySQL数据字典.md
-      - "14. Blocks": basic/Blocks.md
+      - "13. MySQL是如何打开和关闭表": basic/13.MySQL是如何打开和关闭表.md
+      - "14. MySQL数据字典": basic/14.MySQL数据字典.md
+      - "15. MySQL数据文件格式": basic/15.数据文件格式.md
+      - "16. MySQL分区表": basic/16.MySQL分区表.md
+      - "14. MySQL快速导入数据": basic/17.MySQL快速导入数据.md
       - "15. Playbook 高级特性": basic/Playbook-features.md
       - "扩展阅读(深入必读)":
           - "1. YAML 语法": basic/Reference/Yaml.md
