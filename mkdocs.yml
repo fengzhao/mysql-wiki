@@ -211,6 +211,11 @@ nav:
       - "5.常用SQL": oracle/05.常用SQL.md
       - "6.达梦优化": oracle/06.达梦优化.md
 
+  - "network":
+      - "1.计算机网络概述": network/1.计算机网络概述.md
+ 
+
+
 
 extra_css:
   - stylesheets/extra.css
