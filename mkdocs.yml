@@ -90,6 +90,9 @@ nav:
       - "15. MySQL数据文件格式": basic/15.数据文件格式.md
       - "16. MySQL分区表": basic/16.MySQL分区表.md
       - "17. MySQL快速导入数据": basic/17.MySQL快速导入数据.md
+      - "18. MySQL临时表": basic/18.MySQL临时表.md
+
+
   - "SQL特性":
       - "1.SQL2023新特性": sql/sql2023.md
   - "MySQL基础":
