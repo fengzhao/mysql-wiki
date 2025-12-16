@@ -101,6 +101,7 @@ nav:
       - "3.在线DDL": dev/03.在线DDL.md
       - "4.联表算法": dev/04.MySQL连表查询算法.md
       - "5.insert语法": dev/05.MySQL-insert语法.md
+      - "6.MySQL主从复制": dev/06.MySQL主从复制.md
   - "MySQL高级":
       - "深入理解innoDB存储引擎":
           - "1.MySQL架构到innoDB架构": advanced/1.MySQL架构到InnoDB架构.md
