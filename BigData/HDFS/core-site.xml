@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+    <property>
+        <!--指定 HDFS 中 NameNode 的地址，也就是 Master 节点的地址，尽量用主机名来定义比较好-->
+        <name>fs.defaultFS</name> 
+        <value>hdfs://localhost:9000</value>
+    </property>
+
+    <property>
+        <!--指定使用hadoop时产生文件的存放目录-->
+        <name>hadoop.tmp.dir</name>
+        <value>/var/sxt/hadoop/local</value>
+    </property>
+
+    <property>
+        <!--文件IO缓冲区的大小-->
+        <name>io.file.buffer.size</name>
+        <value>131072</value>
+    </property>
+
+    <property>
+        <!-- 配置ipc传输大小 -->
+        <name>ipc.maximum.data.length</name>
+        <value>134217728</value>
+    </property>    
+
+    <property>
+        <!--建立与服务器连接的重试次数为10次-->
+        <name>ipc.client.connect.max.retries</name>
+        <value>100</value>
+    </property>
+
+    <property>
+        <name>ipc.client.connect.retry.interval</name>
+        <value>10000</value>
+    </property>
+    <property>
+        <!-- 用户代理 -->
+        <name>hadoop.proxyuser.root.hosts</name>
+        <value>*</value>
+    </property>
+    <property>
+        <name>hadoop.proxyuser.root.groups</name>
+        <value>*</value>
+    </property> 
+
+</configuration>
