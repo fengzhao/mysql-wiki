@@ -91,6 +91,7 @@ nav:
       - "16. MySQL分区表": basic/16.MySQL分区表.md
       - "17. MySQL快速导入数据": basic/17.MySQL快速导入数据.md
       - "18. MySQL临时表": basic/18.MySQL临时表.md
+      - "19. MySQL不可见列": basic/19.MySQL不可见列.md
 
 
   - "SQL特性":
