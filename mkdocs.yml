@@ -20,11 +20,14 @@ theme:
     - navigation.top
     - navigation.tracking
     - navigation.prune
+    - navigation.path
     - search.suggest
     - search.highlight
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
+    - content.action.edit
+    - content.tooltips
 
   palette:
     - scheme: default
@@ -45,6 +48,10 @@ theme:
     text: "Roboto"
     code: "Roboto Mono"
 
+  icon:
+    edit: material/pencil
+    view: material/eye
+
 plugins:
   - search
   - minify:
@@ -52,6 +59,11 @@ plugins:
   - git-revision-date-localized:
       type: iso_datetime
       enable_time_zone: true
+  - git-authors:
+      show_total_contributors: true
+  - sitemap:
+      changefreq: weekly
+      priority: 0.5
 
 markdown_extensions:
   - admonition
@@ -82,128 +94,132 @@ markdown_extensions:
   - footnotes
   - meta
   - def_list
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.slugs
 
 nav:
   - "首页": index.md
   - "学习资源": resources.md
 
   - "MySQL 入门":
-      - "index": basic/index.md
-      - "0. MySQL 的起源和分支": basic/0.mysql_source.md
-      - "1. 数据库概述": basic/1.introduce_database.md
-      - "2. 安装 MySQL": basic/2.install_mysql.md
-      - "3. MySQL 可执行程序": basic/3.mysql_execute_command.md
-      - "4. SQL 语句和语法": basic/4.sql.md
-      - "5. 关系模型和关系代数": basic/5.relation.md
-      - "6. SQL 题目练习": basic/6.sql_practice.md
-      - "7. MySQL 数据类型": basic/7.MySQL 数据类型.md
-      - "8. MySQL 字符集和排序规则": basic/8.MySQL 字符集和排序规则.md
-      - "9. MySQL 逻辑架构": basic/9.mysql_architecture.md
-      - "10. MySQL 存储引擎": basic/10.MySQL 存储引擎.md
-      - "11. MySQL 事务和锁": basic/11.sql-Transaction.md
-      - "12. MySQL 内存概述": basic/12.MySQL 内存概述.md
-      - "13. MySQL 表管理": basic/13.MySQL 表管理.md
-      - "14. MySQL 数据字典": basic/14.MySQL 数据字典.md
-      - "15. MySQL 数据文件格式": basic/15.数据文件格式.md
-      - "16. MySQL 分区表": basic/16.MySQL 分区表.md
-      - "17. MySQL 快速导入数据": basic/17.MySQL 快速导入数据.md
-      - "18. MySQL 临时表": basic/18.MySQL 临时表.md
-      - "19. MySQL 不可见列": basic/19.MySQL 不可见列.md
+      - "01-mysql-basics/index.md"
+      - "00. MySQL 的起源和分支": 01-mysql-basics/0.mysql_source.md
+      - "01. 数据库概述": 01-mysql-basics/1.introduce_database.md
+      - "02. 安装 MySQL": 01-mysql-basics/2.install_mysql.md
+      - "03. MySQL 可执行程序": 01-mysql-basics/3.mysql_execute_command.md
+      - "04. SQL 语句和语法": 01-mysql-basics/4.sql.md
+      - "05. 关系模型和关系代数": 01-mysql-basics/5.relation.md
+      - "06. SQL 题目练习": 01-mysql-basics/6.sql_practice.md
+      - "07. MySQL 数据类型": 01-mysql-basics/7.MySQL 数据类型.md
+      - "08. MySQL 字符集和排序规则": 01-mysql-basics/8.MySQL 字符集和排序规则.md
+      - "09. MySQL 逻辑架构": 01-mysql-basics/9.mysql_architecture.md
+      - "10. MySQL 存储引擎": 01-mysql-basics/10.MySQL 存储引擎.md
+      - "11. MySQL 事务和锁": 01-mysql-basics/11.sql-Transaction.md
+      - "12. MySQL 内存概述": 01-mysql-basics/12.MySQL 内存概述.md
+      - "13. MySQL 表管理": 01-mysql-basics/13.MySQL 是如何打开和关闭表.md
+      - "14. MySQL 数据字典": 01-mysql-basics/14.MySQL 数据字典.md
+      - "15. MySQL 数据文件格式": 01-mysql-basics/15.数据文件格式.md
+      - "16. MySQL 分区表": 01-mysql-basics/16.MySQL 分区表.md
+      - "17. MySQL 快速导入数据": 01-mysql-basics/17.MySQL 快速导入数据.md
+      - "18. MySQL 临时表": 01-mysql-basics/18.MySQL 临时表.md
+      - "19. MySQL 不可见列": 01-mysql-basics/19.MySQL 不可见列.md
 
   - "MySQL 基础":
-      - "index": mysql-basic/index.md
-      - "1. 索引相关": fundamental/1.MySQL 索引.md
-      - "2. 数据库设计": mysql-basic/02.数据库设计.md
-      - "3. 在线 DDL": mysql-basic/03.在线 DDL.md
-      - "4. 联表查询": mysql-basic/04.MySQL 连表查询算法.md
-      - "5. 数据导入导出": mysql-basic/05.MySQL 导库.md
-      - "6. INSERT 语法": mysql-basic/06.MySQL-insert 语法.md
-      - "7. 主从复制": mysql-basic/07.MySQL 主从复制.md
+      - "02-mysql-fundamental/index.md"
+      - "01. MySQL 索引": 02-mysql-fundamental/2.MySQL 索引.md
+      - "02. 数据库设计": 02-mysql-fundamental/02.数据库设计.md
+      - "03. 在线 DDL": 02-mysql-fundamental/03.在线 DDL.md
+      - "04. 联表查询算法": 02-mysql-fundamental/04.MySQL 连表查询算法.md
+      - "05. 数据导入导出": 02-mysql-fundamental/01.mysql 导库.md
+      - "06. INSERT 语法": 02-mysql-fundamental/05.MySQL-insert 语法.md
+      - "07. 主从复制": 02-mysql-fundamental/06.MySQL 主从复制.md
+      - "08. MySQL 直方图": 02-mysql-fundamental/3.MySQL 直方图.md
+      - "09. MySQL 协议分析": 02-mysql-fundamental/1.MySQL 协议分析与抓包概述.md
 
   - "MySQL 高级":
-      - "深入理解 InnoDB":
-          - "index": innodb/index.md
-          - "1. MySQL 架构到 InnoDB 架构": innodb/01.MySQL 架构到 InnoDB 架构.md
-          - "2. InnoDB 简介": innodb/02.InnoDB——简介.md
-          - "3. InnoDB 关键特性": innodb/03.InnoDB——关键特性.md
-          - "4. InnoDB 内存结构——缓冲池": innodb/04.InnoDB 内存结构——缓冲池.md
-          - "5. InnoDB 崩溃恢复": innodb/05.InnoDB——崩溃恢复.md
-          - "6. InnoDB 双写缓冲区": innodb/06.Innodb——双写缓冲区 DoublewriteBuffer.md
-      - "MySQL 协议分析":
-          - "index": protocol/index.md
-          - "1. 协议分析概述": protocol/01.MySQL 协议分析与抓包概述.md
+      - "03-mysql-advanced/index.md"
+      - "InnoDB 存储引擎":
+          - "01. InnoDB 简介": 03-mysql-advanced/2.InnoDB——简介.md
+          - "02. MySQL 架构到 InnoDB 架构": 03-mysql-advanced/1.MySQL 架构到 InnoDB 架构.md
+          - "03. InnoDB 关键特性": 03-mysql-advanced/3.InnoDB——关键特性.md
+          - "04. InnoDB 内存结构——缓冲池": 03-mysql-advanced/4.InnoDB 内存结构——缓冲池.md
+          - "05. InnoDB 双写缓冲区": 03-mysql-advanced/innodb/05.InnoDB——崩溃恢复.md
+          - "06. 双写缓冲区 Doublewrite": 03-mysql-advanced/1.2.1.Innodb——双写缓冲区 DoublewriteBuffer.md
+          - "07. InnoDB 崩溃恢复": 03-mysql-advanced/innodb/05.InnoDB——崩溃恢复.md
       - "MySQL 内核":
-          - "index": kernel/index.md
-          - "1. MySQL 源码 - 语法树结构": kernel/01.MySQL 源码 - 语法树结构.md
+          - "01. MySQL 源码 - 语法树结构": 03-mysql-advanced/kernel/01.MySQL 源码 - 语法树结构.md
+          - "02. 源代码调试环境": 03-mysql-advanced/5.MySQL 源代码调试环境.md
 
   - "MySQL 调优":
-      - "index": optimize/index.md
-      - "1. 调优概述": optimize/01.overview.md
-      - "2. 性能分析工具 PFS": optimize/02.MySQL 性能分析工具 PFS.md
-      - "3. 多表优化": optimize/03.many_tables.md
+      - "04-mysql-optimize/index.md"
+      - "01. 调优概述": 04-mysql-optimize/1.overview.md
+      - "02. 性能分析工具 PFS": 04-mysql-optimize/2.MySQL 性能分析工具 PFS.md
+      - "03. 多表优化": 04-mysql-optimize/many_tables.md
 
   - "PostgreSQL":
-      - "index": postgresql/index.md
-      - "1. PostgreSQL 简介": postgresql/01.postgresql 简介.md
-      - "2. PostgreSQL 安装": postgresql/02.postgresql 安装.md
-      - "3. PostgreSQL 体系架构": postgresql/03.体系架构.md
-      - "4. PostgreSQL 访问控制": postgresql/04.postgresql 访问控制.md
-      - "5. 常用 SQL": postgresql/05.常用 SQL.md
-      - "6. 继承表": postgresql/06.继承表.md
-      - "7. 用户自定义函数 UDF": postgresql/07.用户自定义函数.md
-      - "8. 基本数据类型": postgresql/08.数据类型.md
-      - "9. 可执行程序": postgresql/09.可执行程序.md
-      - "10. PostgreSQL 索引": postgresql/10.Postgresql 索引.md
-      - "11. 外部表": postgresql/11.外部表.md
-      - "12. PostgreSQL 扩展": postgresql/12.postgresql 扩展.md
-      - "13. 深入理解 TOAST 技术": postgresql/13.深入理解 toast 技术.md
-      - "14. PostgreSQL 压缩表": postgresql/14.PostgreSQL 压缩表.md
-      - "15. 数据备份": postgresql/15.数据备份.md
-
-  - "OLAP 技术":
-      - "index": olap/index.md
-      - "1. OLAP 概述": olap/01.OLAP 概述.md
-      - "2. HBase": olap/02.Hbase.md
+      - "05-postgresql/index.md"
+      - "01. PostgreSQL 简介": 05-postgresql/01.postgresql 简介.md
+      - "02. PostgreSQL 安装": 05-postgresql/02.postgresql 安装.md
+      - "03. 体系架构": 05-postgresql/03.体系架构.md
+      - "04. 访问控制": 05-postgresql/04.postgresql 访问控制.md
+      - "05. 常用 SQL": 05-postgresql/05.常用 SQL.md
+      - "06. 继承表": 05-postgresql/06.继承表.md
+      - "07. 用户自定义函数 UDF": 05-postgresql/07.用户自定义函数.md
+      - "08. 数据类型": 05-postgresql/08.数据类型.md
+      - "09. 可执行程序": 05-postgresql/09.可执行程序.md
+      - "10. PostgreSQL 索引": 05-postgresql/10.Postgresql 索引.md
+      - "11. 外部表": 05-postgresql/11.外部表.md
+      - "12. PostgreSQL 扩展": 05-postgresql/12.postgresql 扩展.md
+      - "13. 深入理解 TOAST 技术": 05-postgresql/13.深入理解 toast 技术.md
+      - "14. PostgreSQL 压缩表": 05-postgresql/14.PostgreSQL 压缩表.md
+      - "15. 数据备份": 05-postgresql/15.数据备份.md
 
   - "Oracle":
-      - "index": oracle/index.md
-      - "1. Oracle 概述": oracle/01.Oracle 概述.md
-      - "2. Oracle 安装": oracle/02.oracle 安装.md
-      - "3. Oracle 体系架构": oracle/03.Oracle 体系架构.md
-      - "4. Oracle 访问控制": oracle/04.oracle 访问控制.md
-      - "5. 常用 SQL": oracle/05.常用 SQL.md
-      - "6. 达梦优化": oracle/06.达梦优化.md
+      - "06-oracle/index.md"
+      - "01. Oracle 概述": 06-oracle/01.Oracle 概述.md
+      - "02. Oracle 安装": 06-oracle/03.oracle 体系架构.md
+      - "03. Oracle 体系架构": 06-oracle/03.oracle 体系架构.md
+      - "04. Oracle 访问控制": 06-oracle/06.达梦优化.md
 
   - "NoSQL":
-      - "MongoDB":
-          - "index": mongodb/index.md
-          - "1. MongoDB 简介": mongodb/01.简介.md
+      - "07-nosql/index.md"
       - "Redis":
-          - "index": redis/index.md
-          - "1. Redis 简介": redis/01.redis 简介.md
-          - "2. Redis 客户端": redis/02.redis 客户端.md
+          - "01. Redis 简介": 07-nosql/redis/01.redis 简介.md
+          - "02. Redis 客户端": 07-nosql/redis/02.redis 客户端.md
+      - "MongoDB":
+          - "01. MongoDB 简介": 07-nosql/mongodb/01.简介.md
 
   - "分布式系统":
-      - "index": distribute/index.md
-      - "1. 分布式系统概述": distribute/01.分布式系统概述.md
-      - "2. 分布式事务": distribute/02.分布式事务.md
+      - "08-distributed/index.md"
+      - "01. 分布式系统概述": 08-distributed/01.分布式系统概述.md
+      - "02. 分布式事务": 08-distributed/02.分布式事务.md
+
+  - "OLAP":
+      - "09-olap/index.md"
+      - "01. OLAP 概述": 09-olap/01.OLAP 概述.md
+      - "02. HBase": 09-olap/02.Hbase.md
 
   - "大数据":
-      - "index": bigdata/index.md
+      - "10-bigdata/index.md"
       - "HDFS":
-          - "1. HDFS 实战": bigdata/hdfs/01.HDFS 实战.md
+          - "01. HDFS 实战": 10-bigdata/HDFS/1.HDFS 实战.md
       - "Hive":
-          - "1. Hive 概述": bigdata/hive/01.HIVE 概述.md
-          - "2. Hive 元数据": bigdata/hive/02.HIVE 元数据.md
+          - "01. Hive 概述": 10-bigdata/HIVE/1.HIVE 概述.md
+          - "02. Hive 元数据": 10-bigdata/HIVE/2.HIVE 元数据.md
 
   - "网络基础":
-      - "index": network/index.md
-      - "1. 计算机网络概述": network/01.计算机网络概述.md
-      - "2. 交换机和交换技术": network/02.交换机和交换技术.md
+      - "11-network/index.md"
+      - "01. 计算机网络概述": 11-network/1.计算机网络概述.md
+      - "02. 交换机和交换技术": 11-network/2.交换机和交换技术.md
 
   - "SQLite":
-      - "index": sqlite/index.md
-      - "1. SQLite 概述": sqlite/01.SQLite.md
+      - "12-sqlite/index.md"
+      - "SQLite 概述": 12-sqlite/SQLite.md
+
+  - "算法":
+      - "13-algorithm/index.md"
+      - "01. 算法和数据结构概述": 13-algorithm/01.算法和数据结构概述.md
 
 extra_css:
   - stylesheets/extra.css
