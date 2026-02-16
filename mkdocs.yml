@@ -61,9 +61,6 @@ plugins:
       enable_time_zone: true
   - git-authors:
       show_total_contributors: true
-  - sitemap:
-      changefreq: weekly
-      priority: 0.5
 
 extra_files:
   - robots.txt
