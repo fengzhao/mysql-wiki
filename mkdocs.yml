@@ -1,7 +1,7 @@
 site_name: MySQL WIKI
 site_description: "MySQL WIKI - MySQL 技术文档与学习资源"
 site_author: "fengzhao"
-site_url: "https://mysql.fengzhao.me"
+site_url: "https://mysql.fengzhao.pro"
 
 # Repository
 repo_name: "fengzhao/mysql-wiki"
@@ -64,6 +64,9 @@ plugins:
   - sitemap:
       changefreq: weekly
       priority: 0.5
+
+extra_files:
+  - robots.txt
 
 markdown_extensions:
   - admonition
