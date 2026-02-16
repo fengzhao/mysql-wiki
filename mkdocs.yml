@@ -1,5 +1,5 @@
 site_name: MySQL WIKI
-site_description: "MySQL WIKI"
+site_description: "MySQL WIKI - MySQL 技术文档与学习资源"
 site_author: "fengzhao"
 site_url: "https://mysql.fengzhao.me"
 
@@ -8,7 +8,7 @@ repo_name: "fengzhao/mysql-wiki"
 repo_url: "https://github.com/fengzhao/mysql-wiki"
 
 # Copyright
-copyright: "Copyleft &copy; 2020 - 2023 fengzhao"
+copyright: "Copyleft &copy; 2020 - 2026 fengzhao"
 
 theme:
   name: material
@@ -18,19 +18,29 @@ theme:
     - navigation.tabs.sticky
     - navigation.sections
     - navigation.top
+    - navigation.tracking
+    - navigation.prune
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
 
   palette:
     - scheme: default
       toggle:
         icon: material/toggle-switch-off-outline
-        name: Switch to dark mode
+        name: 切换到深色模式
       primary: "indigo"
       accent: "indigo"
 
     - scheme: slate
       toggle:
         icon: material/toggle-switch
-        name: Switch to light mode
+        name: 切换到浅色模式
+      primary: "indigo"
+      accent: "indigo"
+
   font:
     text: "Roboto"
     code: "Roboto Mono"
@@ -41,136 +51,180 @@ plugins:
       minify_html: true
   - git-revision-date-localized:
       type: iso_datetime
+      enable_time_zone: true
 
 markdown_extensions:
   - admonition
-  - codehilite:
-      guess_lang: false
-      linenums: false
-  - toc:
-      permalink: true
-  - footnotes
-  - meta
-  - def_list
-  - pymdownx.arithmatex
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
   - pymdownx.betterem:
       smart_enable: all
   - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
   - pymdownx.critic
-  - pymdownx.details
   - pymdownx.emoji:
       emoji_generator: !!python/name:pymdownx.emoji.to_png
-  - pymdownx.inlinehilite
   - pymdownx.magiclink
-  - pymdownx.mark
   - pymdownx.smartsymbols
-  - pymdownx.superfences
-  - pymdownx.tasklist
-  - pymdownx.tilde
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.arithmatex
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - footnotes
+  - meta
+  - def_list
 
 nav:
-  - "Home": index.md
+  - "首页": index.md
   - "学习资源": resources.md
-  - "MySQL入门":
-      - "0. MySQL的起源和分支": basic/0.mysql_source.md
+
+  - "MySQL 入门":
+      - "index": basic/index.md
+      - "0. MySQL 的起源和分支": basic/0.mysql_source.md
       - "1. 数据库概述": basic/1.introduce_database.md
       - "2. 安装 MySQL": basic/2.install_mysql.md
-      - "3. MySQL可执行程序": basic/3.mysql_execute_command.md
-      - "4. SQL语句和语法": basic/4.sql.md
+      - "3. MySQL 可执行程序": basic/3.mysql_execute_command.md
+      - "4. SQL 语句和语法": basic/4.sql.md
       - "5. 关系模型和关系代数": basic/5.relation.md
-      - "6. SQL题目练习": basic/6.sql_practice.md
-      - "7. MySQL数据类型": basic/7.MySQL数据类型.md
-      - "8. MySQL字符集和排序规则": basic/8.MySQL字符集和排序规则.md
-      - "9. MySQL逻辑架构": basic/9.mysql_architecture.md
-      - "10. MySQL存储引擎": basic/10.MySQL存储引擎.md
-      - "11. MySQL事务和锁": basic/11.sql-Transaction.md
-      - "12. MySQL内存概述": basic/12.MySQL内存概述.md
-      - "13. MySQL是如何打开和关闭表": basic/13.MySQL是如何打开和关闭表.md
-      - "14. MySQL数据字典": basic/14.MySQL数据字典.md
-      - "15. MySQL数据文件格式": basic/15.数据文件格式.md
-      - "16. MySQL分区表": basic/16.MySQL分区表.md
-      - "17. MySQL快速导入数据": basic/17.MySQL快速导入数据.md
-      - "18. MySQL临时表": basic/18.MySQL临时表.md
-      - "19. MySQL不可见列": basic/19.MySQL不可见列.md
+      - "6. SQL 题目练习": basic/6.sql_practice.md
+      - "7. MySQL 数据类型": basic/7.MySQL 数据类型.md
+      - "8. MySQL 字符集和排序规则": basic/8.MySQL 字符集和排序规则.md
+      - "9. MySQL 逻辑架构": basic/9.mysql_architecture.md
+      - "10. MySQL 存储引擎": basic/10.MySQL 存储引擎.md
+      - "11. MySQL 事务和锁": basic/11.sql-Transaction.md
+      - "12. MySQL 内存概述": basic/12.MySQL 内存概述.md
+      - "13. MySQL 表管理": basic/13.MySQL 表管理.md
+      - "14. MySQL 数据字典": basic/14.MySQL 数据字典.md
+      - "15. MySQL 数据文件格式": basic/15.数据文件格式.md
+      - "16. MySQL 分区表": basic/16.MySQL 分区表.md
+      - "17. MySQL 快速导入数据": basic/17.MySQL 快速导入数据.md
+      - "18. MySQL 临时表": basic/18.MySQL 临时表.md
+      - "19. MySQL 不可见列": basic/19.MySQL 不可见列.md
 
+  - "MySQL 基础":
+      - "index": mysql-basic/index.md
+      - "1. 索引相关": fundamental/1.MySQL 索引.md
+      - "2. 数据库设计": mysql-basic/02.数据库设计.md
+      - "3. 在线 DDL": mysql-basic/03.在线 DDL.md
+      - "4. 联表查询": mysql-basic/04.MySQL 连表查询算法.md
+      - "5. 数据导入导出": mysql-basic/05.MySQL 导库.md
+      - "6. INSERT 语法": mysql-basic/06.MySQL-insert 语法.md
+      - "7. 主从复制": mysql-basic/07.MySQL 主从复制.md
 
-  - "SQL特性":
-      - "1.SQL2023新特性": sql/sql2023.md
-  - "MySQL基础":
-      - "1.索引相关": foundmental/2.MySQL索引.md
-      - "2.数据库设计": dev/02.数据库设计.md
-      - "3.在线DDL": dev/03.在线DDL.md
-      - "4.联表算法": dev/04.MySQL连表查询算法.md
-      - "5.insert语法": dev/05.MySQL-insert语法.md
-      - "6.MySQL主从复制": dev/06.MySQL主从复制.md
-  - "MySQL高级":
-      - "深入理解innoDB存储引擎":
-          - "1.MySQL架构到innoDB架构": advanced/1.MySQL架构到InnoDB架构.md
-          - "2.InnoDB——简介": advanced/2.InnoDB——简介.md
-          - "3.InnoDB关键特性": advanced/3.InnoDB——关键特性.md
-          - "4.InnoDB内存结构——缓冲池": advanced/4.InnoDB内存结构——缓冲池.md
-          - "5.搭建MySQL源代码调试debug环境": advanced/5.MySQL源代码调试环境.md
-      - "OLAP":
-          - "1.0.OLAP概述": olap/01.OLAP概述.md
-      - "MySQL协议分析":
-          - "1.协议分析概述": foundmental/1.MySQL协议分析与抓包概述.md
-  - "MySQL调优":
-      #- "Ansible 架构": dev/ansible-architecture.md
-      - "调优概述": optimize/1.overview.md
-      - "数据大小": optimize/many_tables.md
+  - "MySQL 高级":
+      - "深入理解 InnoDB":
+          - "index": innodb/index.md
+          - "1. MySQL 架构到 InnoDB 架构": innodb/01.MySQL 架构到 InnoDB 架构.md
+          - "2. InnoDB 简介": innodb/02.InnoDB——简介.md
+          - "3. InnoDB 关键特性": innodb/03.InnoDB——关键特性.md
+          - "4. InnoDB 内存结构——缓冲池": innodb/04.InnoDB 内存结构——缓冲池.md
+          - "5. InnoDB 崩溃恢复": innodb/05.InnoDB——崩溃恢复.md
+          - "6. InnoDB 双写缓冲区": innodb/06.Innodb——双写缓冲区 DoublewriteBuffer.md
+      - "MySQL 协议分析":
+          - "index": protocol/index.md
+          - "1. 协议分析概述": protocol/01.MySQL 协议分析与抓包概述.md
+      - "MySQL 内核":
+          - "index": kernel/index.md
+          - "1. MySQL 源码 - 语法树结构": kernel/01.MySQL 源码 - 语法树结构.md
+
+  - "MySQL 调优":
+      - "index": optimize/index.md
+      - "1. 调优概述": optimize/01.overview.md
+      - "2. 性能分析工具 PFS": optimize/02.MySQL 性能分析工具 PFS.md
+      - "3. 多表优化": optimize/03.many_tables.md
+
   - "PostgreSQL":
-      - "1. PostgreSQL简介": postgresql/01.postgresql简介.md
-      - "2. PogreSQL安装": postgresql/02.postgresql安装.md
-      - "3. PogreSQL体系架构": postgresql/03.体系架构.md
-      - "4. PogreSQL访问控制": postgresql/04.postgresql访问控制.md
-      - "5. 常用SQL": postgresql/05.常用SQL.md
-      - "6. 继承": postgresql/06.继承表.md
-      - "7. 用户自定义函数UDF": postgresql/07.用户自定义函数.md
+      - "index": postgresql/index.md
+      - "1. PostgreSQL 简介": postgresql/01.postgresql 简介.md
+      - "2. PostgreSQL 安装": postgresql/02.postgresql 安装.md
+      - "3. PostgreSQL 体系架构": postgresql/03.体系架构.md
+      - "4. PostgreSQL 访问控制": postgresql/04.postgresql 访问控制.md
+      - "5. 常用 SQL": postgresql/05.常用 SQL.md
+      - "6. 继承表": postgresql/06.继承表.md
+      - "7. 用户自定义函数 UDF": postgresql/07.用户自定义函数.md
       - "8. 基本数据类型": postgresql/08.数据类型.md
       - "9. 可执行程序": postgresql/09.可执行程序.md
+      - "10. PostgreSQL 索引": postgresql/10.Postgresql 索引.md
+      - "11. 外部表": postgresql/11.外部表.md
+      - "12. PostgreSQL 扩展": postgresql/12.postgresql 扩展.md
+      - "13. 深入理解 TOAST 技术": postgresql/13.深入理解 toast 技术.md
+      - "14. PostgreSQL 压缩表": postgresql/14.PostgreSQL 压缩表.md
+      - "15. 数据备份": postgresql/15.数据备份.md
 
-  - "MongoDB":
-      - "0. MongoDB概述": mongodb/01.简介.md
-
-  - "Redis":
-      - "0. redis概述": redis/01.redis简介.md
-      - "2. redis客户端": redis/02.redis客户端.md
-  - "算法":
-      - "0. 算法概述": 算法/01.算法和数据结构概述.md
-
+  - "OLAP 技术":
+      - "index": olap/index.md
+      - "1. OLAP 概述": olap/01.OLAP 概述.md
+      - "2. HBase": olap/02.Hbase.md
 
   - "Oracle":
-      - "1.Oracle概述": oracle/01.Oracle概述.md
-      - "2.Oracle安装": oracle/02.oracle安装.md
-      - "3.Oracle体系架构": oracle/03.Oracle体系架构.md
-      - "4.Oracle访问控制": oracle/04.oracle访问控制.md
-      - "5.常用SQL": oracle/05.常用SQL.md
-      - "6.达梦优化": oracle/06.达梦优化.md
+      - "index": oracle/index.md
+      - "1. Oracle 概述": oracle/01.Oracle 概述.md
+      - "2. Oracle 安装": oracle/02.oracle 安装.md
+      - "3. Oracle 体系架构": oracle/03.Oracle 体系架构.md
+      - "4. Oracle 访问控制": oracle/04.oracle 访问控制.md
+      - "5. 常用 SQL": oracle/05.常用 SQL.md
+      - "6. 达梦优化": oracle/06.达梦优化.md
 
-  - "network":
-      - "1.计算机网络概述": network/1.计算机网络概述.md
- 
+  - "NoSQL":
+      - "MongoDB":
+          - "index": mongodb/index.md
+          - "1. MongoDB 简介": mongodb/01.简介.md
+      - "Redis":
+          - "index": redis/index.md
+          - "1. Redis 简介": redis/01.redis 简介.md
+          - "2. Redis 客户端": redis/02.redis 客户端.md
 
+  - "分布式系统":
+      - "index": distribute/index.md
+      - "1. 分布式系统概述": distribute/01.分布式系统概述.md
+      - "2. 分布式事务": distribute/02.分布式事务.md
 
+  - "大数据":
+      - "index": bigdata/index.md
+      - "HDFS":
+          - "1. HDFS 实战": bigdata/hdfs/01.HDFS 实战.md
+      - "Hive":
+          - "1. Hive 概述": bigdata/hive/01.HIVE 概述.md
+          - "2. Hive 元数据": bigdata/hive/02.HIVE 元数据.md
+
+  - "网络基础":
+      - "index": network/index.md
+      - "1. 计算机网络概述": network/01.计算机网络概述.md
+      - "2. 交换机和交换技术": network/02.交换机和交换技术.md
+
+  - "SQLite":
+      - "index": sqlite/index.md
+      - "1. SQLite 概述": sqlite/01.SQLite.md
 
 extra_css:
   - stylesheets/extra.css
-
 
 extra:
   analytics:
     provider: google
     property: G-PBHN7DDDGX
     feedback:
-      title: Was this page helpful?
+      title: 这个页面有帮助吗？
       ratings:
         - icon: material/emoticon-happy-outline
-          name: This page was helpful
+          name: 有帮助
           data: 1
-          note: >-
-            Thanks for your feedback!
+          note: 感谢你的反馈！
         - icon: material/emoticon-sad-outline
-          name: This page could be improved
+          name: 需要改进
           data: 0
-          note: >-
-            Thanks for your feedback! Help us improve this page by opening an issue.
+          note: 感谢你的反馈！请帮助我们改进这个页面。
+
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/fengzhao/mysql-wiki
+      name: fengzhao/mysql-wiki on GitHub
