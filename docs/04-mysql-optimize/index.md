@@ -4,9 +4,9 @@
 
 ## 目录
 
-- [调优概述](./1.overview.md)
-- [性能分析工具 PFS](./2.MySQL 性能分析工具 PFS.md)
-- [多表优化](./many_tables.md)
+- [调优概述](./01-mysql-optimize-overview.md)
+- [性能分析工具 PFS](./02-mysql-performance-analysis-tool.md)
+- [多表优化](./03-mysql-many-tables.md)
 
 ---
 

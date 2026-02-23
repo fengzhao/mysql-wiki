@@ -3,9 +3,13 @@ site_description: "MySQL WIKI - MySQL 技术文档与学习资源"
 site_author: "fengzhao"
 site_url: "https://mysql.fengzhao.pro"
 
+# 生成干净的 URL（不带 .html 后缀）
+use_directory_urls: true
+
 # Repository
 repo_name: "fengzhao/mysql-wiki"
 repo_url: "https://github.com/fengzhao/mysql-wiki"
+edit_uri: edit/master/docs/
 
 # Copyright
 copyright: "Copyleft &copy; 2020 - 2026 fengzhao"
@@ -19,15 +23,20 @@ theme:
     - navigation.sections
     - navigation.top
     - navigation.tracking
-    - navigation.prune
     - navigation.path
+    - navigation.expand
+    - navigation.prune
+    - navigation.indexes
+    - navigation.footer
     - search.suggest
     - search.highlight
+    - search.share
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
     - content.action.edit
     - content.tooltips
+    - content.code.select
 
   palette:
     - scheme: default
@@ -58,12 +67,7 @@ plugins:
       minify_html: true
   - git-revision-date-localized:
       type: iso_datetime
-      enable_time_zone: true
-  - git-authors:
-      show_total_contributors: true
-
-extra_files:
-  - robots.txt
+  - git-authors
 
 markdown_extensions:
   - admonition
@@ -82,18 +86,25 @@ markdown_extensions:
   - pymdownx.tilde
   - pymdownx.critic
   - pymdownx.emoji:
-      emoji_generator: !!python/name:pymdownx.emoji.to_png
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.magiclink
   - pymdownx.smartsymbols
   - pymdownx.tasklist:
       custom_checkbox: true
-  - pymdownx.arithmatex
+  - pymdownx.arithmatex:
+      generic: true
   - toc:
       permalink: true
       toc_depth: 3
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
   - footnotes
   - meta
   - def_list
+  - attr_list
+  - md_in_html
   - pymdownx.tabbed:
       alternate_style: true
 
@@ -103,83 +114,79 @@ nav:
 
   - "MySQL 入门":
       - "01-mysql-basics/index.md"
-      - "00. MySQL 的起源和分支": 01-mysql-basics/0.mysql_source.md
-      - "01. 数据库概述": 01-mysql-basics/1.introduce_database.md
-      - "02. 安装 MySQL": 01-mysql-basics/2.install_mysql.md
-      - "03. MySQL 可执行程序": 01-mysql-basics/3.mysql_execute_command.md
-      - "04. SQL 语句和语法": 01-mysql-basics/4.sql.md
-      - "05. 关系模型和关系代数": 01-mysql-basics/5.relation.md
-      - "06. SQL 题目练习": 01-mysql-basics/6.sql_practice.md
-      - "07. MySQL 数据类型": 01-mysql-basics/7.MySQL 数据类型.md
-      - "08. MySQL 字符集和排序规则": 01-mysql-basics/8.MySQL 字符集和排序规则.md
-      - "09. MySQL 逻辑架构": 01-mysql-basics/9.mysql_architecture.md
-      - "10. MySQL 存储引擎": 01-mysql-basics/10.MySQL 存储引擎.md
-      - "11. MySQL 事务和锁": 01-mysql-basics/11.sql-Transaction.md
-      - "12. MySQL 内存概述": 01-mysql-basics/12.MySQL 内存概述.md
-      - "13. MySQL 表管理": 01-mysql-basics/13.MySQL 是如何打开和关闭表.md
-      - "14. MySQL 数据字典": 01-mysql-basics/14.MySQL 数据字典.md
-      - "15. MySQL 数据文件格式": 01-mysql-basics/15.数据文件格式.md
-      - "16. MySQL 分区表": 01-mysql-basics/16.MySQL 分区表.md
-      - "17. MySQL 快速导入数据": 01-mysql-basics/17.MySQL 快速导入数据.md
-      - "18. MySQL 临时表": 01-mysql-basics/18.MySQL 临时表.md
-      - "19. MySQL 不可见列": 01-mysql-basics/19.MySQL 不可见列.md
+      - "00. MySQL 的起源和分支": 01-mysql-basics/00-mysql-source-and-branches.md
+      - "01. 数据库概述": 01-mysql-basics/01-introduce-database.md
+      - "02. 安装 MySQL": 01-mysql-basics/02-install-mysql.md
+      - "03. MySQL 可执行程序": 01-mysql-basics/03-mysql-executable-programs.md
+      - "04. SQL 语句和语法": 01-mysql-basics/04-sql-syntax.md
+      - "05. 关系模型和关系代数": 01-mysql-basics/05-relational-model-and-algebra.md
+      - "06. SQL 题目练习": 01-mysql-basics/06-sql-practice.md
+      - "07. MySQL 数据类型": 01-mysql-basics/07-mysql-data-types.md
+      - "08. MySQL 字符集和排序规则": 01-mysql-basics/08-mysql-charset.md
+      - "09. MySQL 逻辑架构": 01-mysql-basics/09-mysql-architecture.md
+      - "10. MySQL 存储引擎": 01-mysql-basics/10-mysql-storage-engines.md
+      - "11. MySQL 事务": 01-mysql-basics/11-mysql-transaction.md
+      - "12. MySQL 内存概述": 01-mysql-basics/12-mysql-memory.md
+      - "13. MySQL 表管理": 01-mysql-basics/13-how-mysql-opens-and-closes-tables.md
+      - "14. MySQL 数据字典": 01-mysql-basics/14-mysql-meta-data.md
+      - "15. MySQL 数据文件格式": 01-mysql-basics/15-data-file-formats.md
+      - "16. MySQL 分区表": 01-mysql-basics/16-mysql-partitioned-table.md
+      - "17. MySQL 快速导入数据": 01-mysql-basics/17-mysql-import-data.md
+      - "18. MySQL 临时表": 01-mysql-basics/18-mysql-temporal-tables.md
+      - "19. MySQL 不可见列": 01-mysql-basics/19-mysql-invisible-column.md
 
   - "MySQL 基础":
       - "02-mysql-fundamental/index.md"
-      - "01. MySQL 索引": 02-mysql-fundamental/2.MySQL 索引.md
-      - "02. 数据库设计": 02-mysql-fundamental/02.数据库设计.md
-      - "03. 在线 DDL": 02-mysql-fundamental/03.在线 DDL.md
-      - "04. 联表查询算法": 02-mysql-fundamental/04.MySQL 连表查询算法.md
-      - "05. 数据导入导出": 02-mysql-fundamental/01.mysql 导库.md
-      - "06. INSERT 语法": 02-mysql-fundamental/05.MySQL-insert 语法.md
-      - "07. 主从复制": 02-mysql-fundamental/06.MySQL 主从复制.md
-      - "08. MySQL 直方图": 02-mysql-fundamental/3.MySQL 直方图.md
-      - "09. MySQL 协议分析": 02-mysql-fundamental/1.MySQL 协议分析与抓包概述.md
+      - "01. MySQL 协议分析与抓包": 02-mysql-fundamental/01-Overview-of-MySQL-Protocol-Analysis-and-Packet-Sniffing.md
+      - "02. 数据库设计": 02-mysql-fundamental/02-database-design.md
+      - "03. MySQL 索引概述": 02-mysql-fundamental/03-mysql-index-overview.md
+      - "04. MySQL 在线 DDL": 02-mysql-fundamental/04-mysql-online-ddl.md
+      - "05. MySQL 直方图": 02-mysql-fundamental/05-mysql-histogram.md
+      - "06. MySQL 联表查询方法": 02-mysql-fundamental/06-mysql-join-method.md
+      - "07. MySQL 主从复制": 02-mysql-fundamental/07-mysql-replications.md
 
   - "MySQL 高级":
       - "03-mysql-advanced/index.md"
       - "InnoDB 存储引擎":
-          - "01. InnoDB 简介": 03-mysql-advanced/2.InnoDB——简介.md
-          - "02. MySQL 架构到 InnoDB 架构": 03-mysql-advanced/1.MySQL 架构到 InnoDB 架构.md
-          - "03. InnoDB 关键特性": 03-mysql-advanced/3.InnoDB——关键特性.md
-          - "04. InnoDB 内存结构——缓冲池": 03-mysql-advanced/4.InnoDB 内存结构——缓冲池.md
-          - "05. InnoDB 双写缓冲区": 03-mysql-advanced/innodb/05.InnoDB——崩溃恢复.md
-          - "06. 双写缓冲区 Doublewrite": 03-mysql-advanced/1.2.1.Innodb——双写缓冲区 DoublewriteBuffer.md
-          - "07. InnoDB 崩溃恢复": 03-mysql-advanced/innodb/05.InnoDB——崩溃恢复.md
+          - "01. InnoDB 概述": 03-mysql-advanced/03-InnoDB-overiew.md
+          - "02. MySQL 架构到 InnoDB 架构": 03-mysql-advanced/01-mysql-architecture-and-InnoDB.md
+          - "03. InnoDB 关键特性": 03-mysql-advanced/04-InnoDB-Key-Features.md
+          - "04. InnoDB 内存结构——缓冲池": 03-mysql-advanced/05-InnoDB-Memory-Cache.md
+          - "05. InnoDB 双写缓冲区": 03-mysql-advanced/02-Innodb-DoublewriteBuffer.md
+          - "06. InnoDB 崩溃恢复": 03-mysql-advanced/innodb/05-InnoDB-Crash-Recovery.md
       - "MySQL 内核":
           - "01. MySQL 源码 - 语法树结构": 03-mysql-advanced/kernel/01.MySQL 源码 - 语法树结构.md
-          - "02. 源代码调试环境": 03-mysql-advanced/5.MySQL 源代码调试环境.md
+          - "02. MySQL 源码调试环境": 03-mysql-advanced/06-mysql-source-code-development.md
 
   - "MySQL 调优":
       - "04-mysql-optimize/index.md"
-      - "01. 调优概述": 04-mysql-optimize/1.overview.md
-      - "02. 性能分析工具 PFS": 04-mysql-optimize/2.MySQL 性能分析工具 PFS.md
-      - "03. 多表优化": 04-mysql-optimize/many_tables.md
+      - "01. 调优概述": 04-mysql-optimize/01-mysql-optimize-overview.md
+      - "02. 性能分析工具 PFS": 04-mysql-optimize/02-mysql-performance-analysis-tool.md
+      - "03. 多表优化": 04-mysql-optimize/03-mysql-many-tables.md
 
   - "PostgreSQL":
       - "05-postgresql/index.md"
-      - "01. PostgreSQL 简介": 05-postgresql/01.postgresql 简介.md
-      - "02. PostgreSQL 安装": 05-postgresql/02.postgresql 安装.md
-      - "03. 体系架构": 05-postgresql/03.体系架构.md
-      - "04. 访问控制": 05-postgresql/04.postgresql 访问控制.md
-      - "05. 常用 SQL": 05-postgresql/05.常用 SQL.md
-      - "06. 继承表": 05-postgresql/06.继承表.md
-      - "07. 用户自定义函数 UDF": 05-postgresql/07.用户自定义函数.md
-      - "08. 数据类型": 05-postgresql/08.数据类型.md
-      - "09. 可执行程序": 05-postgresql/09.可执行程序.md
-      - "10. PostgreSQL 索引": 05-postgresql/10.Postgresql 索引.md
-      - "11. 外部表": 05-postgresql/11.外部表.md
-      - "12. PostgreSQL 扩展": 05-postgresql/12.postgresql 扩展.md
-      - "13. 深入理解 TOAST 技术": 05-postgresql/13.深入理解 toast 技术.md
-      - "14. PostgreSQL 压缩表": 05-postgresql/14.PostgreSQL 压缩表.md
-      - "15. 数据备份": 05-postgresql/15.数据备份.md
+      - "01. PostgreSQL 简介": 05-postgresql/01-postgresql-overview.md
+      - "02. PostgreSQL 安装": 05-postgresql/02-postgresql-instrall.md
+      - "03. 体系架构": 05-postgresql/03-postgresql-architecture.md
+      - "04. PostgreSQL 访问控制": 05-postgresql/04-postgresql-access-control.md
+      - "05. 常用 SQL": 05-postgresql/05-postgresql-common-SQL.md
+      - "06. 继承表": 05-postgresql/06-postgresql-inherit.md
+      - "07. 用户自定义函数 UDF": 05-postgresql/07-postgresql-udf.md
+      - "08. 数据类型": 05-postgresql/08-postgresql-date-types.md
+      - "09. 可执行程序": 05-postgresql/09-postgresql-command.md
+      - "10. PostgreSQL 索引": 05-postgresql/10-postgresql-index.md
+      - "11. 外部表": 05-postgresql/11-postgresql-external-table.md
+      - "12. PostgreSQL 扩展": 05-postgresql/12-postgresql-extension.md
+      - "13. 深入理解 TOAST 技术": 05-postgresql/13.postgresql-toast.md
+      - "14. PostgreSQL 压缩表": 05-postgresql/14-postgresql-comporessed-table.md
+      - "15. 数据备份": 05-postgresql/15-postgresql-data-backup.md
 
   - "Oracle":
       - "06-oracle/index.md"
-      - "01. Oracle 概述": 06-oracle/01.Oracle 概述.md
-      - "02. Oracle 安装": 06-oracle/03.oracle 体系架构.md
-      - "03. Oracle 体系架构": 06-oracle/03.oracle 体系架构.md
-      - "04. Oracle 访问控制": 06-oracle/06.达梦优化.md
+      - "01. Oracle 概述": 06-oracle/01-Oracle-Overview.md
+      - "02. Oracle 体系架构": 06-oracle/03.oracle-architecture.md
+      - "03. Oracle 优化": 06-oracle/06.damenng-optimize.md
 
   - "NoSQL":
       - "07-nosql/index.md"
@@ -191,8 +198,6 @@ nav:
 
   - "分布式系统":
       - "08-distributed/index.md"
-      - "01. 分布式系统概述": 08-distributed/01.分布式系统概述.md
-      - "02. 分布式事务": 08-distributed/02.分布式事务.md
 
   - "OLAP":
       - "09-olap/index.md"

@@ -1,90 +1,91 @@
+---
+hide:
+  - navigation
+  - toc
+---
+
 # MySQL WIKI
 
-## MySQL 版本
+**MySQL 技术文档与学习资源** — 从入门到精通，系统学习 MySQL 及相关数据库技术。
 
 本站点中的示例代码主要针对 **MySQL** `8.0` 版本，部分内容适用于 `5.7` 版本。
 
-## 快速开始
+<div class="grid cards" markdown>
 
-如果你是 **初学者**，建议从 **[MySQL 入门](/01-mysql-basics/)** 开始系统学习 MySQL 基础知识。
+-   :material-database-outline: **MySQL 入门**
 
-如果你已经掌握基础知识，想深入了解 **MySQL** 的内部机制，可以阅读 **[MySQL 高级](/03-mysql-advanced/)** 部分。
+    ---
 
-如果你关注 **MySQL 性能优化**，可以查看 **[MySQL 调优](/04-mysql-optimize/)** 章节。
+    MySQL 的起源、安装配置、SQL 语法、数据类型、存储引擎、事务和锁等基础知识。
 
-如果你想了解其他数据库，我们还提供了 **[PostgreSQL](/05-postgresql/)**、**[Oracle](/06-oracle/)**、**[NoSQL](/07-nosql/)** 等数据库的学习资料。
+    [:octicons-arrow-right-24: 开始学习](01-mysql-basics/index.md)
 
-如果你发现文章 **有错误**，请在 GitHub 上提交 Issue 或 Pull Request 帮助修正。
+-   :material-database-cog-outline: **MySQL 基础**
 
-## 内容概览
+    ---
 
-### MySQL 入门
-- MySQL 的起源和分支发展史
-- 数据库基础概念
-- MySQL 安装配置
-- SQL 语句和语法
-- 关系模型和关系代数
-- MySQL 数据类型、字符集和排序规则
-- MySQL 逻辑架构
-- MySQL 存储引擎
-- MySQL 事务和锁
+    索引、数据库设计、在线 DDL、联表查询算法、主从复制、协议分析等核心技术。
 
-### MySQL 基础
-- 索引相关
-- 数据库设计
-- 在线 DDL
-- 联表算法
-- 数据导入导出
-- 主从复制
-- MySQL 协议分析
+    [:octicons-arrow-right-24: 深入了解](02-mysql-fundamental/index.md)
 
-### MySQL 高级
-- 深入理解 InnoDB 存储引擎
-- InnoDB 崩溃恢复与双写缓冲区
-- MySQL 源代码调试环境
-- MySQL 协议分析
+-   :material-database-search-outline: **MySQL 高级**
 
-### MySQL 调优
-- 调优概述
-- 性能分析工具 PFS
-- 多表优化
+    ---
 
-### 其他数据库
-- **PostgreSQL**: 强大的开源关系型数据库
-- **Oracle**: 企业级关系型数据库
-- **NoSQL**: Redis、MongoDB 等非关系型数据库
-- **SQLite**: 轻量级嵌入式数据库
+    深入 InnoDB 存储引擎内部机制、缓冲池、双写缓冲区、崩溃恢复、源码分析。
 
-### 分布式与大数据
-- **分布式系统**: 分布式事务等核心技术
-- **OLAP**: 在线分析处理技术
-- **大数据**: HDFS、Hive 等大数据生态
+    [:octicons-arrow-right-24: 高级主题](03-mysql-advanced/index.md)
 
-### 基础课程
-- **网络基础**: 计算机网络概述、交换机技术
-- **算法**: 算法和数据结构基础
+-   :material-chart-line: **MySQL 调优**
+
+    ---
+
+    性能调优方法论、PFS 分析工具、多表优化等实用调优技巧。
+
+    [:octicons-arrow-right-24: 性能优化](04-mysql-optimize/index.md)
+
+-   :material-elephant: **PostgreSQL**
+
+    ---
+
+    体系架构、访问控制、索引、TOAST 技术、扩展开发、数据备份等全面内容。
+
+    [:octicons-arrow-right-24: 探索 PostgreSQL](05-postgresql/index.md)
+
+-   :material-database-lock-outline: **Oracle**
+
+    ---
+
+    Oracle 体系架构、性能优化等企业级数据库知识。
+
+    [:octicons-arrow-right-24: 了解 Oracle](06-oracle/index.md)
+
+-   :material-lightning-bolt: **NoSQL**
+
+    ---
+
+    Redis、MongoDB 等非关系型数据库的核心概念与实践。
+
+    [:octicons-arrow-right-24: NoSQL 数据库](07-nosql/index.md)
+
+-   :material-server-network: **分布式与大数据**
+
+    ---
+
+    分布式系统、OLAP、HDFS、Hive 等大数据生态技术。
+
+    [:octicons-arrow-right-24: 大数据技术](08-distributed/index.md)
+
+</div>
 
 ## 学习资源
 
-我们整理了丰富的学习资源，包括：
-- [学习资源总览](resources.md) - 官方文档、视频教程、推荐书籍等
+我们整理了丰富的学习资源，包括官方文档、视频教程、推荐书籍等 — [查看学习资源总览](resources.md)。
 
 ## 项目信息
 
 - **GitHub 仓库**: [fengzhao/mysql-wiki](https://github.com/fengzhao/mysql-wiki)
-- **在线访问**: [https://mysql.fengzhao.me](https://mysql.fengzhao.me)
+- **在线访问**: [https://mysql.fengzhao.pro](https://mysql.fengzhao.pro)
 - **许可协议**: MIT License
 
-## 贡献指南
-
-欢迎对本项目做出贡献！你可以：
-- 修正文档中的错误
-- 补充缺失的内容
-- 提供更好的示例
-- 改进文档结构
-
-请通过 Pull Request 的方式提交你的修改。
-
----
-
-**祝你学习愉快！**
+欢迎通过 Pull Request 提交你的修改，帮助改进本项目！

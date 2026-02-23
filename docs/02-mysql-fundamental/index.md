@@ -4,15 +4,13 @@
 
 ## 目录
 
-- [MySQL 索引](./2.MySQL 索引.md)
-- [数据库设计](./02.数据库设计.md)
-- [在线 DDL](./03.在线 DDL.md)
-- [联表查询算法](./04.MySQL 连表查询算法.md)
-- [数据导入导出](./01.mysql 导库.md)
-- [INSERT 语法](./05.MySQL-insert 语法.md)
-- [主从复制](./06.MySQL 主从复制.md)
-- [MySQL 直方图](./3.MySQL 直方图.md)
-- [MySQL 协议分析](./1.MySQL 协议分析与抓包概述.md)
+- [MySQL 协议分析与抓包](./01-Overview-of-MySQL-Protocol-Analysis-and-Packet-Sniffing.md)
+- [数据库设计](./02-database-design.md)
+- [MySQL 索引概述](./03-mysql-index-overview.md)
+- [MySQL 在线 DDL](./04-mysql-online-ddl.md)
+- [MySQL 直方图](./05-mysql-histogram.md)
+- [MySQL 联表查询方法](./06-mysql-join-method.md)
+- [MySQL 主从复制](./07-mysql-replications.md)
 
 ---
 
