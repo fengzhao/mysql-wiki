@@ -9,11 +9,9 @@
 在数据库管理系统中，Schema 是指数据库的结构和组织方式的描述，它定义了如何存储和组织数据，以及数据之间的关系和约束。简单来说，Schema 是数据库的蓝图，它决定了数据库中有哪些表、每个表有哪些字段以及它们之间的关系。
 
 > 根据 `SQL` 标准定义，SCHEMA（模式） 是一个描述符的持久命名集合（a persistent, named collection of descriptors）
-SCHEMA 中通常包含了表、列、数据类型、视图、存储过程、关系、主键和外键等 **关系型数据库对象** 。
+> SCHEMA 中通常包含了表、列、数据类型、视图、存储过程、关系、主键和外键等 **关系型数据库对象** 。
 
 ==**在 SQL 标准中，SCHEMA 是组织数据库对象的基本逻辑结构，它创建了一个独立的命名空间，确保了数据库内部对象的结构化、隔离和管理**==
-
-
 
 **SCHEMA 和 DATABASE 是否等同？**
 
@@ -653,6 +651,12 @@ REPLACE INTO stu(id, cid, name) VALUES(4, 2,'42')
 
 如果我们在定义表的字段时指定了默认值，也可以使用 DEFAULT 插入默认值
 
+```SQL
+-- 在MySQL数据库中，如果在insert语句后面带上ON DUPLICATE KEY UPDATE 子句，而要插入的行与表中现有记录的惟一索引或主键中产生重复值，那么就会发生旧行的更新；
+-- 如果插入的行数据与现有表中记录的唯一索引或者主键不重复，则执行新纪录插入操作。另外，ON DUPLICATE KEY UPDATE不能写where条件。
+
+```
+
 ### 数据更新
 
 SQL 标准使用 UPDATE 语句更新表中的数据。
@@ -989,11 +993,9 @@ where P
 查询中子句的执行顺序如下：
 
 1. FROM/JOIN：首先执行 FROM 和/或 JOIN 子句以确定感兴趣的数据。
-
    - 查询执行从 FROM 子句开始。在此步骤中，数据库系统访问 FROM 子句中指定的表并在它们之间执行任何必要的连接。联接根据指定的联接条件合并来自不同表的相关行。此步骤检索将用于进一步处理的初始数据集。
 
 2. WHERE：执行 WHERE 子句，过滤掉不满足约束条件的记录。
-
    - 访问和连接表后，将应用 WHERE 子句。WHERE 子句根据指定条件过滤连接表中的行。它允许您指定确定哪些行应包含在结果集中的条件。不满足条件的行将从进一步处理中剔除。
 
 3. GROUP BY：执行 GROUP BY 子句，根据一列或多列中的值对数据进行分组。
@@ -1241,8 +1243,6 @@ WHERE
     FROM t1 LEFT JOIN (dt JOIN t2 ON ...) ON ...
 ```
 
-​
-
 - 可以被多次引用
 
 ```sql
@@ -1257,8 +1257,6 @@ WHERE
     WITH d AS (SELECT a, b, SUM(c) s FROM t1 GROUP BY a, b)
     SELECT ... FROM d AS d1 JOIN d AS d2 ON d1.b = d2.a;
 ```
-
-​
 
 - 可以引用其他的 CTE
 
@@ -1819,7 +1817,7 @@ explain SELECT city ,count(*) AS 'NUM' FROM user GROUP BY city;
 
   "Using filesort"是 MySQL 的 EXPLAIN 输出中的一个短语，表示查询需要使用临时文件对结果集进行排序。这可能发生在查询包括`ORDER BY`子句或`GROUP BY`子句时，而数据库无法使用索引满足排序顺序。
 
-==使用临时文件对大型结果集进行排序可能会导致磁盘 I/O 和内存使用方面的昂贵开销，因此最好尽可能避免"Using filesort"== 
+==使用临时文件对大型结果集进行排序可能会导致磁盘 I/O 和内存使用方面的昂贵开销，因此最好尽可能避免"Using filesort"==
 
 一些避免文件排序的策略包括使用适当的索引优化查询，限制结果集的大小或修改查询以使用不同的排序算法。
 
@@ -1845,7 +1843,7 @@ explain SELECT city ,count(*) AS 'NUM' FROM user GROUP BY city;
 
 当`MySQL`完全利用索引扫描来实现`GROUP BY`的时候，并不需要扫描所有满足条件的索引键即可完成分组操作的方式，称为`loose index scan`，它可以最大限度的减少需要扫描的`ROWS`；
 
-==**松散索引扫描和紧凑索引扫描的最大区别是是否需要扫描整个索引或者整个范围扫描**== 
+==**松散索引扫描和紧凑索引扫描的最大区别是是否需要扫描整个索引或者整个范围扫描**==
 
 ###### **松散索引(Loose Index Scan)**
 
@@ -1909,7 +1907,6 @@ SELECT c1, c2 FROM t1 GROUP BY c2, c3;
 SELECT c1, c3 FROM t1 GROUP BY c1, c2;
 ```
 
-
 为什么松散索引扫描被限制成只能MIN()和MAX()，而不能用其他的SUM()、COUNT()、AVG()、DISTINCT()等聚合函数呢？
 
 - 索引是有序的。
@@ -1919,9 +1916,6 @@ SELECT c1, c3 FROM t1 GROUP BY c1, c2;
 - 找到该组的最后一条记录就是该组的最大值。
 
 所以，扫描时只需跳到每个组的第一行或最后一行，成本极低。**松散索引的特性是"跳过组内大部分记录"，只看一条代表性的记录（比如第一条）**。
-
-
-
 
 ###### 紧凑索引扫描(Tight Index Scan)
 
@@ -2792,7 +2786,6 @@ where saledate = '2019-01-01'
 - ORDER BY 表示将各个分区内的数据按 order_list 进行排序
 
 - FRAME ，表示当前窗口包含哪些数据。滑动窗口有两种指定范围的方式，一种是基于行，一种是基于范围。
-
   - ROWS 选择前后几行，例如 ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING 表示往前 3 行到往后 3 行，一共 7 行数据（或小于 7 行，如果碰到了边界）
 
   - RANGE 选择数据范围，例如 RANGE BETWEEN 3 PRECEDING AND 3 FOLLOWING 表示所有值在 [c-3,c+3] 这个范围内的行，c 为当前行的值
@@ -2863,7 +2856,6 @@ RANK
 - 功能：用于实现分区内排名编号[会留空位]
 
 - 与 row_number 的区别：
-
   - row_number：如果排序时数值相同，继续编号
 
   - rank：如果排序时数值相同，编号相同，但留下空位
