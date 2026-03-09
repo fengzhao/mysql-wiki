@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ren \"01.mysql 导库.md\" \"01-mysql-dump-restore.md\")",
+      "Bash(ren \"02.数据库设计.md\" \"02-database-design.md\")",
+      "Bash(ren \"03.在线 DDL.md\" \"03-online-ddl.md\")",
+      "Bash(ren \"04.MySQL 连表查询算法.md\" \"04-join-algorithms.md\")",
+      "Bash(ren \"05.MySQL-insert 语法.md\" \"05-insert-syntax.md\")",
+      "Bash(ren \"06.MySQL 主从复制.md\" \"06-master-slave-replication.md\")",
+      "Bash(ren \"1.MySQL 协议分析与抓包概述.md\" \"07-mysql-protocol-packet-analysis.md\")",
+      "Bash(ren \"2.MySQL 索引.md\" \"08-mysql-index.md\")",
+      "Bash(ren \"3.MySQL 直方图.md\" \"09-mysql-histogram.md\")"
+    ]
+  }
+}
