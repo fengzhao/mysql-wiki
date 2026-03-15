@@ -2,7 +2,7 @@
 
 [mysql-5.7.31-linux-glibc2.12-x86_64.tar.gz](https://cdn.mysql.com/archives/mysql-5.7/mysql-5.7.34-linux-glibc2.12-x86_64.tar.gz)
 
-[mysql-8.0.24-linux-glibc2.12-x86_64.tar.xz](https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.24-linux-glibc2.12-x86_64.tar.xz)
+[mysql-8.0.24-linux-glibc2.12-x86_64.tar.xz](https://cdn.mysql.com//Downloads/MySQL-8.4/mysql-8.4.8-linux-glibc2.28-x86_64.tar.xz)
 
 [国内的华为云镜像站](https://mirrors.huaweicloud.com/mysql/Downloads/MySQL-8.0/)
 
@@ -14,15 +14,15 @@
 
 ## 科大学习资源
 
-[1.数据库系统概论*第一章*绪论](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/1.1.pdf)
+[1.数据库系统概论-第一章-绪论](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/1.1.pdf)
 
-[2.数据库系统概论*第二章*关系数据库](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/2.pdf)
+[2.数据库系统概论-第二章-关系数据库](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/2.pdf)
 
-[3.1 数据库系统概论*第三章*关系数据库标准语言 SQL\_上](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/3.1.pdf)
+[3.1 数据库系统概论-第三章-关系数据库标准语言 SQL\_上](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/3.1.pdf)
 
-[3.2 数据库系统概论*第三章*关系数据库标准语言 SQL\_下](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/3.2.pdf)
+[3.2 数据库系统概论-第三章-关系数据库标准语言 SQL\_下](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/3.2.pdf)
 
-[4.数据库系统概论*第四章*数据库安全性](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/4.pdf)
+[4.数据库系统概论-第四章\*数据库安全性](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/4.pdf)
 
 [5.数据库系统概论*第五章*数据库完整性](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/5.pdf)
 
@@ -38,7 +38,7 @@
 
 [11.数据库系统概论*第十一章*并发控制](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/11.pdf)
 
-# 数据库学习资料
+# 数据库系统学习资料
 
 [15-445 Introduction to Database System](https://15445.courses.cs.cmu.edu/spring2024/)可能是数据库领域最出名的一门经典课程。
 

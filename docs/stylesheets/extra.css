@@ -1,60 +1,51 @@
-/* 大宽屏布局 - 最大化内容宽度 */
+/* ===== 宽屏内容布局 ===== */
+
+/* 主网格容器 - 直接拉满屏幕宽度 */
 .md-grid {
-  max-width: 95%;
+  max-width: 100% !important;
   margin-left: auto;
   margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
-/* 内容区域最大化 */
+/* 内容区域全宽展开 */
 .md-content {
   max-width: 100%;
 }
 
 .md-content__inner {
-  margin-left: 2rem;
-  margin-right: 2rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
 }
 
-/* 侧边栏优化 */
+/* 侧边栏适当收窄，把空间留给内容 */
 .md-sidebar {
-  width: 18rem;
+  width: 14rem;
 }
 
-/* 大宽屏表格 */
+/* ===== 表格和代码块全宽 ===== */
+
 .md-typeset table:not([class]) {
   display: table;
   width: 100%;
 }
 
-/* 代码块全宽 */
 .md-content .md-code__content {
   width: 100%;
 }
 
-/* 响应式优化 */
-@media (min-width: 1600px) {
-  .md-grid {
-    max-width: 90%;
-  }
-  .md-sidebar {
-    width: 20rem;
-  }
-}
+/* ===== 中文排版优化 ===== */
 
-@media (min-width: 2000px) {
-  .md-grid {
-    max-width: 85%;
-  }
-  .md-sidebar {
-    width: 22rem;
-  }
-}
-
-/* 中文内容字体优化 */
 body,
 .md-typeset {
   font-family: -apple-system, BlinkMacSystemFont, "Noto Sans SC", "Segoe UI",
     "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+}
+
+.md-typeset {
+  font-size: 0.82rem;
+  line-height: 1.8;
 }
 
 h1 {
@@ -83,14 +74,14 @@ ul {
   font-size: 16px;
 }
 
-/* Admonition 间距微调 */
+/* Admonition 间距 */
 .md-typeset .admonition,
 .md-typeset details {
   margin-top: 1.5em;
   margin-bottom: 1.5em;
 }
 
-/* 代码块行高优化 */
+/* 代码块行高 */
 .md-typeset code,
 .md-typeset pre code {
   line-height: 1.6;
