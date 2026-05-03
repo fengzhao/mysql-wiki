@@ -225,6 +225,11 @@ nav:
       - "13-algorithm/index.md"
       - "01. 算法和数据结构概述": 13-algorithm/01.算法和数据结构概述.md
 
+  - "云原生":
+      - "14-k8s/index.md"
+      - "01. 云原生概述": 14-k8s/01.cloud-native-overview.md
+      - "02. 容器": 13-algorithm/02.容器.md
+
 extra_css:
   - stylesheets/extra.css
 
