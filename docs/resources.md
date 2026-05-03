@@ -38,6 +38,18 @@
 
 [11.数据库系统概论*第十一章*并发控制](http://staff.ustc.edu.cn/~qiliuql/files/DB2021/11.pdf)
 
+
+
+# 数据库学习书籍
+
+[SQL与关系数据库理论——如何编写健壮的SQL代码（原书第2版）]
+
+[SQL反模式]
+
+[高性能MySQL]
+
+
+
 # 数据库系统学习资料
 
 [15-445 Introduction to Database System](https://15445.courses.cs.cmu.edu/spring2024/)可能是数据库领域最出名的一门经典课程。
