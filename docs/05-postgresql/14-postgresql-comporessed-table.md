@@ -13,21 +13,21 @@ postgres=# SET default_toast_compression=lz4;
 SET
 
 CREATE TABLE tbl (
-    id int,
-    col1 text COMPRESSION pglz,
-    col2 text COMPRESSION lz4,
-    col3 text
+    id INT,
+    col1 TEXT COMPRESSION pglz,
+    col2 TEXT COMPRESSION lz4,
+    col3 TEXT
 );
 
 
 postgres=# \d+ tbl
-Table "public.tbl"
-Column | Type    | … | Storage  | Compression | …
+TABLE "public.tbl"
+COLUMN | Type    | … | STORAGE  | Compression | …
 -------+---------+---+----------+-------------+ …
-id     | integer |   | plain    |             |
-col1   | text    |   | extended | pglz        |
-col2   | text    |   | extended | lz4         |
-col3   | text    |   | extended |             |
+id     | INTEGER |   | plain    |             |
+col1   | TEXT    |   | EXTENDED | pglz        |
+col2   | TEXT    |   | EXTENDED | lz4         |
+col3   | TEXT    |   | EXTENDED |             |
 Access method: heap
 ```
 

@@ -38,17 +38,17 @@ MySQL 在服务器启动时分配全局缓冲区，这些缓冲区在所有连�
 
 ```SQL
   mysql>
-mysql>   show variables where variable_name in (
+mysql>   SHOW variables WHERE variable_name IN (
     ->     'innodb_buffer_pool_size','innodb_log_buffer_size','innodb_additional_mem_pool_size','key_buffer_size','query_cache_size'
     ->     );
 +-------------------------+-------------+
-| Variable_name           | Value       |
+| Variable_name           | VALUE       |
 +-------------------------+-------------+
 | innodb_buffer_pool_size | 60129542144 |
 | innodb_log_buffer_size  | 16777216    |
 | key_buffer_size         | 8388608     |
 +-------------------------+-------------+
-3 rows in set (0.00 sec)
+3 ROWS IN SET (0.00 sec)
 
 mysql>
 ```
@@ -86,9 +86,9 @@ mysql>
 ```SQL
 
 mysql>
-mysql>  show variables where variable_name in ('read_buffer_size','read_rnd_buffer_size','sort_buffer_size','join_buffer_size','binlog_cache_size','tmp_table_size' );
+mysql>  SHOW variables WHERE variable_name IN ('read_buffer_size','read_rnd_buffer_size','sort_buffer_size','join_buffer_size','binlog_cache_size','tmp_table_size' );
 +----------------------+------------+
-| Variable_name        | Value      |
+| Variable_name        | VALUE      |
 +----------------------+------------+
 | binlog_cache_size    | 32768      |
 | join_buffer_size     | 262144     |
@@ -97,7 +97,7 @@ mysql>  show variables where variable_name in ('read_buffer_size','read_rnd_buff
 | sort_buffer_size     | 268435456  |
 | tmp_table_size       | 2147483648 |
 +----------------------+------------+
-6 rows in set (0.00 sec)
+6 ROWS IN SET (0.00 sec)
 
 mysql>
 mysql>
@@ -144,7 +144,7 @@ mysql>
 
 
 ```SQL
-SELECT * FROM information_schema.tables WHERE table_schema='performance_schema' AND table_name LIKE '%memory%';
+SELECT * FROM information_schema.TABLES WHERE table_schema='performance_schema' AND table_name LIKE '%memory%';
 
 -- performance_schema.memory_summary_by_account_by_event_name
 -- performance_schema.memory_summary_by_host_by_event_name
@@ -158,16 +158,16 @@ SELECT * FROM information_schema.tables WHERE table_schema='performance_schema' 
 ```SQL
 
 --查看 MySQL 总消耗内存
-select * from sys.memory_global_total;
+SELECT * FROM sys.memory_global_total;
 
 
 
 --根据事件，查看内存总体利用情况
-select * from sys.memory_global_by_current_bytes limit 10;
+SELECT * FROM sys.memory_global_by_current_bytes LIMIT 10;
 
 
 
 --查看线程内存占用情况
-select thread_id,event_name,CURRENT_NUMBER_OF_BYTES_USED/1024/1024 from performance_schema.memory_summary_by_thread_by_event_name order by CURRENT_NUMBER_OF_BYTES_USED desc limit 20;
+SELECT thread_id,event_name,CURRENT_NUMBER_OF_BYTES_USED/1024/1024 FROM performance_schema.memory_summary_by_thread_by_event_name ORDER BY CURRENT_NUMBER_OF_BYTES_USED DESC LIMIT 20;
 
 ```

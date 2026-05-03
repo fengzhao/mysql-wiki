@@ -260,11 +260,11 @@ ALTER UNDO TABLESPACE innodb_undo_001 SET ACTIVE;
 -- 可以将inactive的UNDO表空间进行删除
 -- PS:默认以innodb_开头初始化的undo表空间不可被删除
 DROP UNDO TABLESPACE innodb_undo_001;
-ERROR: 3119 (42000): InnoDB: Tablespace names starting with `innodb_` are reserved.
+ERROR: 3119 (42000): InnoDB: TABLESPACE names starting WITH `innodb_` are reserved.
 
 -- 非系统默认的UNDO在inactive后可被删除
 ALTER UNDO TABLESPACE undo_003 SET ACTIVE;
-Query OK, 0 rows affected (0.0030 sec)
+Query OK, 0 ROWS affected (0.0030 sec)
 
 
 

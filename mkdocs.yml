@@ -96,7 +96,7 @@ markdown_extensions:
       generic: true
   - toc:
       permalink: true
-      toc_depth: 3
+      toc_depth: 6
       slugify: !!python/object/apply:pymdownx.slugs.slugify
         kwds:
           case: lower

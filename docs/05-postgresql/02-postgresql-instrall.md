@@ -290,12 +290,12 @@ CREATE USER fengzhao WITH PASSWORD '123456';　　-- 默认具有LOGIN属性
 --  2、表存放混乱；不利于后期维护等等。
 
 
-SELECT rolname from pg_roles ;
-SELECT usename from pg_user;  -- 角色david创建时没有分配login权限，所以没有创建用户
+SELECT rolname FROM pg_roles ;
+SELECT usename FROM pg_user;  -- 角色david创建时没有分配login权限，所以没有创建用户
 
 
 
-create database dbtest;
+CREATE DATABASE dbtest;
 
 schema_element
 CREATE SCHEMA schema_name [AUTHORIZATION username]   [schema_element [ ... ]]
@@ -404,8 +404,8 @@ CREATE ROLE david;　　/**默认不带LOGIN属性**/
 CREATE USER sandy;　　/**默认具有LOGIN属性**/
 -- 用户sandy可以登录，角色david不可以登录。
 
-SELECT rolname from pg_roles ;
-SELECT usename from pg_user;  --角色david创建时没有分配login权限，所以没有创建用户
+SELECT rolname FROM pg_roles ;
+SELECT usename FROM pg_user;  --角色david创建时没有分配login权限，所以没有创建用户
 
 ```
 

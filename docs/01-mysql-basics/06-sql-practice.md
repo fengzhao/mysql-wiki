@@ -23,20 +23,20 @@ SQL语法很简单，但几乎没几个人写的很好
 ```SQL
 
 --创建表student
-create table student(
-	name varchar(10),
-	kecheng varchar(10),
-	fengshu int
+CREATE TABLE student(
+	name VARCHAR(10),
+	kecheng VARCHAR(10),
+	fengshu INT
 )
  
 --插入数据到表student中
-insert into student values('张三','语文',81);
-insert into student values('张三','数学',75);
-insert into student values('李四','语文',76);
-insert into student values('李四','数学',90);
-insert into student values('王五','语文',81);
-insert into student values('王五','数学',100);
-insert into student values('王五','英语',90);
+INSERT INTO student VALUES('张三','语文',81);
+INSERT INTO student VALUES('张三','数学',75);
+INSERT INTO student VALUES('李四','语文',76);
+INSERT INTO student VALUES('李四','数学',90);
+INSERT INTO student VALUES('王五','语文',81);
+INSERT INTO student VALUES('王五','数学',100);
+INSERT INTO student VALUES('王五','英语',90);
 
 
 -- 查询出每门课都大于80分的学生姓名
@@ -44,13 +44,13 @@ insert into student values('王五','英语',90);
 -- 因为一个学生有多门课程，可能所有课程都大于80分，可能有些课程大于80分，另外一些课程少于80分，也可能所有课程都小于80分。
 -- 那么我们要查找出所有大于80分的课程的学生姓名，我们可以反向思考，找出课程小于80分(可以找出有一些课程小于80分，所有课程小于80分的学生)的学生姓名再排除这些学生剩余的就是所有课程都大于80分的学生姓名了。 
 
-select distinct name from student where name not in (select distinct name from student where fengshu<=80);
+SELECT DISTINCT name FROM student WHERE name NOT IN (SELECT DISTINCT name FROM student WHERE fengshu<=80);
 
 /* not in */ 
-SELECT DISTINCT A.name FROM student A WHERE A.name not in(SELECT Distinct S.name FROM student S WHERE S.score <80);
+SELECT DISTINCT A.name FROM student A WHERE A.name NOT IN(SELECT DISTINCT S.name FROM student S WHERE S.score <80);
 
 /* not exists */ 
-SELECT DISTINCT A.name From student A  where not exists (SELECT 1 From student S Where  S.score <80 AND S.name =A.name);
+SELECT DISTINCT A.name FROM student A  WHERE NOT EXISTS (SELECT 1 FROM student S WHERE  S.score <80 AND S.name =A.name);
 ```
 
 
@@ -76,22 +76,22 @@ CREATE TABLE `dept`(
 
 -- 员工信息表（员工编号，员工姓名，工作职位，上级领导，入职日期，月薪，津贴，部门编号）
 CREATE TABLE `emp` ( 
-    `empno` int(4) NOT NULL PRIMARY KEY, 
+    `empno` INT(4) NOT NULL PRIMARY KEY, 
     `ename` VARCHAR(10), 
     `job` VARCHAR(9), 
-    `mgr` int(4), 
+    `mgr` INT(4), 
     `hiredate` DATE, 
-    `sal` float(7,2), 
-    `comm` float(7,2), 
-    `deptno` int(2), 
+    `sal` FLOAT(7,2), 
+    `comm` FLOAT(7,2), 
+    `deptno` INT(2), 
     CONSTRAINT fk_deptno FOREIGN KEY(deptno) REFERENCES dept(deptno) 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 薪水等级信息表（等级，最低薪水，最高薪水）
 CREATE TABLE `salgrade` ( 
-    `grade` int, 
-    `losal` int, 
-    `hisal` int 
+    `grade` INT, 
+    `losal` INT, 
+    `hisal` INT 
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -135,25 +135,25 @@ SELECT e.ename, d.dname FROM emp e, dept d WHERE e.job =( SELECT job FROM emp WH
 SELECT s.grade,count(*),avg(e.sal) FROM emp e LEFT JOIN salgrade s ON e.sal BETWEEN s.losal AND s.hisal GROUP BY s.grade ;
 
 -- 3. 列出薪金高于在部门30工作的所有员工的薪金的员工姓名和薪金、部门名称。
-select ename,sal,d.dname,d.deptno from emp e left join dept d on e.deptno = d.deptno where e.sal > (select max(sal) from emp where deptno = 30);
+SELECT ename,sal,d.dname,d.deptno FROM emp e LEFT JOIN dept d ON e.deptno = d.deptno WHERE e.sal > (SELECT max(sal) FROM emp WHERE deptno = 30);
 
 -- 4. 列出在每个部门工作的员工数量、平均工资和平均服务期限。
-select count(*),avg(sal),avg(year(now())-year(hiredate)) from emp group by deptno;
+SELECT count(*),avg(sal),avg(YEAR(now())-YEAR(hiredate)) FROM emp GROUP BY deptno;
 
 -- 5. 列出所有员工的姓名、部门名称和工资。
-select e.ename,d.dname,e.sal from emp e left join dept d on d.deptno = e.deptno;
+SELECT e.ename,d.dname,e.sal FROM emp e LEFT JOIN dept d ON d.deptno = e.deptno;
 
 -- 6. 列出所有部门的详细信息和部门人数
-select d.*,count(e.ename) from dept d left join emp e on e.deptno = d.deptno group by d.deptno;
+SELECT d.*,count(e.ename) FROM dept d LEFT JOIN emp e ON e.deptno = d.deptno GROUP BY d.deptno;
 
 -- 7. 列出各种工作的最低工资及从事此工作的雇员姓名。
-select t.job ,a.ename , t.minsal from emp a left join (select e.job as job , min(e.sal) as minsal from emp e group by e.job) t on a.job = t.job;
+SELECT t.job ,a.ename , t.minsal FROM emp a LEFT JOIN (SELECT e.job AS job , min(e.sal) AS minsal FROM emp e GROUP BY e.job) t ON a.job = t.job;
 
 -- 8. 列出各个部门的MANAGER(经理)的最低薪金、姓名、部门名称、部门人数。
-select a.mm,c.ename,c.job,b.dname,b.cc from (select d.deptno,min(sal) mm from emp e left join dept d on e.deptno = d.deptno where job = 'MANAGER' group by deptno) a left join (select d.deptno,d.dname,count(*) cc from emp e left join dept d on e.deptno = d.deptno group by d.deptno) b on a.deptno = b.deptno left join emp c on c.sal = a.mm and b.deptno = c.deptno ;
+SELECT a.mm,c.ename,c.job,b.dname,b.cc FROM (SELECT d.deptno,min(sal) mm FROM emp e LEFT JOIN dept d ON e.deptno = d.deptno WHERE job = 'MANAGER' GROUP BY deptno) a LEFT JOIN (SELECT d.deptno,d.dname,count(*) cc FROM emp e LEFT JOIN dept d ON e.deptno = d.deptno GROUP BY d.deptno) b ON a.deptno = b.deptno LEFT JOIN emp c ON c.sal = a.mm AND b.deptno = c.deptno ;
 
 -- 9. 列出所有员工的年工资，所在部门名称，按年薪从低到高排序。
-select empno,ename,sal * 12 ,d.dname from emp left join dept d on d.deptno = emp.deptno order by sal * 12 asc;
+SELECT empno,ename,sal * 12 ,d.dname FROM emp LEFT JOIN dept d ON d.deptno = emp.deptno ORDER BY sal * 12 ASC;
 
 -- 10. 查出某个员工的上级主管及所在部门名称，并要求出这些主管中的月薪超过3000
 
@@ -162,13 +162,13 @@ select empno,ename,sal * 12 ,d.dname from emp left join dept d on d.deptno = emp
 -- 12. 给任职日期超过30年或者在87年雇佣的雇员加薪，加薪原则：10部门增长10%，20部门增长20%， 30部门增长30%，依次类推。
 
 -- 13. 列出至少有一个员工的所有部门的信息。
-select  DISTINCT d.* from dept d join emp e on d.deptno = e.deptno; 
+SELECT  DISTINCT d.* FROM dept d JOIN emp e ON d.deptno = e.deptno; 
 
 -- 14. 列出月薪比JAMES低的所有员工。
-select * from emp where sal < (select sal from emp where ename = 'JAMES')
+SELECT * FROM emp WHERE sal < (SELECT sal FROM emp WHERE ename = 'JAMES')
 
 -- 15. 列出所有员工的姓名以及其直接上级的姓名。
-select a.empno,a.ename as 'e_name',b.ename as 'm_name' from emp a left join emp b on a.mgr = b.empno;
+SELECT a.empno,a.ename AS 'e_name',b.ename AS 'm_name' FROM emp a LEFT JOIN emp b ON a.mgr = b.empno;
 
 -- 16. 列出受雇日期早于其直接上级的所有员工的编号、姓名，部门名称。
 -- 17. 列出部门名称和这些部门的员工信息，同时列出那些没有员工的部门。
@@ -229,492 +229,492 @@ select a.empno,a.ename as 'e_name',b.ename as 'm_name' from emp a left join emp 
 -- SC(SId,CId,score)
 -- SId 学生编号,CId 课程编号,score 分数
 
-create table Student(sid varchar(10),sname varchar(10),sage datetime,ssex nvarchar(10));  
-insert into Student values('01' , '赵雷' , '1990-01-01' , '男');  
-insert into Student values('02' , '钱电' , '1990-12-21' , '男');  
-insert into Student values('03' , '孙风' , '1990-05-20' , '男');  
-insert into Student values('04' , '李云' , '1990-08-06' , '男');  
-insert into Student values('05' , '周梅' , '1991-12-01' , '女');  
-insert into Student values('06' , '吴兰' , '1992-03-01' , '女');  
-insert into Student values('07' , '郑竹' , '1989-07-01' , '女');  
-insert into Student values('08' , '王菊' , '1990-01-20' , '女');  
-create table Course(cid varchar(10),cname varchar(10),tid varchar(10));  
-insert into Course values('01' , '语文' , '02');  
-insert into Course values('02' , '数学' , '01');  
-insert into Course values('03' , '英语' , '03');  
-create table Teacher(tid varchar(10),tname varchar(10));  
-insert into Teacher values('01' , '张三');  
-insert into Teacher values('02' , '李四');  
-insert into Teacher values('03' , '王五');  
-create table SC(sid varchar(10),cid varchar(10),score decimal(18,1));  
-insert into SC values('01' , '01' , 80);  
-insert into SC values('01' , '02' , 90);  
-insert into SC values('01' , '03' , 99);  
-insert into SC values('02' , '01' , 70);  
-insert into SC values('02' , '02' , 60);  
-insert into SC values('02' , '03' , 80);  
-insert into SC values('03' , '01' , 80);  
-insert into SC values('03' , '02' , 80);  
-insert into SC values('03' , '03' , 80);  
-insert into SC values('04' , '01' , 50);  
-insert into SC values('04' , '02' , 30);  
-insert into SC values('04' , '03' , 20);  
-insert into SC values('05' , '01' , 76);  
-insert into SC values('05' , '02' , 87);  
-insert into SC values('06' , '01' , 31);  
-insert into SC values('06' , '03' , 34);  
-insert into SC values('07' , '02' , 89);  
-insert into SC values('07' , '03' , 98);
+CREATE TABLE Student(sid VARCHAR(10),sname VARCHAR(10),sage DATETIME,ssex nvarchar(10));  
+INSERT INTO Student VALUES('01' , '赵雷' , '1990-01-01' , '男');  
+INSERT INTO Student VALUES('02' , '钱电' , '1990-12-21' , '男');  
+INSERT INTO Student VALUES('03' , '孙风' , '1990-05-20' , '男');  
+INSERT INTO Student VALUES('04' , '李云' , '1990-08-06' , '男');  
+INSERT INTO Student VALUES('05' , '周梅' , '1991-12-01' , '女');  
+INSERT INTO Student VALUES('06' , '吴兰' , '1992-03-01' , '女');  
+INSERT INTO Student VALUES('07' , '郑竹' , '1989-07-01' , '女');  
+INSERT INTO Student VALUES('08' , '王菊' , '1990-01-20' , '女');  
+CREATE TABLE Course(cid VARCHAR(10),cname VARCHAR(10),tid VARCHAR(10));  
+INSERT INTO Course VALUES('01' , '语文' , '02');  
+INSERT INTO Course VALUES('02' , '数学' , '01');  
+INSERT INTO Course VALUES('03' , '英语' , '03');  
+CREATE TABLE Teacher(tid VARCHAR(10),tname VARCHAR(10));  
+INSERT INTO Teacher VALUES('01' , '张三');  
+INSERT INTO Teacher VALUES('02' , '李四');  
+INSERT INTO Teacher VALUES('03' , '王五');  
+CREATE TABLE SC(sid VARCHAR(10),cid VARCHAR(10),score DECIMAL(18,1));  
+INSERT INTO SC VALUES('01' , '01' , 80);  
+INSERT INTO SC VALUES('01' , '02' , 90);  
+INSERT INTO SC VALUES('01' , '03' , 99);  
+INSERT INTO SC VALUES('02' , '01' , 70);  
+INSERT INTO SC VALUES('02' , '02' , 60);  
+INSERT INTO SC VALUES('02' , '03' , 80);  
+INSERT INTO SC VALUES('03' , '01' , 80);  
+INSERT INTO SC VALUES('03' , '02' , 80);  
+INSERT INTO SC VALUES('03' , '03' , 80);  
+INSERT INTO SC VALUES('04' , '01' , 50);  
+INSERT INTO SC VALUES('04' , '02' , 30);  
+INSERT INTO SC VALUES('04' , '03' , 20);  
+INSERT INTO SC VALUES('05' , '01' , 76);  
+INSERT INTO SC VALUES('05' , '02' , 87);  
+INSERT INTO SC VALUES('06' , '01' , 31);  
+INSERT INTO SC VALUES('06' , '03' , 34);  
+INSERT INTO SC VALUES('07' , '02' , 89);  
+INSERT INTO SC VALUES('07' , '03' , 98);
 
 
 
 -- 1. 查询“01”课程比“02”课程成绩高的所有学生的学号；
-select distinct t1.sid as sidfrom   
-    (select * from sc where cid='01')t1  
-left join   
-    (select * from sc where cid='02')t2  
-on t1.sid=t2.sid  
-where t1.score>t2.score
+SELECT DISTINCT t1.sid AS sidfrom   
+    (SELECT * FROM sc WHERE cid='01')t1  
+LEFT JOIN   
+    (SELECT * FROM sc WHERE cid='02')t2  
+ON t1.sid=t2.sid  
+WHERE t1.score>t2.score
 
 -- 2. 查询平均成绩大于60分的同学的学号和平均成绩；
-select   
+SELECT   
     sid  
     ,avg(score)  
-from sc  
-group by sid  
-having avg(score)>60
+FROM sc  
+GROUP BY sid  
+HAVING avg(score)>60
 
 -- 3. 查询所有同学的学号、姓名、选课数、总成绩
-select  
-    student.sid as sid  
+SELECT  
+    student.sid AS sid  
     ,sname  
-    ,count(distinct cid) course_cnt  
-    ,sum(score) as total_score  
-from student  
-left join sc  
-on student.sid=sc.sid  
-group by sid,sname
+    ,count(DISTINCT cid) course_cnt  
+    ,sum(score) AS total_score  
+FROM student  
+LEFT JOIN sc  
+ON student.sid=sc.sid  
+GROUP BY sid,sname
 
 -- 4. 查询姓“李”的老师的个数；
-select  
-    count(distinct tid) as teacher_cnt  
-from teacher  
-where tname like '李%'
+SELECT  
+    count(DISTINCT tid) AS teacher_cnt  
+FROM teacher  
+WHERE tname LIKE '李%'
 
 -- 5. 查询没学过“张三”老师课的同学的学号、姓名；
-select  
+SELECT  
     sid,sname  
-from student  
-where sid not in   
+FROM student  
+WHERE sid NOT IN   
     (  
-        select  
+        SELECT  
             sc.sid  
-        from teacher  
-        left join course  
-            on teacher.tid=course.tid  
-        left join sc  
-            on course.cid=sc.cid  
-        where teacher.tname='张三'  
+        FROM teacher  
+        LEFT JOIN course  
+            ON teacher.tid=course.tid  
+        LEFT JOIN sc  
+            ON course.cid=sc.cid  
+        WHERE teacher.tname='张三'  
     )
 
 -- 6. 查询学过“01”并且也学过编号“02”课程的同学的学号、姓名；
-select  
-    t.sid as sid  
+SELECT  
+    t.sid AS sid  
     ,sname  
-from   
+FROM   
     (  
-        select  
+        SELECT  
             sid  
-            ,count(if(cid='01',score,null)) as count1  
-            ,count(if(cid='02',score,null)) as count2  
-        from sc  
-        group by sid  
-        having count(if(cid='01',score,null))>0 and count(if(cid='02',score,null))>0  
+            ,count(IF(cid='01',score,NULL)) AS count1  
+            ,count(IF(cid='02',score,NULL)) AS count2  
+        FROM sc  
+        GROUP BY sid  
+        HAVING count(IF(cid='01',score,NULL))>0 AND count(IF(cid='02',score,NULL))>0  
     )t  
-left join student  
-    on t.sid=student.sid
+LEFT JOIN student  
+    ON t.sid=student.sid
 
 -- 7. 查询学过“张三”老师所教的课的同学的学号、姓名；
-select  
+SELECT  
     student.sid  
     ,sname  
-from   
+FROM   
     (  
-        select  
-            distinct cid   
-        from course  
-        left join teacher   
-        on course.tid=teacher.tid  
-        where teacher.tname='张三'  
+        SELECT  
+            DISTINCT cid   
+        FROM course  
+        LEFT JOIN teacher   
+        ON course.tid=teacher.tid  
+        WHERE teacher.tname='张三'  
     )course  
-left join sc   
-    on course.cid=sc.cid  
-left join student  
-    on sc.sid=student.sid  
-group by student.sid,sname
+LEFT JOIN sc   
+    ON course.cid=sc.cid  
+LEFT JOIN student  
+    ON sc.sid=student.sid  
+GROUP BY student.sid,sname
 
 -- 8. 查询课程编号“01”的成绩比课程编号“02”课程低的所有同学的学号、姓名；
-select  
+SELECT  
     t1.sid,sname  
-from   
+FROM   
     (  
-        select distinct t1.sid as sid  
-        from   
-            (select * from sc where cid='01')t1  
-        left join   
-            (select * from sc where cid='02')t2  
-        on t1.sid=t2.sid  
-        where t1.score>t2.score  
+        SELECT DISTINCT t1.sid AS sid  
+        FROM   
+            (SELECT * FROM sc WHERE cid='01')t1  
+        LEFT JOIN   
+            (SELECT * FROM sc WHERE cid='02')t2  
+        ON t1.sid=t2.sid  
+        WHERE t1.score>t2.score  
     )t1  
-left join student  
-    on t1.sid=student.sid
+LEFT JOIN student  
+    ON t1.sid=student.sid
 
 -- 9. 查询所有课程成绩小于60分的同学的学号、姓名；
-select  
+SELECT  
     t1.sid,sname  
-from   
+FROM   
     (  
-        select  
+        SELECT  
             sid,max(score)  
-        from sc  
-        group by sid  
-        having max(score<60)  
+        FROM sc  
+        GROUP BY sid  
+        HAVING max(score<60)  
     )t1  
-left join student  
-    on t1.sid=student.sid
+LEFT JOIN student  
+    ON t1.sid=student.sid
 
 -- 10. 查询没有学全所有课的同学的学号、姓名；
-select  
+SELECT  
     t1.sid,sname  
-from   
+FROM   
     (  
-        select  
+        SELECT  
             count(cid),sid  
-        from sc  
-        group by sid  
-        having count(cid) < (select count(distinct cid) from course)  
+        FROM sc  
+        GROUP BY sid  
+        HAVING count(cid) < (SELECT count(DISTINCT cid) FROM course)  
     )t1  
-left join student  
-    on t1.sid=student.sid
+LEFT JOIN student  
+    ON t1.sid=student.sid
 
 -- 11. 查询至少有一门课与学号为“01”的同学所学相同的同学的学号和姓名；
-select  
-    distinct sc.sid  
-from   
+SELECT  
+    DISTINCT sc.sid  
+FROM   
     (  
-        select  
+        SELECT  
             cid  
-        from sc  
-        where sid='01'  
+        FROM sc  
+        WHERE sid='01'  
     )t1  
-left join sc  
-    on t1.cid=sc.cid
+LEFT JOIN sc  
+    ON t1.cid=sc.cid
 
 -- 12. 查询和"01"号的同学学习的课程完全相同的其他同学的学号和姓名
 #注意是和'01'号同学课程完全相同但非学习课程数相同的,这里我用左连接解决这个问题select  
     t1.sid,sname  
-from  
+FROM  
     (  
-        select  
+        SELECT  
             sc.sid  
-            ,count(distinct sc.cid)  
-        from   
+            ,count(DISTINCT sc.cid)  
+        FROM   
             (  
-                select  
+                SELECT  
                     cid  
-                from sc  
-                where sid='01'  
+                FROM sc  
+                WHERE sid='01'  
             )t1 #选出01的同学所学的课程  
-        left join sc  
-            on t1.cid=sc.cid  
-        group by sc.sid  
-        having count(distinct sc.cid)= (select count(distinct cid) from sc where sid = '01')  
+        LEFT JOIN sc  
+            ON t1.cid=sc.cid  
+        GROUP BY sc.sid  
+        HAVING count(DISTINCT sc.cid)= (SELECT count(DISTINCT cid) FROM sc WHERE sid = '01')  
     )t1  
-left join student  
-    on t1.sid=student.sid  
-where t1.sid!='01'
+LEFT JOIN student  
+    ON t1.sid=student.sid  
+WHERE t1.sid!='01'
 
 -- 13. 把“SC”表中“张三”老师教的课的成绩都更改为此课程的平均成绩；
 -- 暂跳过update题目
 
 
 -- 14. 查询没学过"张三"老师讲授的任一门课程的学生姓名
-select   
+SELECT   
     sname  
-from student  
-where sid not in  
+FROM student  
+WHERE sid NOT IN  
     (  
-        select  
-            distinct sid  
-        from sc  
-        left join course  
-            on sc.cid=course.cid  
-        left join teacher  
-            on course.tid=teacher.tid   
-        where tname='张三'  
+        SELECT  
+            DISTINCT sid  
+        FROM sc  
+        LEFT JOIN course  
+            ON sc.cid=course.cid  
+        LEFT JOIN teacher  
+            ON course.tid=teacher.tid   
+        WHERE tname='张三'  
     )
 
 -- 15. 查询两门及其以上不及格课程的同学的学号，姓名及其平均成绩
-select  
+SELECT  
     t1.sid,sname,avg_score  
-from   
+FROM   
     (  
-        select  
-            sid,count(if(score<60,cid,null)),avg(score) as avg_score  
-        from sc  
-        group by sid  
-        having count(if(score<60,cid,null)) >=2  
+        SELECT  
+            sid,count(IF(score<60,cid,NULL)),avg(score) AS avg_score  
+        FROM sc  
+        GROUP BY sid  
+        HAVING count(IF(score<60,cid,NULL)) >=2  
     )t1  
-left join student  
-    on t1.sid=student.sid
+LEFT JOIN student  
+    ON t1.sid=student.sid
 
 -- 16. 检索"01"课程分数小于60，按分数降序排列的学生信息
-select   
-    sid,if(cid='01',score,100)from sc  
-where if(cid='01',score,100)<60  
-order by if(cid='01',score,100) desc
+SELECT   
+    sid,IF(cid='01',score,100)FROM sc  
+WHERE IF(cid='01',score,100)<60  
+ORDER BY IF(cid='01',score,100) DESC
 
 -- 17. 按平均成绩从高到低显示所有学生的平均成绩
-select sid,avg(score)  
-from sc  
-group by sid  
-order by avg(score) desc
+SELECT sid,avg(score)  
+FROM sc  
+GROUP BY sid  
+ORDER BY avg(score) DESC
 
 -- 18. 查询各科成绩最高分、最低分和平均分：以如下形式显示：课程ID，课程name，最高分，最低分，平均分，及格率
-select  
+SELECT  
     sc.cid  
     ,cname  
-    ,max(score) as max_score  
-    ,min(score) as min_score  
-    ,avg(score) as avg_score  
-    ,count(if(score>=60,sid,null))/count(sid) as pass_rate  
- from sc   
- left join course  
-    on sc.cid=course.cid  
- group by sc.cid
+    ,max(score) AS max_score  
+    ,min(score) AS min_score  
+    ,avg(score) AS avg_score  
+    ,count(IF(score>=60,sid,NULL))/count(sid) AS pass_rate  
+ FROM sc   
+ LEFT JOIN course  
+    ON sc.cid=course.cid  
+ GROUP BY sc.cid
 
 -- 19. 按各科平均成绩从低到高和及格率的百分数从高到低顺序
 #这里先按照平均成绩排序，再按照及格百分数排序，  
-select   
+SELECT   
     cid  
-    ,avg(score) as avg_score  
-    ,count(if(score>=60,sid,null))/count(sid) as pass_rate  
-from sc  
-group by cid  
-order by avg_score,pass_rate desc
+    ,avg(score) AS avg_score  
+    ,count(IF(score>=60,sid,NULL))/count(sid) AS pass_rate  
+FROM sc  
+GROUP BY cid  
+ORDER BY avg_score,pass_rate DESC
 
 -- 20. 查询学生的总成绩并进行排名
-select  
+SELECT  
     sid  
-    ,sum(score) as sum_score  
-from sc  
-group by sid  
-order by sum_score desc
+    ,sum(score) AS sum_score  
+FROM sc  
+GROUP BY sid  
+ORDER BY sum_score DESC
 
 -- 21. 查询不同老师所教不同课程平均分从高到低显示
-select  
+SELECT  
     tid  
-    ,avg(score) as avg_score  
-from course  
-left join sc  
-    on course.cid=sc.cid  
-group by tid  
-order by avg_score desc
+    ,avg(score) AS avg_score  
+FROM course  
+LEFT JOIN sc  
+    ON course.cid=sc.cid  
+GROUP BY tid  
+ORDER BY avg_score DESC
 
 -- 22. 查询所有课程的成绩第2名到第3名的学生信息及该课程成绩
-select  
+SELECT  
     sid,rank_num,score,cid  
-from  
+FROM  
     (  
-        select  
-            rank() over(partition by cid order by score desc) as rank_num  
+        SELECT  
+            rank() OVER(PARTITION BY cid ORDER BY score DESC) AS rank_num  
             ,sid  
             ,score  
             ,cid  
-        from sc  
+        FROM sc  
     )t  
-where rank_num in (2,3)
+WHERE rank_num IN (2,3)
 
 -- 23. 统计各科成绩各分数段人数：课程编号,课程名称,[100-85],[85-70],[70-60],[0-60]及所占百分比
-select  
+SELECT  
     sc.cid  
     ,cname  
-    ,count(if(score between 85 and 100,sid,null))/count(sid)  
-    ,count(if(score between 70 and 85,sid,null))/count(sid)  
-    ,count(if(score between 60 and 70,sid,null))/count(sid)  
-    ,count(if(score between 0 and 60,sid,null))/count(sid)  
-from sc  
-left join course  
-    on sc.cid=course.cid  
-group by sc.cid,cname
+    ,count(IF(score BETWEEN 85 AND 100,sid,NULL))/count(sid)  
+    ,count(IF(score BETWEEN 70 AND 85,sid,NULL))/count(sid)  
+    ,count(IF(score BETWEEN 60 AND 70,sid,NULL))/count(sid)  
+    ,count(IF(score BETWEEN 0 AND 60,sid,NULL))/count(sid)  
+FROM sc  
+LEFT JOIN course  
+    ON sc.cid=course.cid  
+GROUP BY sc.cid,cname
 
 -- 24. 查询学生平均成绩及其名次
-select  
+SELECT  
     sid  
     ,avg_score  
-    ,rank() over (order by avg_score desc)  
-from   
+    ,rank() OVER (ORDER BY avg_score DESC)  
+FROM   
     (  
-        select  
+        SELECT  
             sid  
-            ,avg(score) as avg_score  
-        from sc  
-        group by sid  
+            ,avg(score) AS avg_score  
+        FROM sc  
+        GROUP BY sid  
     )t
 
 -- 25. 查询各科成绩前三名的记录
-select  
+SELECT  
     sid,cid,rank1from   
     (  
-        select  
+        SELECT  
             cid  
             ,sid  
-            ,rank() over(partition by cid order by score desc) as rank1  
-        from sc  
+            ,rank() OVER(PARTITION BY cid ORDER BY score DESC) AS rank1  
+        FROM sc  
     )twhere rank1<=3
 
 -- 26. 查询每门课程被选修的学生数
-select  
+SELECT  
     count(sid)  
     ,cid  
-from sc  
-group by cid
+FROM sc  
+GROUP BY cid
 
 -- 27. 查询出只选修了一门课程的全部学生的学号
-select  
+SELECT  
     sid  
-from sc  
-group by sid  
-having count(cid) =1
+FROM sc  
+GROUP BY sid  
+HAVING count(cid) =1
 
 -- 28. 查询男生、女生人数
-select  
+SELECT  
     ssex  
-    ,count(distinct sid)  
-from student          
-group by ssex
+    ,count(DISTINCT sid)  
+FROM student          
+GROUP BY ssex
 
 -- 29. 查询名字中含有"风"字的学生信息
-select  
+SELECT  
     sid,sname  
-from student  
-where sname like '%风%'
+FROM student  
+WHERE sname LIKE '%风%'
 
 -- 30. 查询同名同性学生名单，并统计同名人数
-select  
+SELECT  
     ssex  
     ,sname  
     ,count(sid)  
-from student  
-group by ssex,sname  
-having count(sid)>=2
+FROM student  
+GROUP BY ssex,sname  
+HAVING count(sid)>=2
 
 -- 31. 查询1990年出生的学生名单(注：Student表中Sage列的类型是datetime)
-select  
+SELECT  
     sid,sname,sage  
-from student  
-where year(sage)=1990
+FROM student  
+WHERE YEAR(sage)=1990
 
 -- 32. 查询每门课程的平均成绩，结果按平均成绩升序排列，平均成绩相同时，按课程号降序排列
-select  
-    cid,avg(score) as avg_score  
-from sc  
-group by cid  
-order by avg_score,cid desc
+SELECT  
+    cid,avg(score) AS avg_score  
+FROM sc  
+GROUP BY cid  
+ORDER BY avg_score,cid DESC
 
 -- 33. 查询不及格的课程，并按课程号从大到小排列
-select  
+SELECT  
     cid,sid,score  
-from sc  
-where score<60  
-order by cid desc,sid
+FROM sc  
+WHERE score<60  
+ORDER BY cid DESC,sid
 
 -- 34. 查询课程编号为"01"且课程成绩在60分以上的学生的学号和姓名；
-select  
+SELECT  
     sid,cid,score  
-from sc  
-where cid='01' and score>60
+FROM sc  
+WHERE cid='01' AND score>60
 
 -- 35. 查询选修“张三”老师所授课程的学生中，成绩最高的学生姓名及其成绩
-select  
+SELECT  
     sc.sid,sname,cname,score  
-from sc  
-left join course  
+FROM sc  
+LEFT JOIN course  
     style="font-weight: 600;">=course.cid  
-left join teacher  
+LEFT JOIN teacher  
     style="font-weight: 600;">=teacher.tid  
-left join student  
+LEFT JOIN student  
     style="font-weight: 600;">=student.sid  
-where tname='张三'  
-order by score desc  
-limit 1;
+WHERE tname='张三'  
+ORDER BY score DESC  
+LIMIT 1;
 
 -- 36. 查询每门功课成绩最好的前两名
-select  
+SELECT  
     cid,sid,rank1  
-from   
+FROM   
     (  
-        select  
+        SELECT  
             cid  
             ,sid  
-            ,rank() over(partition by cid order by score desc) as rank1  
-        from sc   
+            ,rank() OVER(PARTITION BY cid ORDER BY score DESC) AS rank1  
+        FROM sc   
     )t  
-where rank1 <=2
+WHERE rank1 <=2
 
 -- 37. 统计每门课程的学生选修人数（超过5人的课程才统计）。要求输出课程号和选修人数，查询结果按人数降序排列，若人数相同，按课程号升序排列
-select  
+SELECT  
     cid  
-    ,count(sid) as cnt  
-from sc  
-group by cid  
-having cnt>=5  
-order by count(sid) desc,cid
+    ,count(sid) AS cnt  
+FROM sc  
+GROUP BY cid  
+HAVING cnt>=5  
+ORDER BY count(sid) DESC,cid
 
 -- 38. 检索至少选修两门课程的学生学号
-select  
+SELECT  
     sid  
     ,count(cid)  
-from sc  
-group by sid  
-having count(cid)>=2
+FROM sc  
+GROUP BY sid  
+HAVING count(cid)>=2
 
 -- 39. 查询选修了全部课程的学生信息
-select  
+SELECT  
     sid  
     ,count(cid)  
-from sc  
-group by sid  
-having count(cid)=(select count(distinct cid) from sc)
+FROM sc  
+GROUP BY sid  
+HAVING count(cid)=(SELECT count(DISTINCT cid) FROM sc)
 
 -- 40. 查询各学生的年龄
-select  
-    sid,sname,year(curdate())-year(sage) as sage  
-from student
+SELECT  
+    sid,sname,YEAR(curdate())-YEAR(sage) AS sage  
+FROM student
 
 -- 41. 查询本周过生日的学生
-select  
+SELECT  
     sid,sname,sage  
-from student  
-where weekofyear(sage)=weekofyear(curdate())
+FROM student  
+WHERE weekofyear(sage)=weekofyear(curdate())
 
 -- 42. 查询下周过生日的学生
-select   
+SELECT   
     sid,sname,sage  
-from student  
-where weekofyear(sage) = weekofyear(date_add(curdate(),interval 1 week))
+FROM student  
+WHERE weekofyear(sage) = weekofyear(date_add(curdate(),interval 1 week))
 
 -- 43 查询本月过生日的学生
-select  
+SELECT  
     sid,sname,sage  
-from student  
-where month(sage) = month(curdate())
+FROM student  
+WHERE month(sage) = month(curdate())
 
 -- 44. 查询下月过生日的学生
-select  
+SELECT  
     sid,sname,sage  
-from student  
-where month(date_sub(sage,interval 1 month)) = month(curdate())
+FROM student  
+WHERE month(date_sub(sage,interval 1 month)) = month(curdate())
 
 ```
 

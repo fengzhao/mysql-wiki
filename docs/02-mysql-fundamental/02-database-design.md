@@ -543,8 +543,8 @@ CREATE TABLE db_test.employees_mgr (
 
 
 -- test data
-insert into db_test.employees_mgr values
-(333, "Yasmina", null), /* Yasmina is the CEO (manager_id is null) */
+INSERT INTO db_test.employees_mgr VALUES
+(333, "Yasmina", NULL), /* Yasmina is the CEO (manager_id is null) */
 (198, "John", 333),     /* John has id 198 and reports to 333 (Yasmina) */
 (692, "Tarek", 333),    /* Tarek has id 692 and reports to 333 (Yasmina) */
 (29, "Pedro ", 198),    /* Pedro has id 29 and reports to 198 (John) */
@@ -564,7 +564,7 @@ insert into db_test.employees_mgr values
 |   29 | Pedro   | 333->198->29       |
 | 4610 | Sarah   | 333->198->29->4610 |
 +------+---------+--------------------+
-5 rows in set (0.00 sec)
+5 ROWS IN SET (0.00 sec)
 mysql>
 
 
@@ -572,19 +572,19 @@ mysql>
 -- 通过recursive递归CTE来查询用户的层级关系
 -- 规划一个ID，name，path这样的一个层级临时表
 
-with recursive employee_paths (id, name, path) as (
+WITH RECURSIVE employee_paths (id, name, path) AS (
      -- 先查最顶层节点
-     select id, name, cast(id as char(200))
-     from db_test.employees_mgr
-     where manager_id is null
-     union all
+     SELECT id, name, cast(id AS CHAR(200))
+     FROM db_test.employees_mgr
+     WHERE manager_id IS NULL
+     UNION ALL
      -- 递归查询
-     select e.id, e.name, concat(ep.path, '->', e.id)
-     from employee_paths as ep
-     join db_test.employees_mgr as e
-     on ep.id = e.manager_id
+     SELECT e.id, e.name, concat(ep.path, '->', e.id)
+     FROM employee_paths AS ep
+     JOIN db_test.employees_mgr AS e
+     ON ep.id = e.manager_id
     )
-     select * from employee_paths;
+     SELECT * FROM employee_paths;
 ```
 
 这种方案的优点很明显：结构简单易懂，由于互相之间的关系只由一个 parent_id 维护，所以增删改都是非常容易，只需要改动和他直接相关的记录就可以。
@@ -607,7 +607,7 @@ with recursive employee_paths (id, name, path) as (
 ```SQL
 -- 查询某一节点下的所有子节点:（以Fruit为例）
 SET @path = (SELECT path FROM pathTree WHERE node_name = 'Fruit');
-SELECT * FROM pathTree WHERE path like CONCAT(@path,'/%');
+SELECT * FROM pathTree WHERE path LIKE CONCAT(@path,'/%');
 
 -- 如何查询直属子节点？需要采用MySQL的正则表达式查询：
 SET @path = (SELECT path FROM pathTree WHERE node_name = 'Fruit');
@@ -653,16 +653,16 @@ CREATE TABLE `village` (
 
 -- 部门信息表
 CREATE TABLE `departments` (
-  `id` int NOT NULL COMMENT 'ID',
-  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '部门名称',
-  `parent_id` int DEFAULT NULL COMMENT '父ID',
+  `id` INT NOT NULL COMMENT 'ID',
+  `name` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '部门名称',
+  `parent_id` INT DEFAULT NULL COMMENT '父ID',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='部门表';
 
 -- 部门信息闭包表
 CREATE TABLE `departments_closure_table` (
-  `ancestor` int NOT NULL COMMENT '祖先节点',
-  `descendant` int NOT NULL COMMENT '后代节点',
+  `ancestor` INT NOT NULL COMMENT '祖先节点',
+  `descendant` INT NOT NULL COMMENT '后代节点',
   PRIMARY KEY (`ancestor`,`descendant`),
   KEY `fk_descendant` (`descendant`),
   CONSTRAINT `fk_ancestor` FOREIGN KEY (`ancestor`) REFERENCES `departments` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
@@ -696,7 +696,7 @@ INSERT INTO `hytto_cs`.`departments`(`id`, `name`, `parent_id`) VALUES (20, '绵
 -- 填充闭包信息表
 INSERT INTO departments_closure_table (ancestor, descendant, depth)
 WITH RECURSIVE cte AS (
-  SELECT id as ancestor, id as descendant, 0 as depth
+  SELECT id AS ancestor, id AS descendant, 0 AS depth
   FROM departments
   UNION ALL
   SELECT cte.ancestor, departments.id, cte.depth + 1

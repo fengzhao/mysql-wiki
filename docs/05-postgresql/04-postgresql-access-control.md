@@ -65,7 +65,7 @@ PostgreSql 数据库安装完成后，再需要做一些配置，才可以正常
 --系统命令行执行
 pg_ctl reload
 --连入数据库执行
-select pg_reload_conf();
+SELECT pg_reload_conf();
 ```
 
 

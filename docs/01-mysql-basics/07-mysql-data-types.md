@@ -89,7 +89,7 @@ mysql> SELECT * FROM demo_a;
 +----+---+-------------+
 |  1 | 1 | 00000000001 |
 +----+---+-------------+
-1 row in set (0.18 sec)
+1 ROW IN SET (0.18 sec)
 
 ```
 
@@ -257,7 +257,7 @@ MySQL 中的各种数值类型都有取值范围，所以插入过大的值肯�
 CREATE TABLE vc (v VARCHAR(4), c CHAR(4));
 INSERT INTO vc VALUES ('12', '12');
 INSERT INTO vc VALUES ('ab  ', 'ab  ');
-INSERT INTO vc VALUES ('123456', '123456'); --这行会报错:Data to long...
+INSERT INTO vc VALUES ('123456', '123456'); --这行会报错:Data TO long...
 SELECT CONCAT('(', v, ')'), CONCAT('(', c, ')') FROM vc;
 
 
@@ -303,9 +303,9 @@ CREATE TABLE t (
 
 
 mysql> CREATE TABLE test( a VARCHAR(16384) NOT NULL)CHARSET=utf8mb4;
-ERROR 1074 (42000): Column length too big for column 'a' (max = 16383); use BLOB or TEXT instead
+ERROR 1074 (42000): COLUMN length too big FOR COLUMN 'a' (max = 16383); USE BLOB OR TEXT instead
 mysql> CREATE TABLE test( a VARCHAR(16383) NOT NULL)CHARSET=utf8mb4;
-Query OK, 0 rows affected (0.18 sec)
+Query OK, 0 ROWS affected (0.18 sec)
 
 ```
 
@@ -334,16 +334,16 @@ Query OK, 0 rows affected (0.18 sec)
 
 
 -- 试着创建一个字段长度超过mysql限制的表，从系统提示知道，列长度不能超过65535
-mysql> create table test_varchar_length(v varchar(65536) not null) CHARSET=latin1;
-ERROR 1074 (42000): Column length too big for column 'v' (max = 65535); use BLOB or TEXT instead
+mysql> CREATE TABLE test_varchar_length(v VARCHAR(65536) NOT NULL) CHARSET=latin1;
+ERROR 1074 (42000): COLUMN length too big FOR COLUMN 'v' (max = 65535); USE BLOB OR TEXT instead
 
 -- 创建一个字段长度小于max, 65534的表，继续失败
-mysql> create table test_varchar_length(v varchar(65534) not null) CHARSET=latin1;
-ERROR 1118 (42000): Row size too large. The maximum row size for the used table type, not counting BLOBs, is 65535. This includes storage overhead, check the manual. You have to change some columns to TEXT or BLOBs
+mysql> CREATE TABLE test_varchar_length(v VARCHAR(65534) NOT NULL) CHARSET=latin1;
+ERROR 1118 (42000): ROW size too large. The maximum ROW size FOR the used TABLE type, NOT counting BLOBs, IS 65535. This includes STORAGE overhead, CHECK the manual. You have TO CHANGE SOME COLUMNS TO TEXT OR BLOBs
 
 -- 创建一个65533的表，65533+2=65535(max), 成功
-mysql> create table test_varchar_length(v varchar(65533) not null) CHARSET=latin1;
-Query OK, 0 rows affected (0.05 sec)
+mysql> CREATE TABLE test_varchar_length(v VARCHAR(65533) NOT NULL) CHARSET=latin1;
+Query OK, 0 ROWS affected (0.05 sec)
 ```
 
 ### varchar 变长为什么不是越大越好？
@@ -560,23 +560,23 @@ Codd 曾经认为应该严格地区分两种类型的 NULL ，并提倡在关系
 ```sql
 -- 示例
 
-mysql> select 1 is  null  , 1 is not null , 1 and null , 1 = null , 1 > null , 1 + null  , null = null , null is null ;
+mysql> SELECT 1 IS  NULL  , 1 IS NOT NULL , 1 AND NULL , 1 = NULL , 1 > NULL , 1 + NULL  , NULL = NULL , NULL IS NULL ;
 +------------+---------------+------------+----------+----------+----------+-------------+--------------+
-| 1 is  null | 1 is not null | 1 and null | 1 = null | 1 > null | 1 + null | null = null | null is null |
+| 1 IS  NULL | 1 IS NOT NULL | 1 AND NULL | 1 = NULL | 1 > NULL | 1 + NULL | NULL = NULL | NULL IS NULL |
 +------------+---------------+------------+----------+----------+----------+-------------+--------------+
 |          0 |             1 |       NULL |     NULL |     NULL |     NULL |        NULL |            1 |
 +------------+---------------+------------+----------+----------+----------+-------------+--------------+
-1 row in set (0.00 sec)
+1 ROW IN SET (0.00 sec)
 
 mysql>
 
- mysql> select length(''), length(null), length(0), length('0');
+ mysql> SELECT length(''), length(NULL), length(0), length('0');
  +------------+--------------+-----------+-------------+
- | length('') | length(null) | length(0) | length('0') |
+ | length('') | length(NULL) | length(0) | length('0') |
  +------------+--------------+-----------+-------------+
  |          0 |         NULL |         1 |           1 |
  +------------+--------------+-----------+-------------+
- 1 row in set (0.00 sec)
+ 1 ROW IN SET (0.00 sec)
 ```
 
 [参考](https://mytechshares.com/2021/05/09/week-mysql-null/)
@@ -623,7 +623,7 @@ Redundant、Compact、Compressed、Dynamic
 
 ```sql
 -- 配置文件指定 InnoDB 表的默认文件格式。5.7和8.0的 innodb_default_row_format 默认值都是是 DYNAMIC
-show variables like 'innodb_default_row_format';
+SHOW variables LIKE 'innodb_default_row_format';
 
 -- 用户可以在建表时，显示指定表的 row format，也可以是其他格式
 CREATE TABLE t1 (c1 INT) ROW_FORMAT=DYNAMIC;

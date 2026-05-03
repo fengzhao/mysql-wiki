@@ -25,7 +25,7 @@ CREATE TABLE t1 (
 对于一条最简单的单表查询语句：
 
 ```SQL
-SELECT * FROM t1 where t1.col1 < 5;
+SELECT * FROM t1 WHERE t1.col1 < 5;
 ```
 
 它从逻辑上来说很简单，就是想要找到t1.col1小于5的所有记录。然而，如何从表中获取数据呢？至少可以有以下方案：
@@ -187,7 +187,7 @@ for(Row r1 in List<Row> t1){
 
 -- 优化器一般会优先选择小表做驱动表。所以使用 inner join 时，排在前面的表并不一定就是驱动表。
 -- 使用了 NLJ 算法。一般 join 语句中，如果执行计划 Extra 中未出现 Using join buffer 则表示使用的 join 算法是 NLJ
-select * from t1 inner join t2 on t1.id=t2.tid
+SELECT * FROM t1 INNER JOIN t2 ON t1.id=t2.tid
 
 -- 从表 t2 中读取一行数据(如果t2表有查询过滤条件的，会从过滤结果里取出一行数据);
 ```
@@ -216,7 +216,7 @@ join 查询的优化思路就是小表驱动大表，而且在大表上创建索
 
 ```SQL
 
-select * from t1 straight_join t2 on (t1.a=t2.a);
+SELECT * FROM t1 STRAIGHT_JOIN t2 ON (t1.a=t2.a);
 
 -- 被驱动表t2的字段a上有索引，join过程用上了这个索引
 
@@ -238,8 +238,8 @@ select * from t1 straight_join t2 on (t1.a=t2.a);
 把驱动表的数据读入到 **join_buffer** 中，然后扫描被驱动表，**把被驱动表每一行取出来跟 join_buffer 中的数据做对比。**
 
 ```sql
-explain select * from t1 inner join t2 on t1.b= t2.b;
---查询计划中的 extra 的类型是 Using join buffer (Block Nested Loop) 则说明使用了BNL算法
+EXPLAIN SELECT * FROM t1 INNER JOIN t2 ON t1.b= t2.b;
+--查询计划中的 extra 的类型是 USING JOIN buffer (Block Nested LOOP) 则说明使用了BNL算法
 
 -- 这段sql的大致流程如下:
 -- 1.把 t2 的所有数据放入到 join_buffer 中
@@ -410,7 +410,7 @@ SELECT *
 -- 接下来我们比较一下 hash join 和 block nested loop 的性能，首先分别为 t1、t2 和 t3 生成 1000000 条记录：
 
 
-set join_buffer_size=2097152000;
+SET join_buffer_size=2097152000;
 
 SET @@cte_max_recursion_depth = 99999999;
 
@@ -448,9 +448,9 @@ SELECT *
 
 -- 建表t2
 CREATE TABLE `t2` (
-  `id` int(11) NOT NULL,
-  `a` int(11) DEFAULT NULL,
-  `b` int(11) DEFAULT NULL,
+  `id` INT(11) NOT NULL,
+  `a` INT(11) DEFAULT NULL,
+  `b` INT(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `a` (`a`)
 ) ENGINE=InnoDB;
@@ -458,15 +458,15 @@ CREATE TABLE `t2` (
 
 -- t2的存储过程，插入数据
 delimiter ;;
-create procedure idata()
-begin
-  declare i int;
-  set i=1;
-  while(i<=1000)do
-    insert into t2 values(i, i, i);
-    set i=i+1;
-  end while;
-end;;
+CREATE PROCEDURE idata()
+BEGIN
+  DECLARE i INT;
+  SET i=1;
+  WHILE(i<=1000)do
+    INSERT INTO t2 VALUES(i, i, i);
+    SET i=i+1;
+  END WHILE;
+END;;
 
 delimiter ;
 
@@ -474,21 +474,21 @@ call idata();
 
 
 -- 建表t1
-create table t1 like t2;
-insert into t1 (select * from t2 where id<=100)
+CREATE TABLE t1 LIKE t2;
+INSERT INTO t1 (SELECT * FROM t2 WHERE id<=100)
 
 
 -- t1的存储过程，插入数据
 delimiter ;;
-create procedure idata2()
-begin
-  declare i int;
-  set i=2000;
-  while(i<=3000)do
-    insert into t1 values(i, i, i);
-    set i=i+1;
-  end while;
-end;;
+CREATE PROCEDURE idata2()
+BEGIN
+  DECLARE i INT;
+  SET i=2000;
+  WHILE(i<=3000)do
+    INSERT INTO t1 VALUES(i, i, i);
+    SET i=i+1;
+  END WHILE;
+END;;
 
 delimiter ;
 
@@ -501,7 +501,7 @@ call idata2();
 -- t2 的数据  1-1000            一共是1000条数据
 
 -- 直接多表查询，笛卡尔积：1101*1000 条数据，很少有这样的查询
-select *  from t1 , t2   
+SELECT *  FROM t1 , t2   
 
 
 

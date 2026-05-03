@@ -388,13 +388,13 @@ IO Thread的作用，是负责这些 IO 请求的回调（call back）
 #### 查看purge thread的数量
 
 ```mysql
-mysql> show variables like 'innodb_purge_threads';
+mysql> SHOW variables LIKE 'innodb_purge_threads';
 +----------------------+-------+
-| Variable_name        | Value |
+| Variable_name        | VALUE |
 +----------------------+-------+
 | innodb_purge_threads | 4     |
 +----------------------+-------+
-1 row in set (0.02 sec)
+1 ROW IN SET (0.02 sec)
 ```
 
 ### Page Cleaner Thread

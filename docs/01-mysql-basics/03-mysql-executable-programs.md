@@ -160,9 +160,9 @@ mysql -u root -p --execute="SELECT User, Host FROM mysql.user"
 很多参数选项是 boolean 类型，用来控制某个功能的开关。例如，mysql 客户端程序使用 --column-names 来决定查询结果是否有标题，默认地，它是开启的。可以通过如下格式来关闭它：
 
 ```sql
---disable-column-names
---skip-column-names
---column-names=0
+--disable-COLUMN-names
+--SKIP-COLUMN-names
+--COLUMN-names=0
 ```
 
 -- disable 前缀，--skip 前缀，=0 后缀 ，都有一个效果，那就是关闭这个功能。
@@ -170,9 +170,9 @@ mysql -u root -p --execute="SELECT User, Host FROM mysql.user"
 启用这个功能也有如下三种格式：
 
 ```sql
---column-names
---enable-column-names
---column-names=1
+--COLUMN-names
+--enable-COLUMN-names
+--COLUMN-names=1
 ```
 
 ON, TRUE, OFF, FALSE 都被认为是 boolean 类型，不区分大小写。
@@ -180,8 +180,8 @@ ON, TRUE, OFF, FALSE 都被认为是 boolean 类型，不区分大小写。
 如果一个参数以 --loose 前缀开头，如果命令不能识别这个参数，也不会报错退出，只会提示 warn 警告一下。
 
 ```sql
-shell> mysql --loose-no-such-option
-mysql: WARNING: unknown option '--loose-no-such-option'
+shell> mysql --loose-NO-such-OPTION
+mysql: WARNING: UNKNOWN OPTION '--loose-no-such-option'
 ```
 
 ### 使用配置文件

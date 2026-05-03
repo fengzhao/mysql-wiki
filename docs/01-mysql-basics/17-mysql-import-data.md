@@ -20,17 +20,17 @@ MySQL支持使用`LOAD DATA LOCAL INFILE`语句，即可将客户端本地的文
 -- 缺点：只能备份表数据，并不能包含表结构；如果表被drop，是无法恢复数据的。（只是select ... into outfile）
 
 -- select into outfile 导出表
-select col1， col2 from table-name into outfile  '/path/备份文件名称'
+SELECT col1， col2 FROM TABLE-name INTO OUTFILE  '/path/备份文件名称'
 
 -- 将tt表数据备份到tmp目录下的tt.sql文件(如果tt.sql文件存在，会报错文件已经存在)
-select * from tt into outfile '/tmp/tt.sql';
+SELECT * FROM tt INTO OUTFILE '/tmp/tt.sql';
 
 -- 导入数据
-LOAD DATA INFILE '/path/备份文件' into table database.tt
+LOAD DATA INFILE '/path/备份文件' INTO TABLE DATABASE.tt
 
 
 -- 将tmp下的tt.sql文件恢复到tt表
-load data infile '/tmp/tt.sql' into table db.tt
+LOAD data INFILE '/tmp/tt.sql' INTO TABLE db.tt
 
 -- load data与insert速度对比
 -- 以插入10万条数据为例，load data需要大概1.4s，insert大概需要12.2s，大概是insert的12倍。

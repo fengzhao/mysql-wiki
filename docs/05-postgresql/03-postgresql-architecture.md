@@ -212,21 +212,21 @@ SELECT *, oid FROM pg_catalog.pg_database;
 一个名为information_schema，用于存储所需求提供的元数据查询视图，目的是为了符合ANSI SQL规范，可单独删除
 一个名为public，用于存储用户创建的数据表。不建议项目的表存放在public下，1、是数据安全；2、表存放混乱；不利于后期维护等等
 */
-select table_schema, count(*) from information_schema.tables  group by table_schema;
+SELECT table_schema, count(*) FROM information_schema.TABLES  GROUP BY table_schema;
 
 -- 查看各种class和type
-select * from pg_class order by oid ;
+SELECT * FROM pg_class ORDER BY oid ;
 
 -- PostgreSQL的所有数据类型都存储在系统表pg_type中
-select * from pg_type ;
+SELECT * FROM pg_type ;
 
 
 -- 每一张表的数据（大部分）又是放在 $PGDATA/base/{dboid}/{relfilenode} 这个文件里面，relfilenode一般情况下和和tboid一致，但有些情况下也会变化，如TRUNCATE、REINDEX、CLUSTER以及某些形式的ALTER TABLE。
 
 -- 查找表名的oid, 表物理文件是${PGDATA}/base/{dboid}/{relfilenode}
-select oid,relfilenode from pg_class where relname = '表名';
+SELECT oid,relfilenode FROM pg_class WHERE relname = '表名';
 -- 表物理文件是 base/16396/16399
-select pg_relation_filepath('dim_admin_area');
+SELECT pg_relation_filepath('dim_admin_area');
 
 
 
@@ -312,7 +312,7 @@ postgres=# SELECT oid,datname,datdba,encoding   FROM pg_database;
    5 | postgres  |     10 |        6
    1 | template1 |     10 |        6
    4 | template0 |     10 |        6
-(3 rows)
+(3 ROWS)
 
 ```
 
@@ -370,7 +370,7 @@ SELECT oid, relname FROM pg_class WHERE relname = 'pg_class';
  oid  | relname
 ------+----------
  1259 | pg_class
-(1 row)
+(1 ROW)
 
 postgres=#
 
@@ -392,7 +392,7 @@ SELECT * FROM pg_catalog.pg_database;
 一个名为information_schema，用于存储所需求提供的元数据查询视图，目的是为了符合ANSI SQL规范，可单独删除
 一个名为public，用于存储用户创建的数据表。不建议项目的表存放在public下，1、是数据安全；2、表存放混乱；不利于后期维护等等
 */
-SELECT table_schema, count(*) FROM information_schema.tables  GROUP BY table_schema;
+SELECT table_schema, count(*) FROM information_schema.TABLES  GROUP BY table_schema;
 
 -- 查看各种类：
 SELECT * FROM pg_class ORDER BY oid ;
@@ -445,14 +445,14 @@ SELECT oid,relname,relnamespace,reltype,relam,relfilenode,relpersistence,relkind
   oid  | relname | relnamespace | reltype | relam | relfilenode | relpersistence | relkind | relnatts
 -------+---------+--------------+---------+-------+-------------+----------------+---------+----------
  16388 | map     |         2200 |   16390 |     0 |           0 | p              | c       |        2
-(1 row)
+(1 ROW)
 
 --  表map_test的属性信息
 SELECT oid,relname,relnamespace,reltype,relam,relfilenode,relpersistence,relkind,relnatts FROM pg_class WHERE relname='map_test';
   oid  | relname  | relnamespace | reltype | relam | relfilenode | relpersistence | relkind | relnatts
 -------+----------+--------------+---------+-------+-------------+----------------+---------+----------
  16391 | map_test |         2200 |   16393 |     2 |       16391 | p              | r       |        2
-(1 row)
+(1 ROW)
 ```
 
 **pg_attribute**

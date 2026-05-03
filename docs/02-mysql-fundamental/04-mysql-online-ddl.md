@@ -92,7 +92,7 @@ MySQL 内部具体实现步骤如下：
 在 2-4 的过程中，如果表 A 数据量比较大，拷贝到表 B 的过程会消耗大量时间，并占用额外的存储空间。此外，由于 DDL 操作占用了表 A 的读锁，所以表 A 上的 DDL 和 DML 都将阻塞无法提供服务。
 
 ```SQL
-ALTER TABLE table1 ADD COLUMN column1 int ALGORITHM=COPY;
+ALTER TABLE table1 ADD COLUMN column1 INT ALGORITHM=COPY;
 ```
 
 #### inplace 算法

@@ -207,17 +207,17 @@ mysql> SHOW CREATE TABLE mysql.catalogs
 
 
  SELECT count(*)  FROM information_schema.innodb_tables;                        -- 34 
- SELECT count(*)  FROM information_schema.tables;                               -- 328
- SELECT count(*)  FROM mysql.tables;                                            -- 361
- SELECT count(*)  FROM mysql.tables  where schema_id=1 AND hidden='System';     -- 32张内部表
+ SELECT count(*)  FROM information_schema.TABLES;                               -- 328
+ SELECT count(*)  FROM mysql.TABLES;                                            -- 361
+ SELECT count(*)  FROM mysql.TABLES  WHERE schema_id=1 AND hidden='System';     -- 32张内部表
 
-    SELECT CONVERT( properties USING utf8mb4) as properties FROM mysql.dd_properties;
+    SELECT CONVERT( properties USING utf8mb4) AS properties FROM mysql.dd_properties;
 
 
 mysql> 
-mysql> SELECT id, name,schema_id , engine ,mysql_version_id , comment , hidden  FROM mysql.tables  where schema_id=1 AND hidden='System';
+mysql> SELECT id, name,schema_id , ENGINE ,mysql_version_id , COMMENT , hidden  FROM mysql.TABLES  WHERE schema_id=1 AND hidden='System';
 +----+------------------------------+-----------+--------+------------------+---------+--------+
-| id | name                         | schema_id | engine | mysql_version_id | comment | hidden |
+| id | name                         | schema_id | ENGINE | mysql_version_id | COMMENT | hidden |
 +----+------------------------------+-----------+--------+------------------+---------+--------+
 |  6 | catalogs                     |         1 | InnoDB |            80039 |         | System |
 |  7 | character_sets               |         1 | InnoDB |            80039 |         | System |
@@ -225,7 +225,7 @@ mysql> SELECT id, name,schema_id , engine ,mysql_version_id , comment , hidden  
 |  9 | collations                   |         1 | InnoDB |            80039 |         | System |
 | 10 | column_statistics            |         1 | InnoDB |            80039 |         | System |
 | 11 | column_type_elements         |         1 | InnoDB |            80039 |         | System |
-| 12 | columns                      |         1 | InnoDB |            80039 |         | System |
+| 12 | COLUMNS                      |         1 | InnoDB |            80039 |         | System |
 |  1 | dd_properties                |         1 | InnoDB |            80039 |         | System |
 | 13 | events                       |         1 | InnoDB |            80039 |         | System |
 | 14 | foreign_key_column_usage     |         1 | InnoDB |            80039 |         | System |
@@ -245,21 +245,21 @@ mysql> SELECT id, name,schema_id , engine ,mysql_version_id , comment , hidden  
 | 26 | table_partition_values       |         1 | InnoDB |            80039 |         | System |
 | 27 | table_partitions             |         1 | InnoDB |            80039 |         | System |
 | 28 | table_stats                  |         1 | InnoDB |            80039 |         | System |
-| 29 | tables                       |         1 | InnoDB |            80039 |         | System |
+| 29 | TABLES                       |         1 | InnoDB |            80039 |         | System |
 | 30 | tablespace_files             |         1 | InnoDB |            80039 |         | System |
 | 31 | tablespaces                  |         1 | InnoDB |            80039 |         | System |
 | 32 | triggers                     |         1 | InnoDB |            80039 |         | System |
 | 33 | view_routine_usage           |         1 | InnoDB |            80039 |         | System |
 | 34 | view_table_usage             |         1 | InnoDB |            80039 |         | System |
 +----+------------------------------+-----------+--------+------------------+---------+--------+
-32 rows in set (0.01 sec)
+32 ROWS IN SET (0.01 sec)
 
 mysql> 
 ```
 
 
 ```sql 
-mysql> select table_name  from information_schema.tables where table_schema='mysql' ; 
+mysql> SELECT table_name  FROM information_schema.TABLES WHERE table_schema='mysql' ; 
 +------------------------------------------------------+
 | TABLE_NAME                                           |
 +------------------------------------------------------+
@@ -299,9 +299,9 @@ mysql> select table_name  from information_schema.tables where table_schema='mys
 | time_zone_name                                       |
 | time_zone_transition                                 |
 | time_zone_transition_type                            |
-| user                                                 |
+| USER                                                 |
 +------------------------------------------------------+
-37 rows in set (0.02 sec)
+37 ROWS IN SET (0.02 sec)
 
 mysql> 
 ```
@@ -310,43 +310,43 @@ mysql>
 ```sql
 
 CREATE TABLE `mysql`.`tables` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `schema_id` bigint unsigned NOT NULL,
-  `name` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL,
-  `type` enum('BASE TABLE','VIEW','SYSTEM VIEW') COLLATE utf8mb3_bin NOT NULL,
-  `engine` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
-  `mysql_version_id` int unsigned NOT NULL,
-  `row_format` enum('Fixed','Dynamic','Compressed','Redundant','Compact','Paged') COLLATE utf8mb3_bin DEFAULT NULL,
-  `collation_id` bigint unsigned DEFAULT NULL,
-  `comment` varchar(2048) COLLATE utf8mb3_bin NOT NULL,
-  `hidden` enum('Visible','System','SE','DDL') COLLATE utf8mb3_bin NOT NULL,
-  `options` mediumtext COLLATE utf8mb3_bin,
-  `se_private_data` mediumtext COLLATE utf8mb3_bin,
-  `se_private_id` bigint unsigned DEFAULT NULL,
-  `tablespace_id` bigint unsigned DEFAULT NULL,
-  `partition_type` enum('HASH','KEY_51','KEY_55','LINEAR_HASH','LINEAR_KEY_51','LINEAR_KEY_55','RANGE','LIST','RANGE_COLUMNS','LIST_COLUMNS','AUTO','AUTO_LINEAR') COLLATE utf8mb3_bin DEFAULT NULL,
-  `partition_expression` varchar(2048) COLLATE utf8mb3_bin DEFAULT NULL,
-  `partition_expression_utf8` varchar(2048) COLLATE utf8mb3_bin DEFAULT NULL,
-  `default_partitioning` enum('NO','YES','NUMBER') COLLATE utf8mb3_bin DEFAULT NULL,
-  `subpartition_type` enum('HASH','KEY_51','KEY_55','LINEAR_HASH','LINEAR_KEY_51','LINEAR_KEY_55') COLLATE utf8mb3_bin DEFAULT NULL,
-  `subpartition_expression` varchar(2048) COLLATE utf8mb3_bin DEFAULT NULL,
-  `subpartition_expression_utf8` varchar(2048) COLLATE utf8mb3_bin DEFAULT NULL,
-  `default_subpartitioning` enum('NO','YES','NUMBER') COLLATE utf8mb3_bin DEFAULT NULL,
-  `created` timestamp NOT NULL,
-  `last_altered` timestamp NOT NULL,
-  `view_definition` longblob,
-  `view_definition_utf8` longtext COLLATE utf8mb3_bin,
-  `view_check_option` enum('NONE','LOCAL','CASCADED') COLLATE utf8mb3_bin DEFAULT NULL,
-  `view_is_updatable` enum('NO','YES') COLLATE utf8mb3_bin DEFAULT NULL,
-  `view_algorithm` enum('UNDEFINED','TEMPTABLE','MERGE') COLLATE utf8mb3_bin DEFAULT NULL,
-  `view_security_type` enum('DEFAULT','INVOKER','DEFINER') COLLATE utf8mb3_bin DEFAULT NULL,
-  `view_definer` varchar(288) COLLATE utf8mb3_bin DEFAULT NULL,
-  `view_client_collation_id` bigint unsigned DEFAULT NULL,
-  `view_connection_collation_id` bigint unsigned DEFAULT NULL,
-  `view_column_names` longtext COLLATE utf8mb3_bin,
-  `last_checked_for_upgrade_version_id` int unsigned NOT NULL,
-  `engine_attribute` json DEFAULT NULL,
-  `secondary_engine_attribute` json DEFAULT NULL,
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `schema_id` BIGINT UNSIGNED NOT NULL,
+  `name` VARCHAR(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL,
+  `type` ENUM('BASE TABLE','VIEW','SYSTEM VIEW') COLLATE utf8mb3_bin NOT NULL,
+  `engine` VARCHAR(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
+  `mysql_version_id` INT UNSIGNED NOT NULL,
+  `row_format` ENUM('Fixed','Dynamic','Compressed','Redundant','Compact','Paged') COLLATE utf8mb3_bin DEFAULT NULL,
+  `collation_id` BIGINT UNSIGNED DEFAULT NULL,
+  `comment` VARCHAR(2048) COLLATE utf8mb3_bin NOT NULL,
+  `hidden` ENUM('Visible','System','SE','DDL') COLLATE utf8mb3_bin NOT NULL,
+  `options` MEDIUMTEXT COLLATE utf8mb3_bin,
+  `se_private_data` MEDIUMTEXT COLLATE utf8mb3_bin,
+  `se_private_id` BIGINT UNSIGNED DEFAULT NULL,
+  `tablespace_id` BIGINT UNSIGNED DEFAULT NULL,
+  `partition_type` ENUM('HASH','KEY_51','KEY_55','LINEAR_HASH','LINEAR_KEY_51','LINEAR_KEY_55','RANGE','LIST','RANGE_COLUMNS','LIST_COLUMNS','AUTO','AUTO_LINEAR') COLLATE utf8mb3_bin DEFAULT NULL,
+  `partition_expression` VARCHAR(2048) COLLATE utf8mb3_bin DEFAULT NULL,
+  `partition_expression_utf8` VARCHAR(2048) COLLATE utf8mb3_bin DEFAULT NULL,
+  `default_partitioning` ENUM('NO','YES','NUMBER') COLLATE utf8mb3_bin DEFAULT NULL,
+  `subpartition_type` ENUM('HASH','KEY_51','KEY_55','LINEAR_HASH','LINEAR_KEY_51','LINEAR_KEY_55') COLLATE utf8mb3_bin DEFAULT NULL,
+  `subpartition_expression` VARCHAR(2048) COLLATE utf8mb3_bin DEFAULT NULL,
+  `subpartition_expression_utf8` VARCHAR(2048) COLLATE utf8mb3_bin DEFAULT NULL,
+  `default_subpartitioning` ENUM('NO','YES','NUMBER') COLLATE utf8mb3_bin DEFAULT NULL,
+  `created` TIMESTAMP NOT NULL,
+  `last_altered` TIMESTAMP NOT NULL,
+  `view_definition` LONGBLOB,
+  `view_definition_utf8` LONGTEXT COLLATE utf8mb3_bin,
+  `view_check_option` ENUM('NONE','LOCAL','CASCADED') COLLATE utf8mb3_bin DEFAULT NULL,
+  `view_is_updatable` ENUM('NO','YES') COLLATE utf8mb3_bin DEFAULT NULL,
+  `view_algorithm` ENUM('UNDEFINED','TEMPTABLE','MERGE') COLLATE utf8mb3_bin DEFAULT NULL,
+  `view_security_type` ENUM('DEFAULT','INVOKER','DEFINER') COLLATE utf8mb3_bin DEFAULT NULL,
+  `view_definer` VARCHAR(288) COLLATE utf8mb3_bin DEFAULT NULL,
+  `view_client_collation_id` BIGINT UNSIGNED DEFAULT NULL,
+  `view_connection_collation_id` BIGINT UNSIGNED DEFAULT NULL,
+  `view_column_names` LONGTEXT COLLATE utf8mb3_bin,
+  `last_checked_for_upgrade_version_id` INT UNSIGNED NOT NULL,
+  `engine_attribute` JSON DEFAULT NULL,
+  `secondary_engine_attribute` JSON DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `schema_id` (`schema_id`,`name`),
   UNIQUE KEY `engine` (`engine`,`se_private_id`),
@@ -371,14 +371,14 @@ CREATE TABLE `mysql`.`tables` (
 
 ```sql
 
-ysql> SELECT name, schema_id, hidden, type FROM mysql.tables; 
+ysql> SELECT name, schema_id, hidden, type FROM mysql.TABLES; 
 +------------------------------------------------------+-----------+---------+-------------+
 | name                                                 | schema_id | hidden  | type        |
 +------------------------------------------------------+-----------+---------+-------------+
 | dd_properties                                        |         1 | System  | BASE TABLE  |
 | innodb_dynamic_metadata                              |         1 | System  | BASE TABLE  |
-| innodb_table_stats                                   |         1 | Visible | BASE TABLE  |
-| innodb_index_stats                                   |         1 | Visible | BASE TABLE  |
+| innodb_table_stats                                   |         1 | VISIBLE | BASE TABLE  |
+| innodb_index_stats                                   |         1 | VISIBLE | BASE TABLE  |
 | innodb_ddl_log                                       |         1 | System  | BASE TABLE  |
 | catalogs                                             |         1 | System  | BASE TABLE  |
 | character_sets                                       |         1 | System  | BASE TABLE  |
@@ -386,7 +386,7 @@ ysql> SELECT name, schema_id, hidden, type FROM mysql.tables;
 | collations                                           |         1 | System  | BASE TABLE  |
 | column_statistics                                    |         1 | System  | BASE TABLE  |
 | column_type_elements                                 |         1 | System  | BASE TABLE  |
-| columns                                              |         1 | System  | BASE TABLE  |
+| COLUMNS                                              |         1 | System  | BASE TABLE  |
 | events                                               |         1 | System  | BASE TABLE  |
 | foreign_key_column_usage                             |         1 | System  | BASE TABLE  |
 | foreign_keys                                         |         1 | System  | BASE TABLE  |
@@ -403,341 +403,341 @@ ysql> SELECT name, schema_id, hidden, type FROM mysql.tables;
 | table_partition_values                               |         1 | System  | BASE TABLE  |
 | table_partitions                                     |         1 | System  | BASE TABLE  |
 | table_stats                                          |         1 | System  | BASE TABLE  |
-| tables                                               |         1 | System  | BASE TABLE  |
+| TABLES                                               |         1 | System  | BASE TABLE  |
 | tablespace_files                                     |         1 | System  | BASE TABLE  |
 | tablespaces                                          |         1 | System  | BASE TABLE  |
 | triggers                                             |         1 | System  | BASE TABLE  |
 | view_routine_usage                                   |         1 | System  | BASE TABLE  |
 | view_table_usage                                     |         1 | System  | BASE TABLE  |
-| CHARACTER_SETS                                       |         2 | Visible | SYSTEM VIEW |
-| CHECK_CONSTRAINTS                                    |         2 | Visible | SYSTEM VIEW |
-| COLLATIONS                                           |         2 | Visible | SYSTEM VIEW |
-| COLLATION_CHARACTER_SET_APPLICABILITY                |         2 | Visible | SYSTEM VIEW |
-| COLUMNS                                              |         2 | Visible | SYSTEM VIEW |
-| COLUMNS_EXTENSIONS                                   |         2 | Visible | SYSTEM VIEW |
-| COLUMN_STATISTICS                                    |         2 | Visible | SYSTEM VIEW |
-| EVENTS                                               |         2 | Visible | SYSTEM VIEW |
-| FILES                                                |         2 | Visible | SYSTEM VIEW |
-| INNODB_DATAFILES                                     |         2 | Visible | SYSTEM VIEW |
-| INNODB_FOREIGN                                       |         2 | Visible | SYSTEM VIEW |
-| INNODB_FOREIGN_COLS                                  |         2 | Visible | SYSTEM VIEW |
-| INNODB_FIELDS                                        |         2 | Visible | SYSTEM VIEW |
-| INNODB_TABLESPACES_BRIEF                             |         2 | Visible | SYSTEM VIEW |
-| KEY_COLUMN_USAGE                                     |         2 | Visible | SYSTEM VIEW |
-| KEYWORDS                                             |         2 | Visible | SYSTEM VIEW |
-| PARAMETERS                                           |         2 | Visible | SYSTEM VIEW |
-| PARTITIONS                                           |         2 | Visible | SYSTEM VIEW |
-| REFERENTIAL_CONSTRAINTS                              |         2 | Visible | SYSTEM VIEW |
-| RESOURCE_GROUPS                                      |         2 | Visible | SYSTEM VIEW |
-| ROUTINES                                             |         2 | Visible | SYSTEM VIEW |
-| SCHEMATA                                             |         2 | Visible | SYSTEM VIEW |
-| SCHEMATA_EXTENSIONS                                  |         2 | Visible | SYSTEM VIEW |
+| CHARACTER_SETS                                       |         2 | VISIBLE | SYSTEM VIEW |
+| CHECK_CONSTRAINTS                                    |         2 | VISIBLE | SYSTEM VIEW |
+| COLLATIONS                                           |         2 | VISIBLE | SYSTEM VIEW |
+| COLLATION_CHARACTER_SET_APPLICABILITY                |         2 | VISIBLE | SYSTEM VIEW |
+| COLUMNS                                              |         2 | VISIBLE | SYSTEM VIEW |
+| COLUMNS_EXTENSIONS                                   |         2 | VISIBLE | SYSTEM VIEW |
+| COLUMN_STATISTICS                                    |         2 | VISIBLE | SYSTEM VIEW |
+| EVENTS                                               |         2 | VISIBLE | SYSTEM VIEW |
+| FILES                                                |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_DATAFILES                                     |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_FOREIGN                                       |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_FOREIGN_COLS                                  |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_FIELDS                                        |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_TABLESPACES_BRIEF                             |         2 | VISIBLE | SYSTEM VIEW |
+| KEY_COLUMN_USAGE                                     |         2 | VISIBLE | SYSTEM VIEW |
+| KEYWORDS                                             |         2 | VISIBLE | SYSTEM VIEW |
+| PARAMETERS                                           |         2 | VISIBLE | SYSTEM VIEW |
+| PARTITIONS                                           |         2 | VISIBLE | SYSTEM VIEW |
+| REFERENTIAL_CONSTRAINTS                              |         2 | VISIBLE | SYSTEM VIEW |
+| RESOURCE_GROUPS                                      |         2 | VISIBLE | SYSTEM VIEW |
+| ROUTINES                                             |         2 | VISIBLE | SYSTEM VIEW |
+| SCHEMATA                                             |         2 | VISIBLE | SYSTEM VIEW |
+| SCHEMATA_EXTENSIONS                                  |         2 | VISIBLE | SYSTEM VIEW |
 | SHOW_STATISTICS                                      |         2 | System  | SYSTEM VIEW |
-| ST_SPATIAL_REFERENCE_SYSTEMS                         |         2 | Visible | SYSTEM VIEW |
-| ST_UNITS_OF_MEASURE                                  |         2 | Visible | SYSTEM VIEW |
-| ST_GEOMETRY_COLUMNS                                  |         2 | Visible | SYSTEM VIEW |
-| STATISTICS                                           |         2 | Visible | SYSTEM VIEW |
-| TABLE_CONSTRAINTS                                    |         2 | Visible | SYSTEM VIEW |
-| TABLE_CONSTRAINTS_EXTENSIONS                         |         2 | Visible | SYSTEM VIEW |
-| TABLES                                               |         2 | Visible | SYSTEM VIEW |
-| TABLES_EXTENSIONS                                    |         2 | Visible | SYSTEM VIEW |
-| TABLESPACES_EXTENSIONS                               |         2 | Visible | SYSTEM VIEW |
-| TRIGGERS                                             |         2 | Visible | SYSTEM VIEW |
-| VIEW_ROUTINE_USAGE                                   |         2 | Visible | SYSTEM VIEW |
-| VIEW_TABLE_USAGE                                     |         2 | Visible | SYSTEM VIEW |
-| VIEWS                                                |         2 | Visible | SYSTEM VIEW |
-| COLUMN_PRIVILEGES                                    |         2 | Visible | SYSTEM VIEW |
-| ENGINES                                              |         2 | Visible | SYSTEM VIEW |
-| OPTIMIZER_TRACE                                      |         2 | Visible | SYSTEM VIEW |
-| PLUGINS                                              |         2 | Visible | SYSTEM VIEW |
-| PROCESSLIST                                          |         2 | Visible | SYSTEM VIEW |
-| PROFILING                                            |         2 | Visible | SYSTEM VIEW |
-| SCHEMA_PRIVILEGES                                    |         2 | Visible | SYSTEM VIEW |
-| TABLESPACES                                          |         2 | Visible | SYSTEM VIEW |
-| TABLE_PRIVILEGES                                     |         2 | Visible | SYSTEM VIEW |
-| USER_PRIVILEGES                                      |         2 | Visible | SYSTEM VIEW |
-| cond_instances                                       |         3 | Visible | BASE TABLE  |
-| error_log                                            |         3 | Visible | BASE TABLE  |
-| events_waits_current                                 |         3 | Visible | BASE TABLE  |
-| events_waits_history                                 |         3 | Visible | BASE TABLE  |
-| events_waits_history_long                            |         3 | Visible | BASE TABLE  |
-| events_waits_summary_by_host_by_event_name           |         3 | Visible | BASE TABLE  |
-| events_waits_summary_by_instance                     |         3 | Visible | BASE TABLE  |
-| events_waits_summary_by_thread_by_event_name         |         3 | Visible | BASE TABLE  |
-| events_waits_summary_by_user_by_event_name           |         3 | Visible | BASE TABLE  |
-| events_waits_summary_by_account_by_event_name        |         3 | Visible | BASE TABLE  |
-| events_waits_summary_global_by_event_name            |         3 | Visible | BASE TABLE  |
-| file_instances                                       |         3 | Visible | BASE TABLE  |
-| file_summary_by_event_name                           |         3 | Visible | BASE TABLE  |
-| file_summary_by_instance                             |         3 | Visible | BASE TABLE  |
-| host_cache                                           |         3 | Visible | BASE TABLE  |
-| mutex_instances                                      |         3 | Visible | BASE TABLE  |
-| objects_summary_global_by_type                       |         3 | Visible | BASE TABLE  |
-| performance_timers                                   |         3 | Visible | BASE TABLE  |
-| processlist                                          |         3 | Visible | BASE TABLE  |
-| rwlock_instances                                     |         3 | Visible | BASE TABLE  |
-| setup_actors                                         |         3 | Visible | BASE TABLE  |
-| setup_consumers                                      |         3 | Visible | BASE TABLE  |
-| setup_instruments                                    |         3 | Visible | BASE TABLE  |
-| setup_objects                                        |         3 | Visible | BASE TABLE  |
-| setup_threads                                        |         3 | Visible | BASE TABLE  |
-| table_io_waits_summary_by_index_usage                |         3 | Visible | BASE TABLE  |
-| table_io_waits_summary_by_table                      |         3 | Visible | BASE TABLE  |
-| table_lock_waits_summary_by_table                    |         3 | Visible | BASE TABLE  |
-| threads                                              |         3 | Visible | BASE TABLE  |
-| events_stages_current                                |         3 | Visible | BASE TABLE  |
-| events_stages_history                                |         3 | Visible | BASE TABLE  |
-| events_stages_history_long                           |         3 | Visible | BASE TABLE  |
-| events_stages_summary_by_thread_by_event_name        |         3 | Visible | BASE TABLE  |
-| events_stages_summary_by_account_by_event_name       |         3 | Visible | BASE TABLE  |
-| events_stages_summary_by_user_by_event_name          |         3 | Visible | BASE TABLE  |
-| events_stages_summary_by_host_by_event_name          |         3 | Visible | BASE TABLE  |
-| events_stages_summary_global_by_event_name           |         3 | Visible | BASE TABLE  |
-| events_statements_current                            |         3 | Visible | BASE TABLE  |
-| events_statements_history                            |         3 | Visible | BASE TABLE  |
-| events_statements_history_long                       |         3 | Visible | BASE TABLE  |
-| events_statements_summary_by_thread_by_event_name    |         3 | Visible | BASE TABLE  |
-| events_statements_summary_by_account_by_event_name   |         3 | Visible | BASE TABLE  |
-| events_statements_summary_by_user_by_event_name      |         3 | Visible | BASE TABLE  |
-| events_statements_summary_by_host_by_event_name      |         3 | Visible | BASE TABLE  |
-| events_statements_summary_global_by_event_name       |         3 | Visible | BASE TABLE  |
-| events_statements_summary_by_digest                  |         3 | Visible | BASE TABLE  |
-| events_statements_summary_by_program                 |         3 | Visible | BASE TABLE  |
-| events_statements_histogram_global                   |         3 | Visible | BASE TABLE  |
-| events_statements_histogram_by_digest                |         3 | Visible | BASE TABLE  |
-| events_transactions_current                          |         3 | Visible | BASE TABLE  |
-| events_transactions_history                          |         3 | Visible | BASE TABLE  |
-| events_transactions_history_long                     |         3 | Visible | BASE TABLE  |
-| events_transactions_summary_by_thread_by_event_name  |         3 | Visible | BASE TABLE  |
-| events_transactions_summary_by_account_by_event_name |         3 | Visible | BASE TABLE  |
-| events_transactions_summary_by_user_by_event_name    |         3 | Visible | BASE TABLE  |
-| events_transactions_summary_by_host_by_event_name    |         3 | Visible | BASE TABLE  |
-| events_transactions_summary_global_by_event_name     |         3 | Visible | BASE TABLE  |
-| events_errors_summary_by_user_by_error               |         3 | Visible | BASE TABLE  |
-| events_errors_summary_by_host_by_error               |         3 | Visible | BASE TABLE  |
-| events_errors_summary_by_account_by_error            |         3 | Visible | BASE TABLE  |
-| events_errors_summary_by_thread_by_error             |         3 | Visible | BASE TABLE  |
-| events_errors_summary_global_by_error                |         3 | Visible | BASE TABLE  |
-| users                                                |         3 | Visible | BASE TABLE  |
-| accounts                                             |         3 | Visible | BASE TABLE  |
-| hosts                                                |         3 | Visible | BASE TABLE  |
-| socket_instances                                     |         3 | Visible | BASE TABLE  |
-| socket_summary_by_instance                           |         3 | Visible | BASE TABLE  |
-| socket_summary_by_event_name                         |         3 | Visible | BASE TABLE  |
-| session_connect_attrs                                |         3 | Visible | BASE TABLE  |
-| session_account_connect_attrs                        |         3 | Visible | BASE TABLE  |
-| keyring_keys                                         |         3 | Visible | BASE TABLE  |
-| memory_summary_global_by_event_name                  |         3 | Visible | BASE TABLE  |
-| memory_summary_by_account_by_event_name              |         3 | Visible | BASE TABLE  |
-| memory_summary_by_host_by_event_name                 |         3 | Visible | BASE TABLE  |
-| memory_summary_by_thread_by_event_name               |         3 | Visible | BASE TABLE  |
-| memory_summary_by_user_by_event_name                 |         3 | Visible | BASE TABLE  |
-| table_handles                                        |         3 | Visible | BASE TABLE  |
-| metadata_locks                                       |         3 | Visible | BASE TABLE  |
-| data_locks                                           |         3 | Visible | BASE TABLE  |
-| data_lock_waits                                      |         3 | Visible | BASE TABLE  |
-| replication_connection_configuration                 |         3 | Visible | BASE TABLE  |
-| replication_group_members                            |         3 | Visible | BASE TABLE  |
-| replication_connection_status                        |         3 | Visible | BASE TABLE  |
-| replication_applier_configuration                    |         3 | Visible | BASE TABLE  |
-| replication_applier_status                           |         3 | Visible | BASE TABLE  |
-| replication_applier_status_by_coordinator            |         3 | Visible | BASE TABLE  |
-| replication_applier_status_by_worker                 |         3 | Visible | BASE TABLE  |
-| replication_group_member_stats                       |         3 | Visible | BASE TABLE  |
-| replication_applier_filters                          |         3 | Visible | BASE TABLE  |
-| replication_applier_global_filters                   |         3 | Visible | BASE TABLE  |
-| replication_asynchronous_connection_failover         |         3 | Visible | BASE TABLE  |
-| replication_asynchronous_connection_failover_managed |         3 | Visible | BASE TABLE  |
-| log_status                                           |         3 | Visible | BASE TABLE  |
-| prepared_statements_instances                        |         3 | Visible | BASE TABLE  |
-| user_variables_by_thread                             |         3 | Visible | BASE TABLE  |
-| status_by_account                                    |         3 | Visible | BASE TABLE  |
-| status_by_host                                       |         3 | Visible | BASE TABLE  |
-| status_by_thread                                     |         3 | Visible | BASE TABLE  |
-| status_by_user                                       |         3 | Visible | BASE TABLE  |
-| global_status                                        |         3 | Visible | BASE TABLE  |
-| session_status                                       |         3 | Visible | BASE TABLE  |
-| variables_by_thread                                  |         3 | Visible | BASE TABLE  |
-| global_variables                                     |         3 | Visible | BASE TABLE  |
-| session_variables                                    |         3 | Visible | BASE TABLE  |
-| variables_info                                       |         3 | Visible | BASE TABLE  |
-| persisted_variables                                  |         3 | Visible | BASE TABLE  |
-| user_defined_functions                               |         3 | Visible | BASE TABLE  |
-| binary_log_transaction_compression_stats             |         3 | Visible | BASE TABLE  |
-| tls_channel_status                                   |         3 | Visible | BASE TABLE  |
-| keyring_component_status                             |         3 | Visible | BASE TABLE  |
-| db                                                   |         1 | Visible | BASE TABLE  |
-| user                                                 |         1 | Visible | BASE TABLE  |
-| default_roles                                        |         1 | Visible | BASE TABLE  |
-| role_edges                                           |         1 | Visible | BASE TABLE  |
-| global_grants                                        |         1 | Visible | BASE TABLE  |
-| password_history                                     |         1 | Visible | BASE TABLE  |
-| func                                                 |         1 | Visible | BASE TABLE  |
-| plugin                                               |         1 | Visible | BASE TABLE  |
-| help_topic                                           |         1 | Visible | BASE TABLE  |
-| help_category                                        |         1 | Visible | BASE TABLE  |
-| help_relation                                        |         1 | Visible | BASE TABLE  |
-| servers                                              |         1 | Visible | BASE TABLE  |
-| tables_priv                                          |         1 | Visible | BASE TABLE  |
-| columns_priv                                         |         1 | Visible | BASE TABLE  |
-| help_keyword                                         |         1 | Visible | BASE TABLE  |
-| time_zone_name                                       |         1 | Visible | BASE TABLE  |
-| time_zone                                            |         1 | Visible | BASE TABLE  |
-| time_zone_transition                                 |         1 | Visible | BASE TABLE  |
-| time_zone_transition_type                            |         1 | Visible | BASE TABLE  |
-| time_zone_leap_second                                |         1 | Visible | BASE TABLE  |
-| procs_priv                                           |         1 | Visible | BASE TABLE  |
-| general_log                                          |         1 | Visible | BASE TABLE  |
-| slow_log                                             |         1 | Visible | BASE TABLE  |
-| component                                            |         1 | Visible | BASE TABLE  |
-| slave_relay_log_info                                 |         1 | Visible | BASE TABLE  |
-| slave_master_info                                    |         1 | Visible | BASE TABLE  |
-| slave_worker_info                                    |         1 | Visible | BASE TABLE  |
-| gtid_executed                                        |         1 | Visible | BASE TABLE  |
-| replication_asynchronous_connection_failover         |         1 | Visible | BASE TABLE  |
-| replication_asynchronous_connection_failover_managed |         1 | Visible | BASE TABLE  |
-| replication_group_member_actions                     |         1 | Visible | BASE TABLE  |
-| replication_group_configuration_version              |         1 | Visible | BASE TABLE  |
-| server_cost                                          |         1 | Visible | BASE TABLE  |
-| engine_cost                                          |         1 | Visible | BASE TABLE  |
-| proxies_priv                                         |         1 | Visible | BASE TABLE  |
-| version                                              |         4 | Visible | VIEW        |
-| sys_config                                           |         4 | Visible | BASE TABLE  |
-| innodb_buffer_stats_by_schema                        |         4 | Visible | VIEW        |
-| x$innodb_buffer_stats_by_schema                      |         4 | Visible | VIEW        |
-| innodb_buffer_stats_by_table                         |         4 | Visible | VIEW        |
-| x$innodb_buffer_stats_by_table                       |         4 | Visible | VIEW        |
-| schema_object_overview                               |         4 | Visible | VIEW        |
-| schema_auto_increment_columns                        |         4 | Visible | VIEW        |
-| x$schema_flattened_keys                              |         4 | Visible | VIEW        |
-| schema_redundant_indexes                             |         4 | Visible | VIEW        |
-| ps_check_lost_instrumentation                        |         4 | Visible | VIEW        |
-| latest_file_io                                       |         4 | Visible | VIEW        |
-| x$latest_file_io                                     |         4 | Visible | VIEW        |
-| io_by_thread_by_latency                              |         4 | Visible | VIEW        |
-| x$io_by_thread_by_latency                            |         4 | Visible | VIEW        |
-| io_global_by_file_by_bytes                           |         4 | Visible | VIEW        |
-| x$io_global_by_file_by_bytes                         |         4 | Visible | VIEW        |
-| io_global_by_file_by_latency                         |         4 | Visible | VIEW        |
-| x$io_global_by_file_by_latency                       |         4 | Visible | VIEW        |
-| io_global_by_wait_by_bytes                           |         4 | Visible | VIEW        |
-| x$io_global_by_wait_by_bytes                         |         4 | Visible | VIEW        |
-| io_global_by_wait_by_latency                         |         4 | Visible | VIEW        |
-| x$io_global_by_wait_by_latency                       |         4 | Visible | VIEW        |
-| innodb_lock_waits                                    |         4 | Visible | VIEW        |
-| x$innodb_lock_waits                                  |         4 | Visible | VIEW        |
-| memory_by_user_by_current_bytes                      |         4 | Visible | VIEW        |
-| x$memory_by_user_by_current_bytes                    |         4 | Visible | VIEW        |
-| memory_by_host_by_current_bytes                      |         4 | Visible | VIEW        |
-| x$memory_by_host_by_current_bytes                    |         4 | Visible | VIEW        |
-| memory_by_thread_by_current_bytes                    |         4 | Visible | VIEW        |
-| x$memory_by_thread_by_current_bytes                  |         4 | Visible | VIEW        |
-| memory_global_by_current_bytes                       |         4 | Visible | VIEW        |
-| x$memory_global_by_current_bytes                     |         4 | Visible | VIEW        |
-| memory_global_total                                  |         4 | Visible | VIEW        |
-| x$memory_global_total                                |         4 | Visible | VIEW        |
-| schema_index_statistics                              |         4 | Visible | VIEW        |
-| x$schema_index_statistics                            |         4 | Visible | VIEW        |
-| x$ps_schema_table_statistics_io                      |         4 | Visible | VIEW        |
-| schema_table_statistics                              |         4 | Visible | VIEW        |
-| x$schema_table_statistics                            |         4 | Visible | VIEW        |
-| schema_table_statistics_with_buffer                  |         4 | Visible | VIEW        |
-| x$schema_table_statistics_with_buffer                |         4 | Visible | VIEW        |
-| schema_tables_with_full_table_scans                  |         4 | Visible | VIEW        |
-| x$schema_tables_with_full_table_scans                |         4 | Visible | VIEW        |
-| schema_unused_indexes                                |         4 | Visible | VIEW        |
-| schema_table_lock_waits                              |         4 | Visible | VIEW        |
-| x$schema_table_lock_waits                            |         4 | Visible | VIEW        |
-| statement_analysis                                   |         4 | Visible | VIEW        |
-| x$statement_analysis                                 |         4 | Visible | VIEW        |
-| statements_with_errors_or_warnings                   |         4 | Visible | VIEW        |
-| x$statements_with_errors_or_warnings                 |         4 | Visible | VIEW        |
-| statements_with_full_table_scans                     |         4 | Visible | VIEW        |
-| x$statements_with_full_table_scans                   |         4 | Visible | VIEW        |
-| x$ps_digest_avg_latency_distribution                 |         4 | Visible | VIEW        |
-| x$ps_digest_95th_percentile_by_avg_us                |         4 | Visible | VIEW        |
-| statements_with_runtimes_in_95th_percentile          |         4 | Visible | VIEW        |
-| x$statements_with_runtimes_in_95th_percentile        |         4 | Visible | VIEW        |
-| statements_with_sorting                              |         4 | Visible | VIEW        |
-| x$statements_with_sorting                            |         4 | Visible | VIEW        |
-| statements_with_temp_tables                          |         4 | Visible | VIEW        |
-| x$statements_with_temp_tables                        |         4 | Visible | VIEW        |
-| user_summary_by_file_io_type                         |         4 | Visible | VIEW        |
-| x$user_summary_by_file_io_type                       |         4 | Visible | VIEW        |
-| user_summary_by_file_io                              |         4 | Visible | VIEW        |
-| x$user_summary_by_file_io                            |         4 | Visible | VIEW        |
-| user_summary_by_statement_type                       |         4 | Visible | VIEW        |
-| x$user_summary_by_statement_type                     |         4 | Visible | VIEW        |
-| user_summary_by_statement_latency                    |         4 | Visible | VIEW        |
-| x$user_summary_by_statement_latency                  |         4 | Visible | VIEW        |
-| user_summary_by_stages                               |         4 | Visible | VIEW        |
-| x$user_summary_by_stages                             |         4 | Visible | VIEW        |
-| user_summary                                         |         4 | Visible | VIEW        |
-| x$user_summary                                       |         4 | Visible | VIEW        |
-| host_summary_by_file_io_type                         |         4 | Visible | VIEW        |
-| x$host_summary_by_file_io_type                       |         4 | Visible | VIEW        |
-| host_summary_by_file_io                              |         4 | Visible | VIEW        |
-| x$host_summary_by_file_io                            |         4 | Visible | VIEW        |
-| host_summary_by_statement_type                       |         4 | Visible | VIEW        |
-| x$host_summary_by_statement_type                     |         4 | Visible | VIEW        |
-| host_summary_by_statement_latency                    |         4 | Visible | VIEW        |
-| x$host_summary_by_statement_latency                  |         4 | Visible | VIEW        |
-| host_summary_by_stages                               |         4 | Visible | VIEW        |
-| x$host_summary_by_stages                             |         4 | Visible | VIEW        |
-| host_summary                                         |         4 | Visible | VIEW        |
-| x$host_summary                                       |         4 | Visible | VIEW        |
-| wait_classes_global_by_avg_latency                   |         4 | Visible | VIEW        |
-| x$wait_classes_global_by_avg_latency                 |         4 | Visible | VIEW        |
-| wait_classes_global_by_latency                       |         4 | Visible | VIEW        |
-| x$wait_classes_global_by_latency                     |         4 | Visible | VIEW        |
-| waits_by_user_by_latency                             |         4 | Visible | VIEW        |
-| x$waits_by_user_by_latency                           |         4 | Visible | VIEW        |
-| waits_by_host_by_latency                             |         4 | Visible | VIEW        |
-| x$waits_by_host_by_latency                           |         4 | Visible | VIEW        |
-| waits_global_by_latency                              |         4 | Visible | VIEW        |
-| x$waits_global_by_latency                            |         4 | Visible | VIEW        |
-| metrics                                              |         4 | Visible | VIEW        |
-| processlist                                          |         4 | Visible | VIEW        |
-| x$processlist                                        |         4 | Visible | VIEW        |
-| session                                              |         4 | Visible | VIEW        |
-| x$session                                            |         4 | Visible | VIEW        |
-| session_ssl_status                                   |         4 | Visible | VIEW        |
-| ENABLED_ROLES                                        |         2 | Visible | SYSTEM VIEW |
-| APPLICABLE_ROLES                                     |         2 | Visible | SYSTEM VIEW |
-| ADMINISTRABLE_ROLE_AUTHORIZATIONS                    |         2 | Visible | SYSTEM VIEW |
-| ROLE_COLUMN_GRANTS                                   |         2 | Visible | SYSTEM VIEW |
-| ROLE_ROUTINE_GRANTS                                  |         2 | Visible | SYSTEM VIEW |
-| ROLE_TABLE_GRANTS                                    |         2 | Visible | SYSTEM VIEW |
-| USER_ATTRIBUTES                                      |         2 | Visible | SYSTEM VIEW |
-| INNODB_SESSION_TEMP_TABLESPACES                      |         2 | Visible | SYSTEM VIEW |
-| INNODB_VIRTUAL                                       |         2 | Visible | SYSTEM VIEW |
-| INNODB_BUFFER_POOL_STATS                             |         2 | Visible | SYSTEM VIEW |
-| INNODB_BUFFER_PAGE                                   |         2 | Visible | SYSTEM VIEW |
-| INNODB_CMPMEM_RESET                                  |         2 | Visible | SYSTEM VIEW |
-| INNODB_CMPMEM                                        |         2 | Visible | SYSTEM VIEW |
-| INNODB_TRX                                           |         2 | Visible | SYSTEM VIEW |
-| INNODB_CMP_PER_INDEX_RESET                           |         2 | Visible | SYSTEM VIEW |
-| INNODB_CMP_RESET                                     |         2 | Visible | SYSTEM VIEW |
-| INNODB_FT_DEFAULT_STOPWORD                           |         2 | Visible | SYSTEM VIEW |
-| INNODB_METRICS                                       |         2 | Visible | SYSTEM VIEW |
-| INNODB_TEMP_TABLE_INFO                               |         2 | Visible | SYSTEM VIEW |
-| INNODB_FT_DELETED                                    |         2 | Visible | SYSTEM VIEW |
-| INNODB_TABLESTATS                                    |         2 | Visible | SYSTEM VIEW |
-| INNODB_CMP                                           |         2 | Visible | SYSTEM VIEW |
-| INNODB_TABLES                                        |         2 | Visible | SYSTEM VIEW |
-| INNODB_FT_BEING_DELETED                              |         2 | Visible | SYSTEM VIEW |
-| INNODB_BUFFER_PAGE_LRU                               |         2 | Visible | SYSTEM VIEW |
-| INNODB_CMP_PER_INDEX                                 |         2 | Visible | SYSTEM VIEW |
-| INNODB_FT_CONFIG                                     |         2 | Visible | SYSTEM VIEW |
-| INNODB_CACHED_INDEXES                                |         2 | Visible | SYSTEM VIEW |
-| INNODB_FT_INDEX_TABLE                                |         2 | Visible | SYSTEM VIEW |
-| INNODB_COLUMNS                                       |         2 | Visible | SYSTEM VIEW |
-| INNODB_FT_INDEX_CACHE                                |         2 | Visible | SYSTEM VIEW |
-| INNODB_INDEXES                                       |         2 | Visible | SYSTEM VIEW |
-| INNODB_TABLESPACES                                   |         2 | Visible | SYSTEM VIEW |
-| innodb_redo_log_files                                |         3 | Visible | BASE TABLE  |
+| ST_SPATIAL_REFERENCE_SYSTEMS                         |         2 | VISIBLE | SYSTEM VIEW |
+| ST_UNITS_OF_MEASURE                                  |         2 | VISIBLE | SYSTEM VIEW |
+| ST_GEOMETRY_COLUMNS                                  |         2 | VISIBLE | SYSTEM VIEW |
+| STATISTICS                                           |         2 | VISIBLE | SYSTEM VIEW |
+| TABLE_CONSTRAINTS                                    |         2 | VISIBLE | SYSTEM VIEW |
+| TABLE_CONSTRAINTS_EXTENSIONS                         |         2 | VISIBLE | SYSTEM VIEW |
+| TABLES                                               |         2 | VISIBLE | SYSTEM VIEW |
+| TABLES_EXTENSIONS                                    |         2 | VISIBLE | SYSTEM VIEW |
+| TABLESPACES_EXTENSIONS                               |         2 | VISIBLE | SYSTEM VIEW |
+| TRIGGERS                                             |         2 | VISIBLE | SYSTEM VIEW |
+| VIEW_ROUTINE_USAGE                                   |         2 | VISIBLE | SYSTEM VIEW |
+| VIEW_TABLE_USAGE                                     |         2 | VISIBLE | SYSTEM VIEW |
+| VIEWS                                                |         2 | VISIBLE | SYSTEM VIEW |
+| COLUMN_PRIVILEGES                                    |         2 | VISIBLE | SYSTEM VIEW |
+| ENGINES                                              |         2 | VISIBLE | SYSTEM VIEW |
+| OPTIMIZER_TRACE                                      |         2 | VISIBLE | SYSTEM VIEW |
+| PLUGINS                                              |         2 | VISIBLE | SYSTEM VIEW |
+| PROCESSLIST                                          |         2 | VISIBLE | SYSTEM VIEW |
+| PROFILING                                            |         2 | VISIBLE | SYSTEM VIEW |
+| SCHEMA_PRIVILEGES                                    |         2 | VISIBLE | SYSTEM VIEW |
+| TABLESPACES                                          |         2 | VISIBLE | SYSTEM VIEW |
+| TABLE_PRIVILEGES                                     |         2 | VISIBLE | SYSTEM VIEW |
+| USER_PRIVILEGES                                      |         2 | VISIBLE | SYSTEM VIEW |
+| cond_instances                                       |         3 | VISIBLE | BASE TABLE  |
+| error_log                                            |         3 | VISIBLE | BASE TABLE  |
+| events_waits_current                                 |         3 | VISIBLE | BASE TABLE  |
+| events_waits_history                                 |         3 | VISIBLE | BASE TABLE  |
+| events_waits_history_long                            |         3 | VISIBLE | BASE TABLE  |
+| events_waits_summary_by_host_by_event_name           |         3 | VISIBLE | BASE TABLE  |
+| events_waits_summary_by_instance                     |         3 | VISIBLE | BASE TABLE  |
+| events_waits_summary_by_thread_by_event_name         |         3 | VISIBLE | BASE TABLE  |
+| events_waits_summary_by_user_by_event_name           |         3 | VISIBLE | BASE TABLE  |
+| events_waits_summary_by_account_by_event_name        |         3 | VISIBLE | BASE TABLE  |
+| events_waits_summary_global_by_event_name            |         3 | VISIBLE | BASE TABLE  |
+| file_instances                                       |         3 | VISIBLE | BASE TABLE  |
+| file_summary_by_event_name                           |         3 | VISIBLE | BASE TABLE  |
+| file_summary_by_instance                             |         3 | VISIBLE | BASE TABLE  |
+| host_cache                                           |         3 | VISIBLE | BASE TABLE  |
+| mutex_instances                                      |         3 | VISIBLE | BASE TABLE  |
+| objects_summary_global_by_type                       |         3 | VISIBLE | BASE TABLE  |
+| performance_timers                                   |         3 | VISIBLE | BASE TABLE  |
+| processlist                                          |         3 | VISIBLE | BASE TABLE  |
+| rwlock_instances                                     |         3 | VISIBLE | BASE TABLE  |
+| setup_actors                                         |         3 | VISIBLE | BASE TABLE  |
+| setup_consumers                                      |         3 | VISIBLE | BASE TABLE  |
+| setup_instruments                                    |         3 | VISIBLE | BASE TABLE  |
+| setup_objects                                        |         3 | VISIBLE | BASE TABLE  |
+| setup_threads                                        |         3 | VISIBLE | BASE TABLE  |
+| table_io_waits_summary_by_index_usage                |         3 | VISIBLE | BASE TABLE  |
+| table_io_waits_summary_by_table                      |         3 | VISIBLE | BASE TABLE  |
+| table_lock_waits_summary_by_table                    |         3 | VISIBLE | BASE TABLE  |
+| threads                                              |         3 | VISIBLE | BASE TABLE  |
+| events_stages_current                                |         3 | VISIBLE | BASE TABLE  |
+| events_stages_history                                |         3 | VISIBLE | BASE TABLE  |
+| events_stages_history_long                           |         3 | VISIBLE | BASE TABLE  |
+| events_stages_summary_by_thread_by_event_name        |         3 | VISIBLE | BASE TABLE  |
+| events_stages_summary_by_account_by_event_name       |         3 | VISIBLE | BASE TABLE  |
+| events_stages_summary_by_user_by_event_name          |         3 | VISIBLE | BASE TABLE  |
+| events_stages_summary_by_host_by_event_name          |         3 | VISIBLE | BASE TABLE  |
+| events_stages_summary_global_by_event_name           |         3 | VISIBLE | BASE TABLE  |
+| events_statements_current                            |         3 | VISIBLE | BASE TABLE  |
+| events_statements_history                            |         3 | VISIBLE | BASE TABLE  |
+| events_statements_history_long                       |         3 | VISIBLE | BASE TABLE  |
+| events_statements_summary_by_thread_by_event_name    |         3 | VISIBLE | BASE TABLE  |
+| events_statements_summary_by_account_by_event_name   |         3 | VISIBLE | BASE TABLE  |
+| events_statements_summary_by_user_by_event_name      |         3 | VISIBLE | BASE TABLE  |
+| events_statements_summary_by_host_by_event_name      |         3 | VISIBLE | BASE TABLE  |
+| events_statements_summary_global_by_event_name       |         3 | VISIBLE | BASE TABLE  |
+| events_statements_summary_by_digest                  |         3 | VISIBLE | BASE TABLE  |
+| events_statements_summary_by_program                 |         3 | VISIBLE | BASE TABLE  |
+| events_statements_histogram_global                   |         3 | VISIBLE | BASE TABLE  |
+| events_statements_histogram_by_digest                |         3 | VISIBLE | BASE TABLE  |
+| events_transactions_current                          |         3 | VISIBLE | BASE TABLE  |
+| events_transactions_history                          |         3 | VISIBLE | BASE TABLE  |
+| events_transactions_history_long                     |         3 | VISIBLE | BASE TABLE  |
+| events_transactions_summary_by_thread_by_event_name  |         3 | VISIBLE | BASE TABLE  |
+| events_transactions_summary_by_account_by_event_name |         3 | VISIBLE | BASE TABLE  |
+| events_transactions_summary_by_user_by_event_name    |         3 | VISIBLE | BASE TABLE  |
+| events_transactions_summary_by_host_by_event_name    |         3 | VISIBLE | BASE TABLE  |
+| events_transactions_summary_global_by_event_name     |         3 | VISIBLE | BASE TABLE  |
+| events_errors_summary_by_user_by_error               |         3 | VISIBLE | BASE TABLE  |
+| events_errors_summary_by_host_by_error               |         3 | VISIBLE | BASE TABLE  |
+| events_errors_summary_by_account_by_error            |         3 | VISIBLE | BASE TABLE  |
+| events_errors_summary_by_thread_by_error             |         3 | VISIBLE | BASE TABLE  |
+| events_errors_summary_global_by_error                |         3 | VISIBLE | BASE TABLE  |
+| users                                                |         3 | VISIBLE | BASE TABLE  |
+| accounts                                             |         3 | VISIBLE | BASE TABLE  |
+| hosts                                                |         3 | VISIBLE | BASE TABLE  |
+| socket_instances                                     |         3 | VISIBLE | BASE TABLE  |
+| socket_summary_by_instance                           |         3 | VISIBLE | BASE TABLE  |
+| socket_summary_by_event_name                         |         3 | VISIBLE | BASE TABLE  |
+| session_connect_attrs                                |         3 | VISIBLE | BASE TABLE  |
+| session_account_connect_attrs                        |         3 | VISIBLE | BASE TABLE  |
+| keyring_keys                                         |         3 | VISIBLE | BASE TABLE  |
+| memory_summary_global_by_event_name                  |         3 | VISIBLE | BASE TABLE  |
+| memory_summary_by_account_by_event_name              |         3 | VISIBLE | BASE TABLE  |
+| memory_summary_by_host_by_event_name                 |         3 | VISIBLE | BASE TABLE  |
+| memory_summary_by_thread_by_event_name               |         3 | VISIBLE | BASE TABLE  |
+| memory_summary_by_user_by_event_name                 |         3 | VISIBLE | BASE TABLE  |
+| table_handles                                        |         3 | VISIBLE | BASE TABLE  |
+| metadata_locks                                       |         3 | VISIBLE | BASE TABLE  |
+| data_locks                                           |         3 | VISIBLE | BASE TABLE  |
+| data_lock_waits                                      |         3 | VISIBLE | BASE TABLE  |
+| replication_connection_configuration                 |         3 | VISIBLE | BASE TABLE  |
+| replication_group_members                            |         3 | VISIBLE | BASE TABLE  |
+| replication_connection_status                        |         3 | VISIBLE | BASE TABLE  |
+| replication_applier_configuration                    |         3 | VISIBLE | BASE TABLE  |
+| replication_applier_status                           |         3 | VISIBLE | BASE TABLE  |
+| replication_applier_status_by_coordinator            |         3 | VISIBLE | BASE TABLE  |
+| replication_applier_status_by_worker                 |         3 | VISIBLE | BASE TABLE  |
+| replication_group_member_stats                       |         3 | VISIBLE | BASE TABLE  |
+| replication_applier_filters                          |         3 | VISIBLE | BASE TABLE  |
+| replication_applier_global_filters                   |         3 | VISIBLE | BASE TABLE  |
+| replication_asynchronous_connection_failover         |         3 | VISIBLE | BASE TABLE  |
+| replication_asynchronous_connection_failover_managed |         3 | VISIBLE | BASE TABLE  |
+| log_status                                           |         3 | VISIBLE | BASE TABLE  |
+| prepared_statements_instances                        |         3 | VISIBLE | BASE TABLE  |
+| user_variables_by_thread                             |         3 | VISIBLE | BASE TABLE  |
+| status_by_account                                    |         3 | VISIBLE | BASE TABLE  |
+| status_by_host                                       |         3 | VISIBLE | BASE TABLE  |
+| status_by_thread                                     |         3 | VISIBLE | BASE TABLE  |
+| status_by_user                                       |         3 | VISIBLE | BASE TABLE  |
+| global_status                                        |         3 | VISIBLE | BASE TABLE  |
+| session_status                                       |         3 | VISIBLE | BASE TABLE  |
+| variables_by_thread                                  |         3 | VISIBLE | BASE TABLE  |
+| global_variables                                     |         3 | VISIBLE | BASE TABLE  |
+| session_variables                                    |         3 | VISIBLE | BASE TABLE  |
+| variables_info                                       |         3 | VISIBLE | BASE TABLE  |
+| persisted_variables                                  |         3 | VISIBLE | BASE TABLE  |
+| user_defined_functions                               |         3 | VISIBLE | BASE TABLE  |
+| binary_log_transaction_compression_stats             |         3 | VISIBLE | BASE TABLE  |
+| tls_channel_status                                   |         3 | VISIBLE | BASE TABLE  |
+| keyring_component_status                             |         3 | VISIBLE | BASE TABLE  |
+| db                                                   |         1 | VISIBLE | BASE TABLE  |
+| USER                                                 |         1 | VISIBLE | BASE TABLE  |
+| default_roles                                        |         1 | VISIBLE | BASE TABLE  |
+| role_edges                                           |         1 | VISIBLE | BASE TABLE  |
+| global_grants                                        |         1 | VISIBLE | BASE TABLE  |
+| password_history                                     |         1 | VISIBLE | BASE TABLE  |
+| func                                                 |         1 | VISIBLE | BASE TABLE  |
+| plugin                                               |         1 | VISIBLE | BASE TABLE  |
+| help_topic                                           |         1 | VISIBLE | BASE TABLE  |
+| help_category                                        |         1 | VISIBLE | BASE TABLE  |
+| help_relation                                        |         1 | VISIBLE | BASE TABLE  |
+| servers                                              |         1 | VISIBLE | BASE TABLE  |
+| tables_priv                                          |         1 | VISIBLE | BASE TABLE  |
+| columns_priv                                         |         1 | VISIBLE | BASE TABLE  |
+| help_keyword                                         |         1 | VISIBLE | BASE TABLE  |
+| time_zone_name                                       |         1 | VISIBLE | BASE TABLE  |
+| time_zone                                            |         1 | VISIBLE | BASE TABLE  |
+| time_zone_transition                                 |         1 | VISIBLE | BASE TABLE  |
+| time_zone_transition_type                            |         1 | VISIBLE | BASE TABLE  |
+| time_zone_leap_second                                |         1 | VISIBLE | BASE TABLE  |
+| procs_priv                                           |         1 | VISIBLE | BASE TABLE  |
+| general_log                                          |         1 | VISIBLE | BASE TABLE  |
+| slow_log                                             |         1 | VISIBLE | BASE TABLE  |
+| component                                            |         1 | VISIBLE | BASE TABLE  |
+| slave_relay_log_info                                 |         1 | VISIBLE | BASE TABLE  |
+| slave_master_info                                    |         1 | VISIBLE | BASE TABLE  |
+| slave_worker_info                                    |         1 | VISIBLE | BASE TABLE  |
+| gtid_executed                                        |         1 | VISIBLE | BASE TABLE  |
+| replication_asynchronous_connection_failover         |         1 | VISIBLE | BASE TABLE  |
+| replication_asynchronous_connection_failover_managed |         1 | VISIBLE | BASE TABLE  |
+| replication_group_member_actions                     |         1 | VISIBLE | BASE TABLE  |
+| replication_group_configuration_version              |         1 | VISIBLE | BASE TABLE  |
+| server_cost                                          |         1 | VISIBLE | BASE TABLE  |
+| engine_cost                                          |         1 | VISIBLE | BASE TABLE  |
+| proxies_priv                                         |         1 | VISIBLE | BASE TABLE  |
+| version                                              |         4 | VISIBLE | VIEW        |
+| sys_config                                           |         4 | VISIBLE | BASE TABLE  |
+| innodb_buffer_stats_by_schema                        |         4 | VISIBLE | VIEW        |
+| x$innodb_buffer_stats_by_schema                      |         4 | VISIBLE | VIEW        |
+| innodb_buffer_stats_by_table                         |         4 | VISIBLE | VIEW        |
+| x$innodb_buffer_stats_by_table                       |         4 | VISIBLE | VIEW        |
+| schema_object_overview                               |         4 | VISIBLE | VIEW        |
+| schema_auto_increment_columns                        |         4 | VISIBLE | VIEW        |
+| x$schema_flattened_keys                              |         4 | VISIBLE | VIEW        |
+| schema_redundant_indexes                             |         4 | VISIBLE | VIEW        |
+| ps_check_lost_instrumentation                        |         4 | VISIBLE | VIEW        |
+| latest_file_io                                       |         4 | VISIBLE | VIEW        |
+| x$latest_file_io                                     |         4 | VISIBLE | VIEW        |
+| io_by_thread_by_latency                              |         4 | VISIBLE | VIEW        |
+| x$io_by_thread_by_latency                            |         4 | VISIBLE | VIEW        |
+| io_global_by_file_by_bytes                           |         4 | VISIBLE | VIEW        |
+| x$io_global_by_file_by_bytes                         |         4 | VISIBLE | VIEW        |
+| io_global_by_file_by_latency                         |         4 | VISIBLE | VIEW        |
+| x$io_global_by_file_by_latency                       |         4 | VISIBLE | VIEW        |
+| io_global_by_wait_by_bytes                           |         4 | VISIBLE | VIEW        |
+| x$io_global_by_wait_by_bytes                         |         4 | VISIBLE | VIEW        |
+| io_global_by_wait_by_latency                         |         4 | VISIBLE | VIEW        |
+| x$io_global_by_wait_by_latency                       |         4 | VISIBLE | VIEW        |
+| innodb_lock_waits                                    |         4 | VISIBLE | VIEW        |
+| x$innodb_lock_waits                                  |         4 | VISIBLE | VIEW        |
+| memory_by_user_by_current_bytes                      |         4 | VISIBLE | VIEW        |
+| x$memory_by_user_by_current_bytes                    |         4 | VISIBLE | VIEW        |
+| memory_by_host_by_current_bytes                      |         4 | VISIBLE | VIEW        |
+| x$memory_by_host_by_current_bytes                    |         4 | VISIBLE | VIEW        |
+| memory_by_thread_by_current_bytes                    |         4 | VISIBLE | VIEW        |
+| x$memory_by_thread_by_current_bytes                  |         4 | VISIBLE | VIEW        |
+| memory_global_by_current_bytes                       |         4 | VISIBLE | VIEW        |
+| x$memory_global_by_current_bytes                     |         4 | VISIBLE | VIEW        |
+| memory_global_total                                  |         4 | VISIBLE | VIEW        |
+| x$memory_global_total                                |         4 | VISIBLE | VIEW        |
+| schema_index_statistics                              |         4 | VISIBLE | VIEW        |
+| x$schema_index_statistics                            |         4 | VISIBLE | VIEW        |
+| x$ps_schema_table_statistics_io                      |         4 | VISIBLE | VIEW        |
+| schema_table_statistics                              |         4 | VISIBLE | VIEW        |
+| x$schema_table_statistics                            |         4 | VISIBLE | VIEW        |
+| schema_table_statistics_with_buffer                  |         4 | VISIBLE | VIEW        |
+| x$schema_table_statistics_with_buffer                |         4 | VISIBLE | VIEW        |
+| schema_tables_with_full_table_scans                  |         4 | VISIBLE | VIEW        |
+| x$schema_tables_with_full_table_scans                |         4 | VISIBLE | VIEW        |
+| schema_unused_indexes                                |         4 | VISIBLE | VIEW        |
+| schema_table_lock_waits                              |         4 | VISIBLE | VIEW        |
+| x$schema_table_lock_waits                            |         4 | VISIBLE | VIEW        |
+| statement_analysis                                   |         4 | VISIBLE | VIEW        |
+| x$statement_analysis                                 |         4 | VISIBLE | VIEW        |
+| statements_with_errors_or_warnings                   |         4 | VISIBLE | VIEW        |
+| x$statements_with_errors_or_warnings                 |         4 | VISIBLE | VIEW        |
+| statements_with_full_table_scans                     |         4 | VISIBLE | VIEW        |
+| x$statements_with_full_table_scans                   |         4 | VISIBLE | VIEW        |
+| x$ps_digest_avg_latency_distribution                 |         4 | VISIBLE | VIEW        |
+| x$ps_digest_95th_percentile_by_avg_us                |         4 | VISIBLE | VIEW        |
+| statements_with_runtimes_in_95th_percentile          |         4 | VISIBLE | VIEW        |
+| x$statements_with_runtimes_in_95th_percentile        |         4 | VISIBLE | VIEW        |
+| statements_with_sorting                              |         4 | VISIBLE | VIEW        |
+| x$statements_with_sorting                            |         4 | VISIBLE | VIEW        |
+| statements_with_temp_tables                          |         4 | VISIBLE | VIEW        |
+| x$statements_with_temp_tables                        |         4 | VISIBLE | VIEW        |
+| user_summary_by_file_io_type                         |         4 | VISIBLE | VIEW        |
+| x$user_summary_by_file_io_type                       |         4 | VISIBLE | VIEW        |
+| user_summary_by_file_io                              |         4 | VISIBLE | VIEW        |
+| x$user_summary_by_file_io                            |         4 | VISIBLE | VIEW        |
+| user_summary_by_statement_type                       |         4 | VISIBLE | VIEW        |
+| x$user_summary_by_statement_type                     |         4 | VISIBLE | VIEW        |
+| user_summary_by_statement_latency                    |         4 | VISIBLE | VIEW        |
+| x$user_summary_by_statement_latency                  |         4 | VISIBLE | VIEW        |
+| user_summary_by_stages                               |         4 | VISIBLE | VIEW        |
+| x$user_summary_by_stages                             |         4 | VISIBLE | VIEW        |
+| user_summary                                         |         4 | VISIBLE | VIEW        |
+| x$user_summary                                       |         4 | VISIBLE | VIEW        |
+| host_summary_by_file_io_type                         |         4 | VISIBLE | VIEW        |
+| x$host_summary_by_file_io_type                       |         4 | VISIBLE | VIEW        |
+| host_summary_by_file_io                              |         4 | VISIBLE | VIEW        |
+| x$host_summary_by_file_io                            |         4 | VISIBLE | VIEW        |
+| host_summary_by_statement_type                       |         4 | VISIBLE | VIEW        |
+| x$host_summary_by_statement_type                     |         4 | VISIBLE | VIEW        |
+| host_summary_by_statement_latency                    |         4 | VISIBLE | VIEW        |
+| x$host_summary_by_statement_latency                  |         4 | VISIBLE | VIEW        |
+| host_summary_by_stages                               |         4 | VISIBLE | VIEW        |
+| x$host_summary_by_stages                             |         4 | VISIBLE | VIEW        |
+| host_summary                                         |         4 | VISIBLE | VIEW        |
+| x$host_summary                                       |         4 | VISIBLE | VIEW        |
+| wait_classes_global_by_avg_latency                   |         4 | VISIBLE | VIEW        |
+| x$wait_classes_global_by_avg_latency                 |         4 | VISIBLE | VIEW        |
+| wait_classes_global_by_latency                       |         4 | VISIBLE | VIEW        |
+| x$wait_classes_global_by_latency                     |         4 | VISIBLE | VIEW        |
+| waits_by_user_by_latency                             |         4 | VISIBLE | VIEW        |
+| x$waits_by_user_by_latency                           |         4 | VISIBLE | VIEW        |
+| waits_by_host_by_latency                             |         4 | VISIBLE | VIEW        |
+| x$waits_by_host_by_latency                           |         4 | VISIBLE | VIEW        |
+| waits_global_by_latency                              |         4 | VISIBLE | VIEW        |
+| x$waits_global_by_latency                            |         4 | VISIBLE | VIEW        |
+| metrics                                              |         4 | VISIBLE | VIEW        |
+| processlist                                          |         4 | VISIBLE | VIEW        |
+| x$processlist                                        |         4 | VISIBLE | VIEW        |
+| session                                              |         4 | VISIBLE | VIEW        |
+| x$session                                            |         4 | VISIBLE | VIEW        |
+| session_ssl_status                                   |         4 | VISIBLE | VIEW        |
+| ENABLED_ROLES                                        |         2 | VISIBLE | SYSTEM VIEW |
+| APPLICABLE_ROLES                                     |         2 | VISIBLE | SYSTEM VIEW |
+| ADMINISTRABLE_ROLE_AUTHORIZATIONS                    |         2 | VISIBLE | SYSTEM VIEW |
+| ROLE_COLUMN_GRANTS                                   |         2 | VISIBLE | SYSTEM VIEW |
+| ROLE_ROUTINE_GRANTS                                  |         2 | VISIBLE | SYSTEM VIEW |
+| ROLE_TABLE_GRANTS                                    |         2 | VISIBLE | SYSTEM VIEW |
+| USER_ATTRIBUTES                                      |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_SESSION_TEMP_TABLESPACES                      |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_VIRTUAL                                       |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_BUFFER_POOL_STATS                             |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_BUFFER_PAGE                                   |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_CMPMEM_RESET                                  |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_CMPMEM                                        |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_TRX                                           |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_CMP_PER_INDEX_RESET                           |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_CMP_RESET                                     |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_FT_DEFAULT_STOPWORD                           |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_METRICS                                       |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_TEMP_TABLE_INFO                               |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_FT_DELETED                                    |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_TABLESTATS                                    |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_CMP                                           |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_TABLES                                        |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_FT_BEING_DELETED                              |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_BUFFER_PAGE_LRU                               |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_CMP_PER_INDEX                                 |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_FT_CONFIG                                     |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_CACHED_INDEXES                                |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_FT_INDEX_TABLE                                |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_COLUMNS                                       |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_FT_INDEX_CACHE                                |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_INDEXES                                       |         2 | VISIBLE | SYSTEM VIEW |
+| INNODB_TABLESPACES                                   |         2 | VISIBLE | SYSTEM VIEW |
+| innodb_redo_log_files                                |         3 | VISIBLE | BASE TABLE  |
 +------------------------------------------------------+-----------+---------+-------------+
-361 rows in set (0.02 sec)
+361 ROWS IN SET (0.02 sec)
 
 mysql> 
 

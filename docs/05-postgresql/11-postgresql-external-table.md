@@ -30,14 +30,14 @@ CREATE USER fdw_user WITH ENCRYPTED PASSWORD 'secret';
 
 ```SQL
 CREATE TABLE weather (
-    city        varchar(80),  -- city name (城市名)
-    temp_low    int,          -- low temperature (最低温度)
-    temp_high   int,          -- high temperature (最高温度)
-    prcp        real,         -- precipitation (降水量)
-    date        date          -- date (日期)
+    city        VARCHAR(80),  -- city name (城市名)
+    temp_low    INT,          -- low temperature (最低温度)
+    temp_high   INT,          -- high temperature (最高温度)
+    prcp        REAL,         -- precipitation (降水量)
+    DATE        DATE          -- date (日期)
 );
 
-INSERT INTO weather (city, temp_low, temp_high, prcp, date)
+INSERT INTO weather (city, temp_low, temp_high, prcp, DATE)
     VALUES ('Beijing', 18, 32, 0.25, '2021-05-19'),
           ('Beijing', 20, 30, 0.0, '2021-05-20'),
           ('Dalian', 16, 24, 0.0, '2021-05-21');

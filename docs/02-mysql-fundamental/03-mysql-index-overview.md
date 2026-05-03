@@ -216,9 +216,9 @@ MySQL 最常用存储引擎 InnoDB 和 MyISAM 都不支持 Hash 索引，它们�
 -- 索引语法：ALTER TABLE table1 ADD INDEX idx_name(column) USING  BTREE |HASH ;
 
 -- 添加普通的B-tree索引
-ALTER TABLE t1   ADD INDEX idx_name(column(10)) USING BTREE;
+ALTER TABLE t1   ADD INDEX idx_name(COLUMN(10)) USING BTREE;
 -- 添加unique的B-tree索引
-ALTER TABLE t1   ADD INDEX unique idx_name(column(10)) USING BTREE;
+ALTER TABLE t1   ADD INDEX UNIQUE idx_name(COLUMN(10)) USING BTREE;
 
 
 
@@ -313,7 +313,7 @@ MySQL 中的 InnoDB 存储引擎中对于表索引的管理是采用 B+树结构
 
 ```SQL
 -- 下述sql语句可以在blog中查找内容以xxx开头的文章，并且只要content添加了B+树索引，那么就可以利用索引快速的进行查询。
-SELECT * FROM blog WHERE content like "xxx%";
+SELECT * FROM blog WHERE content LIKE "xxx%";
 
 ```
 
@@ -323,7 +323,7 @@ SELECT * FROM blog WHERE content like "xxx%";
 
 ```SQL
 -- 实际上，这种查询并不是B+树索引所能很好的完成的工作。
-SELECT * FROM blog WHERE content like "%xxx%";
+SELECT * FROM blog WHERE content LIKE "%xxx%";
 ```
 
 全文检索的一般实现————倒排索引
@@ -393,10 +393,10 @@ SELECT table_id, name, space FROM INFORMATION_SCHEMA.INNODB_TABLES  WHERE name L
 
 ```SQL
 SELECT
-	b.name as table_name,
+	b.name AS table_name,
     a.table_id,
     HEX(a.table_id),
-	a.name as index_name
+	a.name AS index_name
     a.index_id,
     HEX(a.index_id),
 FROM
@@ -407,7 +407,7 @@ WHERE
         AND b.name = 'test_fulltext/opening_lines'
         AND a.name = 'idx';
 
---Innodb 存储引擎允许用户查看指定倒排索引的Auxiliary Table中分词的信息，可以通过设置参数 innodb_ft_aux_table 来观察倒排索引的 Auxiliary Table。
+--Innodb 存储引擎允许用户查看指定倒排索引的Auxiliary Table中分词的信息，可以通过设置参数 innodb_ft_aux_table 来观察倒排索引的 Auxiliary TABLE。
 
 SET GLOBAL innodb_ft_aux_table="test_fulltext/opening_lines";
 
@@ -440,17 +440,17 @@ DOC_ID 是关键词映射的索引表记录 ID，每条记录被当作一个文�
 mysql>
 mysql> SHOW EXTENDED COLUMNS FROM test_fulltext.opening_lines;
 +--------------+--------------+------+-----+---------+----------------+
-| Field        | Type         | Null | Key | Default | Extra          |
+| Field        | Type         | NULL | KEY | DEFAULT | Extra          |
 +--------------+--------------+------+-----+---------+----------------+
-| id           | int unsigned | NO   | PRI | NULL    | auto_increment |
-| opening_line | text         | YES  | MUL | NULL    |                |
-| author       | varchar(200) | YES  |     | NULL    |                |
-| title        | varchar(200) | YES  |     | NULL    |                |
+| id           | INT UNSIGNED | NO   | PRI | NULL    | AUTO_INCREMENT |
+| opening_line | TEXT         | YES  | MUL | NULL    |                |
+| author       | VARCHAR(200) | YES  |     | NULL    |                |
+| title        | VARCHAR(200) | YES  |     | NULL    |                |
 | FTS_DOC_ID   |              | NO   |     | NULL    |                |
 | DB_TRX_ID    |              | NO   |     | NULL    |                |
 | DB_ROLL_PTR  |              | NO   |     | NULL    |                |
 +--------------+--------------+------+-----+---------+----------------+
-7 rows in set (0.00 sec)
+7 ROWS IN SET (0.00 sec)
 
 mysql>
 
@@ -465,12 +465,12 @@ mysql>
 -- Table structure for t_article
 -- ----------------------------
 CREATE TABLE `t_article`  (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  `content` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `content` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
   PRIMARY KEY (`id`) USING BTREE,
   FULLTEXT INDEX `fulltext_title_content`(`title`, `content`) WITH PARSER `ngram`
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of t_article
@@ -496,7 +496,7 @@ INSERT INTO `t_article` VALUES (14, '恭喜发财', '你好');
 ALTER TABLE `t_article` ADD FULLTEXT INDEX fulltext_title_content(`title`,`content`) WITH PARSER ngram;
 
 -- 可以单字段索引
-ALTER TABLE `t_article` add FULLTEXT INDEX fulltext_content(`content`) WITH PARSER ngram;
+ALTER TABLE `t_article` ADD FULLTEXT INDEX fulltext_content(`content`) WITH PARSER ngram;
 
 
 --------------------------------------------------------------------------------------------------------
@@ -531,8 +531,8 @@ SELECT *, MATCH (title, content) AGAINST ('团') AS score
 
 
 -- 查询 content 中包含"诚实守信"和"见利忘义"的语句
-SELECT  * , MATCH (content) AGAINST ('+诚实守信 +见利忘义') as score
-    FROM  t_article where MATCH (content) AGAINST ('+诚实守信 +见利忘义' IN BOOLEAN MODE);
+SELECT  * , MATCH (content) AGAINST ('+诚实守信 +见利忘义') AS score
+    FROM  t_article WHERE MATCH (content) AGAINST ('+诚实守信 +见利忘义' IN BOOLEAN MODE);
 
 ```
 
@@ -576,38 +576,38 @@ MySQL 支持降序索引：索引定义中的`DESC`不再被忽略，而是按�
 
 ```sql
 -- 同一个建表语句
-create table slowtech.t1(c1 int,c2 int,index idx_c1_c2(c1,c2 desc));
+CREATE TABLE slowtech.t1(c1 INT,c2 INT,INDEX idx_c1_c2(c1,c2 DESC));
 
 -- MySQL5.7
-mysql> show create table slowtech.t1\G
-*************************** 1. row ***************************
-      Table: t1
-Create Table: CREATE TABLE `t1` (
-  `c1` int(11) DEFAULT NULL,
-  `c2` int(11) DEFAULT NULL,
+mysql> SHOW CREATE TABLE slowtech.t1\G
+*************************** 1. ROW ***************************
+      TABLE: t1
+CREATE TABLE: CREATE TABLE `t1` (
+  `c1` INT(11) DEFAULT NULL,
+  `c2` INT(11) DEFAULT NULL,
   KEY `idx_c1_c2` (`c1`,`c2`)  -- 虽然c2列指定了desc，但在实际的建表语句中还是将其忽略了
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1
-1 row in set (0.00 sec)
+1 ROW IN SET (0.00 sec)
 
 
 -- 在t1表中，针对b,c,d三个字段创建一个联合索引。其实等价于下面的语句
-create index idx_t1_bcd on t1(b,c,d);
+CREATE INDEX idx_t1_bcd ON t1(b,c,d);
 
-create index idx_t1_bcd on t1(b asc,c asc,d asc);
+CREATE INDEX idx_t1_bcd ON t1(b ASC,c ASC,d ASC);
 
 -- asc表示的是升序，使用这种语法创建出来的索引叫做升序索引。也就是我们平时在创建索引的时候，创建的都是升序索引。
 
 
 -- MySQL8.0
-mysql> show create table slowtech.t1\G
-*************************** 1. row ***************************
-      Table: t1
-Create Table: CREATE TABLE `t1` (
-  `c1` int(11) DEFAULT NULL,
-  `c2` int(11) DEFAULT NULL,
+mysql> SHOW CREATE TABLE slowtech.t1\G
+*************************** 1. ROW ***************************
+      TABLE: t1
+CREATE TABLE: CREATE TABLE `t1` (
+  `c1` INT(11) DEFAULT NULL,
+  `c2` INT(11) DEFAULT NULL,
   KEY `idx_c1_c2` (`c1`,`c2` DESC) --保留了desc子句
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-1 row in set (0.00 sec)
+1 ROW IN SET (0.00 sec)
 
 
 ```
@@ -626,13 +626,13 @@ Create Table: CREATE TABLE `t1` (
 
 ```sql
 -- mysql5.7
-mysql> explain select * from slowtech.t1 order by c1,c2 desc;
+mysql> EXPLAIN SELECT * FROM slowtech.t1 ORDER BY c1,c2 DESC;
 +----+-------------+-------+------------+-------+---------------+-----------+---------+------+------+----------+-----------------------------+
-| id | select_type | table | partitions | type  | possible_keys | key      | key_len | ref  | rows | filtered | Extra                      |
+| id | select_type | TABLE | PARTITIONS | type  | possible_keys | KEY      | key_len | ref  | ROWS | filtered | Extra                      |
 +----+-------------+-------+------------+-------+---------------+-----------+---------+------+------+----------+-----------------------------+
-|  1 | SIMPLE      | t1    | NULL      | index | NULL          | idx_c1_c2 | 10      | NULL |    1 |  100.00 | Using index; Using filesort |
+|  1 | SIMPLE      | t1    | NULL      | INDEX | NULL          | idx_c1_c2 | 10      | NULL |    1 |  100.00 | USING INDEX; USING filesort |
 +----+-------------+-------+------------+-------+---------------+-----------+---------+------+------+----------+-----------------------------+
-1 row in set, 1 warning (0.00 sec)
+1 ROW IN SET, 1 warning (0.00 sec)
 ```
 
 #### MySQL group by 隐式排序
@@ -653,11 +653,11 @@ INSERT INTO t VALUES (4,1),(3,2),(1,4),(2,2),(1,1),(1,5),(2,6),(2,1),(1,3),(3,4)
 -- 在MySQL5.7中，下面这三条SQL看起来执行的效果是一样的
 
 -- 推荐，5.7和8.0效果一致
-select id, SUM(cnt) from t group by id order by id;
+SELECT id, SUM(cnt) FROM t GROUP BY id ORDER BY id;
 -- 不推荐  --8.0中不会排序，结果不保证有序
-select id, SUM(cnt) from t group by id ;
+SELECT id, SUM(cnt) FROM t GROUP BY id ;
 -- 不推荐  --8.0中直接报错
-select id, SUM(cnt) from t group by id  asc;
+SELECT id, SUM(cnt) FROM t GROUP BY id  ASC;
 
 +------+----------+
 | id   | SUM(cnt) |
@@ -667,10 +667,10 @@ select id, SUM(cnt) from t group by id  asc;
 |    3 |       12 |
 |    4 |        6 |
 +------+----------+
-4 rows in set (0.00 sec)
+4 ROWS IN SET (0.00 sec)
 
 -- 从 MySQL8.0 开始，不支持 GROUP BY隐式排序 和 GROUP BY显式排序
-https://dev.mysql.com/blog-archive/removal-of-implicit-and-explicit-sorting-for-group-by/
+https://dev.mysql.com/blog-archive/removal-OF-implicit-AND-explicit-sorting-FOR-GROUP-BY/
 ```
 
 <span style="color:blue"> 要对一组数据进行分组，MySQL 优化器会选择不同的方法。其中之一是分组之前对数据排序。这使得连续分组变得很容易。</span>
@@ -693,7 +693,7 @@ SELECT * FROM user_info WHERE substr(id_card_no,1,6) = '330106';
 
 -- 索引树存储的是原始 id_card_no 的值。数据库需要对表中每一行的 id_card_no 执行 SUBSTR() 函数，然后将结果与 '330106' 比较。相当于全表遍历导致索引失效
 -- 一般来说，我们会建议开发人员，避免这种写法，更多的是将表达式放到右侧
-SELECT * FROM user_info WHERE id_card_no like '330106%';
+SELECT * FROM user_info WHERE id_card_no LIKE '330106%';
 
 
 -- 比如说有些表中，需要根据日期字段中的月份为条件查询，那么可以创建一个索引
@@ -739,7 +739,7 @@ INSERT INTO orders (id, customer_id, status)
 SELECT
   i,
   (random()*10000)::INT,
-  CASE (random() * 100)::int
+  CASE (random() * 100)::INT
     WHEN 0 THEN 'pending'
     WHEN 1 THEN 'shipped'
     ELSE 'completed'
@@ -872,7 +872,7 @@ mysql> select _rowid from test;
 
 ```sql
 -- 重建表
-alter table T engine=InnoDB;
+ALTER TABLE T ENGINE=InnoDB;
 
 ```
 
@@ -914,7 +914,7 @@ INSERT INTO t1 VALUES
 (5, 5, '2002-01-01');
 
 
-show variables like '%optimizer_switch%';
+SHOW variables LIKE '%optimizer_switch%';
 
 SET optimizer_switch = 'use_index_extensions=off';
 
@@ -937,9 +937,9 @@ SET optimizer_switch = 'use_index_extensions=on';
 自增主键是指自增列上定义的主键，在建表语句中一般是这么定义的：
 
 ```sql
-create table t1 (
+CREATE TABLE t1 (
     -- 创建自增列
-	`rid` int(11)  NOT NULL  AUTO_INCREMENT,
+	`rid` INT(11)  NOT NULL  AUTO_INCREMENT,
 	-- 以自增列创建主键
     PRIMARY KEY (`id`),
  )
@@ -987,7 +987,7 @@ create table t1 (
 -- 查看表中的索引详情
 SHOW INDEX FROM table_name;
 -- 创建唯一索引
-ALTER TABLE table_name ADD UNIQUE (column);
+ALTER TABLE table_name ADD UNIQUE (COLUMN);
 ```
 
 #### Multi-Range Read（MRR）
@@ -1033,15 +1033,15 @@ postgresql 表的数据都是以堆表`heap`的形式存储的，因此`Postgres
 
 ```sql
 CREATE TABLE `tuser` (
-  `id` int(11) NOT NULL,
-  `id_card` varchar(32) DEFAULT NULL,
-  `name` varchar(32) DEFAULT NULL,
-  `age` int(11) DEFAULT NULL,
-  `ismale` tinyint(1) DEFAULT NULL,
+  `id` INT(11) NOT NULL,
+  `id_card` VARCHAR(32) DEFAULT NULL,
+  `name` VARCHAR(32) DEFAULT NULL,
+  `age` INT(11) DEFAULT NULL,
+  `ismale` TINYINT(1) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `id_card` (`id_card`),
   KEY `name_age` (`name`,`age`)
-) ENGINE=In
+) ENGINE=IN
 ```
 
 如果要根据市民身份证号查询市民信息的需求，在身份证号字段上建立索引就够了。
@@ -1066,10 +1066,10 @@ MySQL 可以创建联合索引（即在多列上创建一个索引，一个索�
 
 ```sql
 CREATE TABLE `geek` (
-  `a` int(11) NOT NULL,
-  `b` int(11) NOT NULL,
-  `c` int(11) NOT NULL,
-  `d` int(11) NOT NULL,
+  `a` INT(11) NOT NULL,
+  `b` INT(11) NOT NULL,
+  `c` INT(11) NOT NULL,
+  `d` INT(11) NOT NULL,
   PRIMARY KEY (`a`,`b`),
   KEY `c` (`c`),
   KEY `ca` (`c`,`a`),
@@ -1125,7 +1125,7 @@ SELECT * FROM test WHERE last_name='Jones';
 SELECT * FROM test WHERE last_name='Jones' AND first_name='John';
 SELECT * FROM test WHERE last_name='Jones' AND (first_name='John' OR first_name='Jon');
 SELECT * FROM test WHERE last_name='Jones' AND first_name >='M' AND first_name < 'N';
-select * FROM test where last_name like '张%' and age=10 ;
+SELECT * FROM test WHERE last_name LIKE '张%' AND age=10 ;
 
 -- 下面的查询无法用到这个索引
 SELECT * FROM test WHERE first_name='John';
@@ -1174,12 +1174,12 @@ test 是要加索引的字段，5 是索引长度，
 
 ```sql
 -- 查询表中某个字段最长的记录
-select  `字段`, length(`字段`)  from 表名  where  length(`字段`) = ( select max(length(`字段`)) from 表名  )
+SELECT  `字段`, length(`字段`)  FROM 表名  WHERE  length(`字段`) = ( SELECT max(length(`字段`)) FROM 表名  )
 -- 查询表中某个字段最短的记录
-select  `字段`, length(`字段`)  from 表名  where  length(`字段`) = ( select min(length(`字段`)) from 表名  )
+SELECT  `字段`, length(`字段`)  FROM 表名  WHERE  length(`字段`) = ( SELECT min(length(`字段`)) FROM 表名  )
 
 -- left函数取test字段的前5位，对前5位去重，这个
-select count(distinct left(test,5))/count(*) from table;
+SELECT count(DISTINCT LEFT(test,5))/count(*) FROM TABLE;
 
 -- 随着索引字段长度的扩大，这个区分度的值是越来越趋近于1，等于1即表示
 
@@ -1245,7 +1245,7 @@ CREATE TABLE test (blob_col BLOB, INDEX(blob_col(10)));
 在联合索引的最左前缀匹配时，以 INDEX name (last_name,first_name,age) 这个索引为例。有如下查询
 
 ```sql
-select * FROM test where last_name like '张%' and age=10 ;
+SELECT * FROM test WHERE last_name LIKE '张%' AND age=10 ;
 ```
 
 在 5.6 之前，这个语句在搜索索引树的时候，使用第一个字段的条件去匹配。找到所有匹配的行，逐行去主键索引上找到数据行，对比后面的条件。
@@ -1429,11 +1429,11 @@ EXPLAIN SELECT f1, f2 FROM t1 WHERE f2 > 40;
 
 mysql> EXPLAIN SELECT f1, f2 FROM t1 WHERE f2 > 40;
 +----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------+
-| id | select_type | table | partitions | type  | possible_keys | key     | key_len | ref  | rows | filtered | Extra                                  |
+| id | select_type | TABLE | PARTITIONS | type  | possible_keys | KEY     | key_len | ref  | ROWS | filtered | Extra                                  |
 +----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------+
-|  1 | SIMPLE      | t1    | NULL       | range | PRIMARY       | PRIMARY | 8       | NULL |   53 |   100.00 | Using where; Using index for skip scan |
+|  1 | SIMPLE      | t1    | NULL       | RANGE | PRIMARY       | PRIMARY | 8       | NULL |   53 |   100.00 | USING WHERE; USING INDEX FOR SKIP scan |
 +----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------+
-1 row in set, 1 warning (0.00 sec)
+1 ROW IN SET, 1 warning (0.00 sec)
 ```
 
 > A range scan is more efficient than a full index scan, but cannot be used in this case because there is no condition on f1, the first index column. However, as of MySQL 8.0.13, the optimizer can perform multiple range scans, one for each value of f1, using a method called Skip Scan that is similar to Loose Index Scan。
@@ -1508,28 +1508,28 @@ SELECT * FROM t1 USE INDEX FOR JOIN (i1) FORCE INDEX FOR JOIN (i2);
 ```sql
 SELECT @@optimizer_switch;
 
-index_merge=on,
-index_merge_union=on,
-index_merge_sort_union=on,
-index_merge_intersection=on,
-engine_condition_pushdown=on
-index_condition_pushdown=on,
-mrr=on,
-mrr_cost_based=on,
-block_nested_loop=on,
+index_merge=ON,
+index_merge_union=ON,
+index_merge_sort_union=ON,
+index_merge_intersection=ON,
+engine_condition_pushdown=ON
+index_condition_pushdown=ON,
+mrr=ON,
+mrr_cost_based=ON,
+block_nested_loop=ON,
 batched_key_access=off,
-materialization=on,
-semijoin=on,
-loosescan=on,
-firstmatch=on,
-duplicateweedout=on,
-subquery_materialization_cost_based=on,
-use_index_extensions=on,
-condition_fanout_filter=on,
-derived_merge=on,
+materialization=ON,
+semijoin=ON,
+loosescan=ON,
+firstmatch=ON,
+duplicateweedout=ON,
+subquery_materialization_cost_based=ON,
+use_index_extensions=ON,
+condition_fanout_filter=ON,
+derived_merge=ON,
 use_invisible_indexes=off,
-skip_scan=on,
-hash_join=on
+skip_scan=ON,
+hash_join=ON
 
 
 -- 要修改optimizer_switch的值，指定一个由一个或多个命令组成的逗号分隔的值
@@ -1866,7 +1866,7 @@ for(Row r1 in List<Row> t1){
 -- 当使用left join时，左表是驱动表，右表是被驱动表，当使用right join时，右表时驱动表，左表是被驱动表。
 
 -- 使用了 NLJ算法。一般 join 语句中，如果执行计划 Extra 中未出现 Using join buffer 则表示使用的 join 算 法是NLJ
-select * from t1 inner join t2 on t1.id=t2.tid
+SELECT * FROM t1 INNER JOIN t2 ON t1.id=t2.tid
 
 -- 从表 t2 中读取一行数据(如果t2表有查询过滤条件的，会从过滤结果里取出一行数据);
 ```
@@ -1979,11 +1979,11 @@ MySQL8.0 正式引入了 Hash Join 的连接方式。
 ```sql
 -- 建表t2
 CREATE TABLE `t2` (
-  `id` int(11) NOT NULL,
-  `a` int(11) DEFAULT NULL,
-  `b` int(11) DEFAULT NULL,
-  `c` int(11) DEFAULT NULL,
-  `d` int(11) DEFAULT NULL,
+  `id` INT(11) NOT NULL,
+  `a` INT(11) DEFAULT NULL,
+  `b` INT(11) DEFAULT NULL,
+  `c` INT(11) DEFAULT NULL,
+  `d` INT(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `a` (`a`),
   KEY `b` (`b`),
@@ -1993,15 +1993,15 @@ CREATE TABLE `t2` (
 
 -- t2测试数据
 delimiter ;;
-create procedure idata2()
-begin
-  declare i int;
-  set i=1;
-  while(i<=1000)do
-    insert into t2 values(i, i+1, i+2, i+2, i+4);
-    set i=i+1;
-  end while;
-end;;
+CREATE PROCEDURE idata2()
+BEGIN
+  DECLARE i INT;
+  SET i=1;
+  WHILE(i<=1000)do
+    INSERT INTO t2 VALUES(i, i+1, i+2, i+2, i+4);
+    SET i=i+1;
+  END WHILE;
+END;;
 
 delimiter ;
 
@@ -2010,21 +2010,21 @@ call idata2();
 
 
 -- 建表t1
-create table t1 like t2;
-insert into t1 (select * from t2 where id<=100);
+CREATE TABLE t1 LIKE t2;
+INSERT INTO t1 (SELECT * FROM t2 WHERE id<=100);
 
 
 -- t1测试数据
 delimiter ;;
-create procedure idata1()
-begin
-  declare i int;
-  set i=2000;
-  while(i<=3000)do
-    insert into t1 values(i, i, i, i, i);
-    set i=i+1;
-  end while;
-end;;
+CREATE PROCEDURE idata1()
+BEGIN
+  DECLARE i INT;
+  SET i=2000;
+  WHILE(i<=3000)do
+    INSERT INTO t1 VALUES(i, i, i, i, i);
+    SET i=i+1;
+  END WHILE;
+END;;
 
 delimiter ;
 
@@ -2038,26 +2038,26 @@ call idata1();
 -- t2 的数据  1-1000  一共是1000条数据
 
 -- 直接多表查询，笛卡尔积：1101*1000 条数据，一般很少有这样的查询
-select *  from t1 , t2
+SELECT *  FROM t1 , t2
 
 
 
 -- 内连接查询，匹配到了1-100这100行数据
-select count(*)  from t1  join t2 on  t1.id=t2.id
+SELECT count(*)  FROM t1  JOIN t2 ON  t1.id=t2.id
 
 -- 查看执行计划
 
 
-explain select count(*)  from t1  join t2 on  t1.id=t2.id
+EXPLAIN SELECT count(*)  FROM t1  JOIN t2 ON  t1.id=t2.id
 -- 此时驱动表是t2
 
 
-explain select t1.* from t1  join t2 on  t1.id=t2.id
+EXPLAIN SELECT t1.* FROM t1  JOIN t2 ON  t1.id=t2.id
 
-explain select t2.* from t1  join t2 on  t1.id=t2.id
+EXPLAIN SELECT t2.* FROM t1  JOIN t2 ON  t1.id=t2.id
 
 -- 不等值连接查询
-explain select count(*) from t1  join t2 on  t1.id != t2.id
+EXPLAIN SELECT count(*) FROM t1  JOIN t2 ON  t1.id != t2.id
 
 
 
@@ -2191,7 +2191,7 @@ EXPLAIN SELECT store_id FROM customer;
 -- 在这种情况下，注意比较的字段要加上索引。否则就是全表扫描
 -- 这种也不是绝对的，也有可能走全表扫描，无论什么情况下，只查询需要的列
 EXPLAIN SELECT * FROM customer WHERE customer_id>=10 AND customer_id<=20;
-EXPLAIN select  apprdate from temp_policy_org_base where apprdate > '8' and apprdate < '10' ;
+EXPLAIN SELECT  apprdate FROM temp_policy_org_base WHERE apprdate > '8' AND apprdate < '10' ;
 
 ```
 
@@ -2218,7 +2218,7 @@ EXPLAIN select  apprdate from temp_policy_org_base where apprdate > '8' and appr
 **ref_table、other_table** 表关联查询，关联字段`customer.customer_id`（主键），`payment.customer_id`（非唯一索引）
 
 ```sql
-    SELECT * FROM ref_table,other_table  WHERE ref_table.key_column=other_table.column;
+    SELECT * FROM ref_table,other_table  WHERE ref_table.key_column=other_table.COLUMN;
 ```
 
 关联查询时必定会有一张表进行全表扫描，此表一定是几张表中记录行数最少的表，然后再通过非唯一索引寻找其他关联表中的匹配行，以此达到表关联时扫描行数最少。
@@ -2528,8 +2528,8 @@ MySQL 中，order by 和 limit 使用时有一些小坑，一定要注意。
 ```SQL
 --先说现象：当order by排序字段存在重复时，不带limit可以正常排序。带了limit发现乱序了。
 
-select * from ratings order by category;
-select * from ratings order by category limit 5
+SELECT * FROM ratings ORDER BY category;
+SELECT * FROM ratings ORDER BY category LIMIT 5
 ```
 
 关于这个现象，官网中有一段描述。
@@ -2553,7 +2553,7 @@ select * from ratings order by category limit 5
 # MySQL count 优化
 
 ```sql
-select count(*) from api_runtime_log;
+SELECT count(*) FROM api_runtime_log;
 
 
 ```
@@ -2589,7 +2589,7 @@ MySQL 中有各种数据类型，包括：数字，字符、字符串、时间 �
 - 两个参数至少有一个是 NULL 时，比较的结果也是 NULL，例外是使用 <=> 对两个 NULL 做比较时会返回 1，这两种情况都不需要做类型转换。
 
   ```sql
-  select 1=NULL   -- 结果也是null
+  SELECT 1=NULL   -- 结果也是null
   ```
 
 - 两个参数都是字符串，会按照字符串来比较，不做类型转换
