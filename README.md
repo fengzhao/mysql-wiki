@@ -5,7 +5,7 @@
 [![Build Status](https://github.com/fengzhao/mysql-wiki/actions/workflows/publish_docs.yml/badge.svg)](https://github.com/fengzhao/mysql-wiki/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-📖 在线访问：[https://mysql.fengzhao.me](https://mysql.fengzhao.me)
+📖 在线访问：[https://mysql.fengzhao.pro](https://mysql.fengzhao.pro)
 
 ## 内容概览
 
