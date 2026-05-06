@@ -162,17 +162,15 @@ CREATE ROLE role_name;
 
 ??? note "数据库创建"
 
-​ `CREATE DATABASE`实际上是通过拷贝一个现有的数据库进行工作的。默认地它将拷贝名为template1的标准系统数据库。
+    `CREATE DATABASE`实际上是通过拷贝一个现有的数据库进行工作的。默认地它将拷贝名为template1的标准系统数据库。
 
-​
+    比如，如果你把过程语言PL/Perl安装到template1里， 那么你在创建用户数据库的时候它们就会自动可得，而不需要额外的动作。
 
-​ 比如，如果你把过程语言PL/Perl安装到template1里， 那么你在创建用户数据库的时候它们就会自动可得，而不需要额外的动作。
+    PostgreSQL默认有template0、template1两个模板，创建数据库时不指定模板，则默认模板为template1。用户也可以指定其他的自定义模板创建数据库。
 
-​ PostgreSQL默认有template0、template1两个模板，创建数据库时不指定模板，则默认模板为template1。用户也可以指定其他的自定义模板创建数据库。
+    - 使用 template1 模板库建库时不可指定新的字符集和本地化collate属性
 
-​ \* 使用 template1 模板库建库时不可指定新的字符集和本地化collate属性
-
-​ \* 使用 template0 模板库建库时可指定字符集和本地化collate属性
+    - 使用 template0 模板库建库时可指定字符集和本地化collate属性
 
     | **特性**     | **template1 (默认模板)**                   | **template0 (原始模板)**                 |
     | ------------ | ------------------------------------------ | ---------------------------------------- |
@@ -182,10 +180,6 @@ CREATE ROLE role_name;
     | **建库限制** | **不能**更改字符集（Encoding）和 Collate。 | **可以**更改字符集和 Collate。           |
 
 
-
-
-
-​
 
     ```sql
     -- 建库
