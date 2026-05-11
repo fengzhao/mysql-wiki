@@ -178,23 +178,23 @@ nav:
       - "10. PostgreSQL 索引": 05-postgresql/10-postgresql-index.md
       - "11. 外部表": 05-postgresql/11-postgresql-external-table.md
       - "12. PostgreSQL 扩展": 05-postgresql/12-postgresql-extension.md
-      - "13. 深入理解 TOAST 技术": 05-postgresql/13.postgresql-toast.md
+      - "13. 深入理解 TOAST 技术": 05-postgresql/13-postgresql-toast.md
       - "14. PostgreSQL 压缩表": 05-postgresql/14-postgresql-comporessed-table.md
       - "15. 数据备份": 05-postgresql/15-postgresql-data-backup.md
 
   - "Oracle":
       - "06-oracle/index.md"
       - "01. Oracle 概述": 06-oracle/01-Oracle-Overview.md
-      - "02. Oracle 体系架构": 06-oracle/03.oracle-architecture.md
-      - "03. Oracle 优化": 06-oracle/06.damenng-optimize.md
+      - "02. Oracle 体系架构": 06-oracle/03-oracle-architecture.md
+      - "03. Oracle 优化": 06-oracle/06-damenng-optimize.md
 
   - "NoSQL":
       - "07-nosql/index.md"
       - "Redis":
-          - "01. Redis 简介": 07-nosql/redis/01.redis 简介.md
-          - "02. Redis 客户端": 07-nosql/redis/02.redis 客户端.md
+          - "01. Redis 简介": 07-nosql/redis/01-redis-overview.md
+          - "02. Redis 客户端": 07-nosql/redis/02-redis-client.md
       - "MongoDB":
-          - "01. MongoDB 简介": 07-nosql/mongodb/01.简介.md
+          - "01. MongoDB 简介": 07-nosql/mongodb/01-mongodb-overview.md
 
   - "分布式系统":
       - "08-distributed/index.md"
