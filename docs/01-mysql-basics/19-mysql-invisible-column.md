@@ -1,9 +1,10 @@
 # 不可见列
 
+不可见的列(invisible columns)，不可见的列功能自8.0.23版开始实现的。有时候也有人叫它隐藏字段。
 
-不可见的列(invisible columns)，不可见的列功能自8.0.23版开始实现的。
+什么是不可见的列？它本质上是表中的普通列，有自己的名称和数据类型。它的处理和更新方式与其他普通列相同，唯一的区别是应用程序看不到它。
 
-什么是不可见的列？它本质上是表中的普通列，有自己的名称和数据类型。它的处理和更新方式与其他普通列相同，唯一的区别是应用程序看不到它。换句话说，只有在select中明确涉及到它的情况下，才能访问它；否则，它就像一个不存在的列。隐藏字段需要在查询中进行显式引用，否则对查询而言是不可见的。
+换句话说，只有在select中明确涉及到它的情况下，才能访问它；否则，它就像一个不存在的列。隐藏字段需要在查询中进行显式引用，否则对查询而言是不可见的。
 
 这个定义看起来很奇怪，通过一个实际使用案例，一切就都应该更清楚了。
 
@@ -11,21 +12,22 @@
 
 ==**这就是在应用程序中尽量避免使用`select *`的原因之一**==
 
-在这种情况下，如果需要避免更改应用程序代码以匹配新的表模式，可以将新列添加为不可见列，由于查询没有明确处理该列，因此不会将其返回给客户端。因此，应用程序不会出现故障或奇怪的行为。
+在这种情况下不，如果需要避免更改应用程序代码以匹配新的表模式，可以将新列添加为可见列，由于查询没有明确处理该列，因此不会将其返回给客户端。因此，应用程序不会出现故障或奇怪的行为。
 
 你需要在列定义中使用`invisible`关键字。如果需要将列转换为可见列，则需要使用`visible`关键字。
 
-
 ## 隐藏字段与DDL语句
 
-默认情况下创建的字段属于可见字段。如果想要显式指定字段的可见性，可以在`CREATE TABLE`或者`ALTER TABLE`语句中为字段的定义指定`VISIBLE`或者 `INVISIBLE`关键字。例如：
-
+默认情况下创建的字段属于可见字段。如果想要显式指定字段的可见性，可以在`CREATE TABLE`/`ALTER TABLE`语句中为字段的定义指定`VISIBLE`或者 `INVISIBLE`关键字。例如：
 
 ```SQL
+-- 建表，定义一个隐藏字段
 CREATE TABLE t1 (
   i INT,
   j DATE INVISIBLE
 ) ENGINE = InnoDB;
+
+-- 添加一个隐藏字段
 ALTER TABLE t1 ADD COLUMN k INT INVISIBLE;
 ```
 
@@ -36,15 +38,16 @@ ALTER TABLE t1 CHANGE COLUMN j j DATE VISIBLE;
 ALTER TABLE t1 MODIFY COLUMN j DATE INVISIBLE;
 ALTER TABLE t1 ALTER COLUMN j SET VISIBLE;
 ```
+
 使用隐藏字段时，需要注意以下事项：
 
 - 一个表至少需要一个可见字段。如果将所有字段都设置为隐藏字段，将会返回错误。
-- 隐藏字段支持常见的字段属性：NULL、NOT NULL 以及 AUTO_INCREMENT 等等。
+- 隐藏字段支持常见的字段属性：`NULL`、`NOT NULL` 以及 `AUTO_INCREMENT` 等等。
 - 计算列（Generated column）可以是隐藏字段。
 - 索引可以使用隐藏字段，包括 `PRIMARY KEY` 和 `UNIQUE` 索引。虽然一个表至少需要一个可见字段，但是索引定义中可以不包含任何可见字段。
 - 删除某个表中的隐藏字段时，同时会从相关索引中删除该字段。
 - 外键约束可以基于隐藏字段进行定义，同时外键约束也可以引用隐藏字段。
-- CHECK 约束可以基于隐藏字段进行定义。插入或者更新数据时，如果违反了隐藏字段上的 `CHECK` 约束将会返回错误。
+- `CHECK` 约束可以基于隐藏字段进行定义。插入或者更新数据时，如果违反了隐藏字段上的 `CHECK` 约束将会返回错误。
 
 如果使用`CREATE TABLE ... LIKE`语句复制表结构，将会复制原表中的隐藏字段，而且它们在新表中仍然是隐藏字段。如果使用`CREATE TABLE ... SELECT`语句复制表，不会包含隐藏字段，除非显式指定了隐藏字段。尽管如此，即使包含了原表中的隐藏字段，新表中的这些字段将会变成可见字段。
 
@@ -60,7 +63,7 @@ CREATE TABLE: CREATE TABLE `t2` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 ```
 
-如果想要保留这些字段的隐藏属性，可以在 CREATE TABLE 之后为它们指定隐藏属性。例如：
+如果想要保留这些字段的隐藏属性，可以在 `CREATE TABLE` 之后为它们指定隐藏属性。例如：
 
 ```SQL
 mysql> CREATE TABLE t1 (col1 INT, col2 INT INVISIBLE);
@@ -77,10 +80,13 @@ CREATE TABLE: CREATE TABLE `t2` (
 
 视图可以引用隐藏字段，需要在定义中显式指定这些字段。在视图定义之后修改字段的可见性不会影响视图。
 
+## 隐藏字段的行为
 
-## 隐藏字段与DML语句
+### 读取行为
 
-对于 `SELECT` 语句，除非在查询列表中显式指定了隐藏字段，否则查询结构中不会包含隐藏字段。查询列表中的 * 和 tbl_name.* 不会包含隐藏字段。自然连接不会包含隐藏字段。
+对于 `SELECT` 语句，除非在查询列表中显式指定了隐藏字段，否则查询结构中不会包含隐藏字段。
+
+`SELCECT *`这样的通配符也不包含隐藏字段。而且表的自然连接也不会包含隐藏字段。
 
 ```SQL
 mysql> CREATE TABLE t1 (col1 INT, col2 INT INVISIBLE);
@@ -104,52 +110,58 @@ mysql> SELECT col1, col2 FROM t1;
 
 ```
 
-第一个 `SELECT` 语句没有引用隐藏字段 `col2`（* 不包含隐藏字段），因此查询结果中没有返回 col2 字段。第二个 `SELECT` 语句显式指定了 col2 字段，因此查询结果返回了该字段。
+第一个 `SELECT *` 语句没有引用隐藏字段 `col2`，因此查询结果中没有返回 `col2` 字段
+
+第二个 `SELECT` 语句显式指定了 `col2` 字段，因此查询结果返回了该字段。
 
 对于查询语句，如果没有为隐藏字段指定数据，使用隐式默认值规则进行赋值。
+
+### 插入行为
 
 对于 INSERT 语句（包括 REPLACE 语句的数据插入），如果没有指定字段列表、指定空白列表或者没有在字段列表中指定隐藏字段时，使用隐式默认值赋值。例如：
 
 ```SQL
 CREATE TABLE t1 (col1 INT, col2 INT INVISIBLE);
-INSERT INTO t1 VALUES(...);
-INSERT INTO t1 () VALUES(...);
-INSERT INTO t1 (col1) VALUES(...);
+
+INSERT INTO t1 VALUES(1,2);     -- 正确
+INSERT INTO t1 VALUES(1);       -- 错误
+
+INSERT INTO t1 () VALUES(1,2);  -- 正确
+INSERT INTO t1 () VALUES(1);    -- 错误
+
+
+INSERT INTO t1 (col1) VALUES(1); -- 正确
 ```
 
-在 MySQL 中，如果一个列被设为 `INVISIBLE` ，且你没有在 INSERT 语句中显式给它赋值，那么它的行为完全取决于该列的 **约束定义（如 NULL、NOT NULL、DEFAULT 等）**
+在 MySQL 中，如果一个列被设为 `INVISIBLE` ，且你没有在 `INSERT` 语句中显式给它赋值，那么它的行为完全取决于该列的 **约束定义（如 NULL、NOT NULL、DEFAULT 等）**
 
 如果你的不可见列定义为 `col2 INT INVISIBLE`（未指定 NOT NULL），那么它的隐式默认值就是 NULL
 
-如果你定义为 `col2 INT INVISIBLE NOT NULL`，如果插入时不为隐藏字段指定值，那么直接报错
+如果你定义为 `col2 INT INVISIBLE NOT NULL`，如果插入数据时不为隐藏字段指定值，那么插入语句提交则直接报错。根据上面的例子：
 
+对于前两个 `INSERT` 语句，`VALUES()` 列表必须为每个可见字段和隐藏字段提供一个数值。
 
-对于前两个 `INSERT` 语句，`VALUES()` 列表必须为每个可见字段和隐藏字段提供一个数值。对于第三个 `INSERT` 语句，`VALUES()` 列表必须为每个指定的字段提供一个数值。
+对于第三个 `INSERT` 语句，`VALUES()` 列表必须为每个指定的字段提供一个数值。
 
 对于 `LOAD DATA` 和 `LOAD XML` 语句，如果没有指定字段列表或者没有在字段列表中指定隐藏字段时，使用隐式默认值赋值。输入数据中不能包含隐藏字段的值。
 
 如果想要为上面的语句提供一个非默认的数据，可以在字段列表中显式指定隐藏字段并且在 `VALUES()` 列表中指定一个数值。
 
-`INSERT INTO … SELECT *` 和 `REPLACE INTO … SELECT *` 不会包含隐藏字段，因为 * 不会返回隐藏字段。此时同样会使用隐式默认值规则进行赋值。
-
-
+`INSERT INTO … SELECT *` 和 `REPLACE INTO … SELECT *` 不会包含隐藏字段，因为 \* 不会返回隐藏字段。此时同样会使用隐式默认值规则进行赋值。
 
 ## 隐藏主键
 
-
 MySQL Innodb 引擎采用的是 IOT（索引组织表）存储方式，主键的重要性就不言而喻。在早期版本用户如果没有显式指定主键，会自动生成隐藏主键 `DB_ROW_ID` 来组织 B+ 树，隐藏主键 `db_row_id` 只会作用于 `MVCC`、`Redo` 和 `Undo` 等内部机制，无法在复制模块中使用。一些大数据组件生成的表结构，往往都没有主键设计，会出现全表扫描回放问题，带来非常大的主备延迟。而且 MySQL 一些周边软件 `gh-ost`、`DTS` 服务等，都有依赖主键设计，没有主键会降低数据库的可维护性。
-
 
 很早，在 MySQL 运维的过程中就发现了有一类复制延迟问题，非常难缠。当主库的表没有主键/唯一键时，在主库使用一条 `UPDATE` 或 `DELETE` 操作了大量记录，在使用ROW模式的备库中，则会收到对应的、大量的变更记录，而这些变更记录在备库上应用（apply）时，因为没有主键或者唯一索引，每一条变更的回放都需要很长时间，最终导致主备之间无法追上的延迟。
 
-所以，在很早的时候，MySQL 规范中就有一条，表必须要有主键。对于企业，也许可以通过规范，或者调整表结构去绕开这个问题，但是，对于提供数据库托管服务的云厂商来说，却没法去要求上面使用数据库的用户去做任何适配。但是，云厂商有需要为这些数据库服务提供基于主备的高可用能力。这就陷入了一个困境，这也是为什么云厂商可能是最早需要解决这个问题的。
+==所以，在很早的时候，MySQL 规范中就有一条，表必须要有主键。对于企业，也许可以通过规范，或者调整表结构去绕开这个问题，但是，对于提供数据库托管服务的云厂商来说，却没法去要求上面使用数据库的用户去做任何适配。但是，云厂商有需要为这些数据库服务提供基于主备的高可用能力。这就陷入了一个困境，这也是为什么云厂商可能是最早需要解决这个问题的。==
 
+社区版MySQL自从8.0.30开始，MySQL支持在`GIPK`模式下运行时自动生成不可见的主键。
 
-从MySQL 8.0.30开始，MySQL支持在`GIPK`模式下运行时生成不可见的主键。在这种模式下运行时，对于任何在没有显式主键的情况下创建的InnoDB表，MySQL服务器会自动将生成的不可见主键 (GIPK) 添加到表中。
+==**如果数据库在这种模式下运行时，对于任何在没有显式主键的情况下创建的InnoDB表，MySQL服务器会自动将生成的不可见主键 (GIPK) 添加到表中。**==
 
 GIPK 由参数 `sql_generate_invisible_primary_key` 控制，默认关闭，表示禁用，如果需要使用该特性，则需显式开启。
-
-
 
 ```SQL
 master [localhost:22031]> SHOW variables LIKE 'sql_generate_invisible_primary_key';
@@ -189,36 +201,81 @@ CREATE TABLE `t3` (
 -- 正常插入数据
 INSERT INTO t3 VALUES(1,1),(2,2),(3,3);
 
--- 查询：直接通过 select * from table 查询时，t3 和普通表t1无差异。 因为 GIPK 是基于不可见列实现的，如果我们显式指定访问 my_row_id ,则可以查看到隐藏的主键 my_row_id。
+-- 查询：直接通过 select * from t3 查询时，t3 和普通表t1无差异。因为 GIPK 是基于不可见列实现的。
+mysql> select * from t3;
++------+------+
+| id   | c1   |
++------+------+
+|    1 |    1 |
+|    2 |    2 |
+|    3 |    3 |
++------+------+
+3 rows in set (0.00 sec)
 
--- 总体来说，从业务程序访问数据库的角度来看，开启 GIPK 对业务是透明的。除非后面又想手动修改主键，否则 GIPK 是一个透明功能。
+mysql>
+
+-- 但是，如果我们显式指定访问 my_row_id ,则可以查看到隐藏的主键 my_row_id。
+mysql> select my_row_id , id,c1 from t3;
++-----------+------+------+
+| my_row_id | id   | c1   |
++-----------+------+------+
+|         1 |    1 |    1 |
+|         2 |    2 |    2 |
+|         3 |    3 |    3 |
++-----------+------+------+
+3 rows in set (0.00 sec)
+
+mysql>
+
+-- 对这个隐式主键字段的值进行修改，也是支持的
+mysql> update t3 set my_row_id=5 where my_row_id=1;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql>
+mysql> select my_row_id , id,c1 from t3;
++-----------+------+------+
+| my_row_id | id   | c1   |
++-----------+------+------+
+|         2 |    2 |    2 |
+|         3 |    3 |    3 |
+|         5 |    1 |    1 |
++-----------+------+------+
+3 rows in set (0.00 sec)
+
+mysql>
+
+
+
+-- 总体来说，从业务程序访问数据库的角度来看，开启 GIPK 对业务来说是基本透明的。除非后面又想手动修改主键，否则 GIPK 是一个透明功能。
 ```
 
-当开启 GIPK 特性时，MySQL 生成的主键不能更改，只能在 `VISIBLE` 和 `INVISIBLE` 之间进行切换。
+当开启 `GIPK` 特性时，MySQL 生成的内置隐式主键字段属性不能更改，只能在 `VISIBLE` 和 `INVISIBLE` 之间进行切换。
 
 ```SQL
 ALTER TABLE t3 ALTER COLUMN my_row_id SET VISIBLE;
 ```
 
+注意，开启隐式主键这个参数后，仅对"新创建"的表生效，对"存量"的表没有任何影响。
 
-注意，开启隐式主键这个参数后，仅对“新创建”的表生效，对“存量”的表没有任何影响。开启这个参数后，MySQL 不会自动去扫描并修改你数据库里已经存在的旧表。如果你想让存量表也获得 GIPK（生成的不可见主键），你需要手动介入。
+开启这个参数后，MySQL 不会自动去扫描并修改你数据库里已经存在的旧表。如果你想让存量无主键旧表也获得 GIPK（生成的不可见主键），你需要手动介入。
 
 ```SQL
 -- 找出整个实例中没有主键的表
-SELECT 
-    t.table_schema, 
-    t.table_name 
-FROM 
-    information_schema.TABLES t 
-LEFT JOIN 
-    information_schema.table_constraints tc 
-ON 
-    t.table_schema = tc.table_schema 
-    AND t.table_name = tc.table_name 
-    AND tc.constraint_type = 'PRIMARY KEY' 
-WHERE 
-    t.table_schema NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys') 
-    AND t.table_type = 'BASE TABLE' 
+SELECT
+    t.table_schema,
+    t.table_name
+FROM
+    information_schema.TABLES t
+LEFT JOIN
+    information_schema.table_constraints tc
+ON
+    t.table_schema = tc.table_schema
+    AND t.table_name = tc.table_name
+    AND tc.constraint_type = 'PRIMARY KEY'
+WHERE
+    t.table_schema NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys')
+    AND t.table_type = 'BASE TABLE'
     AND tc.constraint_name IS NULL;
 ```
 
