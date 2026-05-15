@@ -201,8 +201,8 @@ nav:
 
   - "OLAP":
       - "09-olap/index.md"
-      - "01. OLAP 概述": 09-olap/01.OLAP 概述.md
-      - "02. HBase": 09-olap/02.Hbase.md
+      - "01. OLAP 概述": 09-olap/01-olap-overview.md
+      - "02. HBase": 09-olap/02-hbase.md
 
   - "大数据":
       - "10-bigdata/index.md"
