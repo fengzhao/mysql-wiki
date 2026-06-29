@@ -60,6 +60,11 @@ To be able to use the cluster,you must first initialize 2 (create) it. The direc
 
 pg_database、pg_class 是存放在一个名为 pg_catalog 的 Schema 下。其中 pg_catalog 是系统级的 schema，用于存储系统函数和系统元数据。
 
+在 PostgreSQL 中，有一个至高无上的铁律：“数据库里的一切皆是对象，所有的对象都必须在 `pg_class` 中登记。”
+
+无论是你创建的用户表、系统自带的统计表、还是索引、视图、序列，甚至包括 `pg_class` 自身，只要它是一个物理实体或关系，它就必须有一条对应的 OID（对象标识符）和元数据记录。
+
+
 > pg 安装后会默认附带三个 database，分别是 postgres、template0、template1
 
 在 PostgreSQL 中，数据库的创建是通过克隆数据库模板来实现的，这与`SQL SERVER`是同样的机制。如果`CREATE DATABASE dbname`语句没有指明数据库模板，所以系统将默认克隆 template1 数据库，得到新的数据库 dbname。
