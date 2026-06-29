@@ -159,6 +159,70 @@ Schemas are namespaces that store all objects of a database
 
 - pg_temp
 
+
+
+| **字典表名称**                 | **含义 / 存储的元数据**                                      |
+| ------------------------------ | ------------------------------------------------------------ |
+| **`pg_class`**                 | **最核心表**：记录所有表、索引、视图、序列、复合类型和 TOAST 表的 OID 及基本属性。 |
+| **`pg_attribute`**             | 存储所有表、索引或视图的**字段/列（Columns）**的详细定义（如字段名、类型、长度等）。 |
+| **`pg_type`**                  | 存储数据库支持的全部**数据类型**（如 int4, text 以及用户自定义的域名、枚举、复合类型）。 |
+| **`pg_namespace`**             | 存储**模式（Schema）**的信息（如 `public`, `pg_catalog`）。  |
+| **`pg_database`**              | 存储当前实例/集簇中包含的**所有数据库**信息。                |
+| **`pg_proc`**                  | 存储所有**函数、存储过程**以及内置函数的定义和参数信息。     |
+| **`pg_constraint`**            | 存储所有的**约束**信息（主键、外键、唯一、检查约束、非空约束）。 |
+| **`pg_index`**                 | 存储关于**索引**的底层详细信息（如是否唯一、包含哪些字段、表达式索引定义等）。 |
+| **`pg_inherits`**              | 存储表与表之间的**继承关系**（包含传统表继承和现代分区表的父子映射）。 |
+| **`pg_attrdef`**               | 存储字段的**默认值（Default values）**表达式。               |
+| **`pg_authid`**                | 存储数据库的**认证身份**（包含用户 User 和角色 Role 的账号、密码、有效期等）。 |
+| **`pg_auth_members`**          | 存储角色之间的**成员继承/授权关系**（即哪个角色/用户属于另一个角色）。 |
+| **`pg_tablespace`**            | 存储注册的**表空间（Tablespace）**的物理路径信息。           |
+| **`pg_am`**                    | 存储**索引访问方法**（如 btree, hash, gist, gin, brin 等）。 |
+| **`pg_amop`**                  | 存储与索引访问方法关联的**操作符（Operators）**映射关系。    |
+| **`pg_amproc`**                | 存储与索引访问方法关联的**支持过程/底层函数**。              |
+| **`pg_opclass`**               | 存储**操作符类（Operator Classes）**，定义特定数据类型在特定索引下的行为。 |
+| **`pg_opfamily`**              | 存储**操作符族（Operator Families）**，将功能相似的操作符类组合在一起。 |
+| **`pg_operator`**              | 存储系统中定义的全部**操作符**（如 `+`, `-`, `=`, `&&` 等）。 |
+| **`pg_statistic`**             | 存储查询优化器（Optimizer）所需的**单列物理统计信息**（高频值、直方图等，内容加密）。 |
+| **`pg_statistic_ext`**         | 存储用户创建的**扩展统计信息**（多列相关性统计）的定义。     |
+| **`pg_statistic_ext_data`**    | 存储扩展统计信息的**真实统计数据**。                         |
+| **`pg_rewrite`**               | 存储系统的**查询重写规则（Rules）**，视图（View）的底层逻辑就是通过它实现的。 |
+| **`pg_trigger`**               | 存储表或视图上配置的**触发器（Triggers）**信息。             |
+| **`pg_event_trigger`**         | 存储**事件触发器**（针对 DDL 操作如 CREATE, DROP 的触发器）的定义。 |
+| **`pg_description`**           | 存储本地数据库对象（表、列等）的**注释/说明（Comments）**。  |
+| **`pg_shdescription`**         | 存储共享数据库对象（如数据库、角色、表空间）的**共享注释**。 |
+| **`pg_cast`**                  | 存储数据类型之间的**类型转换（Cast）**路径和函数。           |
+| **`pg_enum`**                  | 存储**枚举类型（ENUM）**的具体标签值和排序顺序。             |
+| **`pg_conversion`**            | 存储字符集**编码转换**（Conversion）的函数映射。             |
+| **`pg_depend`**                | 存储常规数据库对象之间的**依赖关系**（用于实现 `DROP ... CASCADE`）。 |
+| **`pg_shdepend`**              | 存储全局共享对象（如角色、数据库）与局部对象之间的**共享依赖关系**。 |
+| **`pg_language`**              | 存储编写函数所用的**过程语言**（如 `plpgsql`, `sql`, `internal`, `c`）。 |
+| **`pg_largeobject_metadata`**  | 存储**大对象（Large Objects, BLOB）**的元数据和访问权限。    |
+| **`pg_largeobject`**           | 存储大对象的**实际二进制分片数据**。                         |
+| **`pg_extension`**             | 存储当前数据库中已安装的**插件/扩展**（Extensions, 如 `pg_stat_statements`）。 |
+| **`pg_foreign_data_wrapper`**  | 存储**外部数据包装器（FDW）**的定义。                        |
+| **`pg_foreign_server`**        | 存储定义的**外部服务器（Foreign Servers）**连接配置。        |
+| **`pg_foreign_table`**         | 存储**外部表（Foreign Tables）**特有的底层元数据。           |
+| **`pg_user_mapping`**          | 存储本地角色到外部服务器用户的**用户映射（User Mappings）**及凭证。 |
+| **`pg_policy`**                | 存储表上的**行级安全策略（Row Level Security Policies）**。  |
+| **`pg_replication_origin`**    | 存储**逻辑复制源**的状态标记，防止双向复制死循环。           |
+| **`pg_default_acl`**           | 存储用户定义的**默认访问权限（ACL）**，当未来创建新对象时自动应用。 |
+| **`pg_init_privs`**            | 存储对象在系统初始化或插件安装时的**初始权限**（用于跟踪权限变更）。 |
+| **`pg_parameter_acl`**         | 存储针对修改特定 **GUC 配置参数（GUC Parameters）** 的权限控制。 |
+| **`pg_seclabel`**              | 存储常规对象上的**安全标签**（用于 SE-Linux 等安全模块）。   |
+| **`pg_shseclabel`**            | 存储共享对象（数据库、角色）上的**安全标签**。               |
+| **`pg_collation`**             | 存储支持的**排序规则（Collations）**（决定文本如何比大小和排序）。 |
+| **`pg_partitioned_table`**     | 存储关于**声明式分区表**的键、分区策略（List, Range, Hash）的信息。 |
+| **`pg_range`**                 | 存储关于**范围类型（Range Types）**和多范围类型的特殊元数据。 |
+| **`pg_transform`**             | 存储将数据类型转换为过程语言语言形式的**变换（Transforms）**。 |
+| **`pg_sequence`**              | 存储**序列（Sequence）**的底层参数（起始值、步长、最大值、是否循环）。 |
+| **`pg_publication`**           | 存储逻辑复制中的**发布（Publications）**定义。               |
+| **`pg_publication_rel`**       | 存储逻辑复制发布中包含的**表映射关系**。                     |
+| **`pg_publication_namespace`** | 存储逻辑复制发布中包含的**整个模式（Schema）映射**。         |
+| **`pg_subscription`**          | 存储逻辑复制中的**订阅（Subscriptions）**连接与状态信息。    |
+| **`pg_subscription_rel`**      | 存储逻辑复制订阅中各个表的**同步状态**。                     |
+
+
+
 ### 表空间
 
 本质上，PostgreSQL 中的表空间是一个包含数据文件的目录。这些数据文件是表、序列、索引和物化视图等对象背后的存储空间。在 PostgreSQL 中，每个这样的对象都有自己的数据文件。如果对象很大，它将有几个被称为 segments 的文件，大小限制为 1GB。
@@ -173,14 +237,21 @@ PostgreSQL 在安装完成后。初始化时需要指定一个数据目录（$PG
 
 PostgreSQL 启动后，所有数据库对象的数据文件都是在该文件夹下存储的。简短一点说，表空间即是告诉 PostgreSQL 服务器数据库对象物理文件存储位置的一种方式。在 psql 中使用\db+命令即可列出表空间的详情：
 
-这两个表空间（pg_default 与 pg_global）是在`PostgreSQL`初始化后自动创建的。
+这两个表空间（`pg_default` 与 `pg_global`）是在`PostgreSQL`初始化后自动创建的。
 
-- pg_default 是 template0 与 template1 数据库的默认表空间（因此，也将是其它数据库的默认表空间），路径是 ${GDATA}/base
-  pg_default是用来存储系统目录对象、用户表、用户表index、和临时表、临时表index、内部临时表的默认空间。对应存储目录`${PADATA}/base/`
-
+- pg_default 是 template0 与 template1 数据库的默认表空间（因此，也将是其它数据库的默认表空间），路径是 `${PGDATA}/base`
+  pg_default是用来存储系统目录对象、用户表、用户表index、和临时表、临时表index、内部临时表的默认空间
 - pg_global 是共享系统目录表（pg_database、pg_authid、pg_tablespace、pg_shdepend 等）及其索引的表空间。路径是 `${PGDATA}/global`
 
-自定义表空间，创建一个新的表空间，需要提前创建一个新的空文件夹（注意不要在 `PostgreSQL`数据文件夹`$PGDATA`下创建），且该文件夹的`owner`须是`postgres`系统用户。
+```sql
+SELECT *
+FROM pg_catalog.pg_tablespace
+WHERE spcname IN ('pg_default', 'pg_global');
+```
+
+
+
+自定义建表空间，需要提前创建一个新的空文件夹（注意不要在 `PostgreSQL`数据文件夹`$PGDATA`下创建），且该文件夹的`owner`须是`postgres`系统用户。
 
 ```bash
 $ mkdir -p /data/postgres/testspace
@@ -408,7 +479,9 @@ SELECT pg_relation_filepath('dim_admin_area');
 pg_relation_filepath(oid)
 
 
--- `PostgreSQL文件段`是指数据库表在磁盘上的物理存储单元。当一个表的数据量超过一定阈值（默认 1GiB）时，PostgreSQL 会将该表的数据分割成多个大小相等的文件，这些文件就是文件段。文件段的名称通常是表 OID（对象标识符）加上一个数字后缀，例如 12345.1、12345.2，其中 12345 是表的 OID，后缀表示文件段的序号。
+-- `PostgreSQL文件段`是指数据库表在磁盘上的物理存储单元。当一个表的数据量超过一定阈值（默认 1GiB）时，PostgreSQL 会将该表的数据分割成多个大小相等的文件，这些文件就是文件段。文件段的名称通常是表 OID（对象标识符）加上一个数字后缀，例如 12345.1、12345.2，其中 12345 是表的 OID，后缀表示文件段的序号。这种安排可以避免在有文件大小限制的平台上出现问题。(实际上，1 GB 只是默认的段大小。在构建 PostgreSQL 时，可以使用配置选项 --with-segsize 来调整段的大小）。原则上，空闲空间映射和可见性映射分叉也可能需要多个分段，但这在实践中不太可能发生。
+
+
 
 -- 在 PostgreSQL 中，segment_size 和 blocks 这两个参数共同决定了一个表的数据文件（即文件段）的最大尺寸。
 
