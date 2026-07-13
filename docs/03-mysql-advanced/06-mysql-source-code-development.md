@@ -27,6 +27,8 @@
 因为老版本中存在 `bug` 的概率较大，编译过程需要解决这些 `bug`，比如在 `8.0.23` 版本中编译过程中报了这个错：`buf0buf.cc:1227:44: error: ‘SYS_gettid’ was not declared in this scope`。
 参考 `MySQL` 官方论坛：https://forums.mysql.com/read.php?117,674410,676378#msg-676378，在`storage/innobase/buf/buf0flu.cc`文件代码中加上声明`#include <sys/syscall.h>`，解决了这个报错。
 
+"从 MySQL 8.3 开始，你再也不用自己去下载 Boost 库了，官方已经把它直接内置（Bundled）在 MySQL 的源码包里了。"
+
 **环境配置**
 
 - 硬件环境配置：8 核 + 16GiB + 200GiB 的服务器
