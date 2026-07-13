@@ -283,7 +283,8 @@ character-set-server = utf8mb4
 
 int mysqld_main(int argc, char **argv) {
 
-    // sql/check_stack.cc:70。它声明两个局部变量、比较地址，判断栈是向高地址（向上）还是低地址（向下）增长，
+    // https://github.com/mysql/mysql-server/blob/8.4/sql/check_stack.cc#L70
+    // 它声明两个局部变量、比较地址，判断栈是向高地址（向上）还是低地址（向下）增长，
     initialize_stack_direction();
 
     // https://github.com/mysql/mysql-server/blob/8.4/sql/mysqld.cc#L1764
