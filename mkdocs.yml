@@ -157,7 +157,7 @@ nav:
       - "MySQL 内核":
           - "01. MySQL 源码 - 语法树结构": 03-mysql-advanced/kernel/01.MySQL 源码 - 语法树结构.md
           - "02. MySQL 源码调试环境": 03-mysql-advanced/06-mysql-source-code-development.md
-          - "07. 深入Linux IO模型": 03-mysql-advanced/07-Linux-IO-Model.md
+          - "07. 深入Linux IO模型": 03-mysql-advanced/07-deep-dive-into-linux-io-models.md
   - "MySQL 调优":
       - "04-mysql-optimize/index.md"
       - "01. 调优概述": 04-mysql-optimize/01-mysql-optimize-overview.md
