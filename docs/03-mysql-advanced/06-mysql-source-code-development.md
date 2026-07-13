@@ -23,7 +23,7 @@
 
 **源代码版本选择**
 
-首先需要从官网上下载源码，操作系统选择为 `source code`，操作系统版本选择为 `ALL OPERATING SYSTEM`，下载带 `boost` 头文件的源码包。如果对 `MySQL` 的版本没有特别要求的话，一般推荐下载最新版本的。
+首先需要从[官网](https://cdn.mysql.com//Downloads/MySQL-8.4/mysql-8.4.10.tar.gz)下载源码，操作系统选择为 `source code`，操作系统版本选择为 `ALL OPERATING SYSTEM`，下载带 `boost` 头文件的源码包。如果对 `MySQL` 的版本没有特别要求的话，一般推荐下载最新版本的。
 因为老版本中存在 `bug` 的概率较大，编译过程需要解决这些 `bug`，比如在 `8.0.23` 版本中编译过程中报了这个错：`buf0buf.cc:1227:44: error: ‘SYS_gettid’ was not declared in this scope`。
 参考 `MySQL` 官方论坛：https://forums.mysql.com/read.php?117,674410,676378#msg-676378，在`storage/innobase/buf/buf0flu.cc`文件代码中加上声明`#include <sys/syscall.h>`，解决了这个报错。
 
