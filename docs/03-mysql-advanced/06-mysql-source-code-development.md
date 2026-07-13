@@ -286,7 +286,8 @@ int mysqld_main(int argc, char **argv) {
     // sql/check_stack.cc:70。它声明两个局部变量、比较地址，判断栈是向高地址（向上）还是低地址（向下）增长，
     initialize_stack_direction();
 
-    // mysqld.cc:1764 , 把 argv[0] 换成可执行文件的完整路径。的：让 my_progname 永远是完整路径，这样下一步才能可靠地从路径反推 basedir
+    // https://github.com/mysql/mysql-server/blob/8.4/sql/mysqld.cc#L1764
+    // 把 argv[0] 换成可执行文件的完整路径。的：让 my_progname 永远是完整路径，这样下一步才能可靠地从路径反推 basedir
     substitute_progpath(argv);
 
     // 连接 systemd 的通知 socket
@@ -298,7 +299,8 @@ int mysqld_main(int argc, char **argv) {
     // 记下mysqld自己的完整路径：例如/usr/local/mysql/bin/mysqld
 	my_progname = argv[0];
 
-    // mysqld.cc:8725，从路径反推 MYSQL_HOME
+    // https://github.com/mysql/mysql-server/blob/8.4/sql/mysqld.cc#L8725
+    // 从路径反推 MYSQL_HOME
 	calculate_mysql_home_from_my_progname();
 
 	// Performance Schema 模块初始化，有时候也叫PSI
