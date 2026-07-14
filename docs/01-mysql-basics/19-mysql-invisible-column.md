@@ -284,3 +284,27 @@ WHERE
 1. 隐式主键的列名只能是：`my_row_id`
 2. 不能删除只有一个 `my_row_id` 隐式主键，除非同时指定其它主键
 3. 在主从复制中，从库设置 `sql_generate_invisible_primary_key` 为 on , 但主库没有设置，创建的表也不会自动添加 `my_row_id`
+
+## 强制必须使用显式主键
+
+`sql_require_primary_key` 是 MySQL 的全局动态参数，默认值为OFF，其核心功能为：
+
+开启时（ON）：强制要求所有表必须包含主键（PRIMARY KEY），任何创建或修改表结构的操作（如CREATE TABLE、ALTER TABLE）若导致表无主键，将触发报错。
+
+关闭时（OFF）：允许表无主键（但可能影响复制性能与数据一致性）。
+
+当需要将单一主键修改为联合主键时，本质上包含两个步骤：
+
+- 删除原有主键：ALTER TABLE table DROP PRIMARY KEY;
+
+- 添加新联合主键：ALTER TABLE table ADD PRIMARY KEY (col1, col2);
+
+若`sql_require_primary_key=ON`，第一步删除主键后表将处于无主键状态，触发参数校验导致操作失败。
+
+```SQL
+-- 原子操作：在一条SQL中完成删除主键，新增主键
+ALTER TABLE test_table
+DROP PRIMARY KEY,
+ADD CONSTRAINT pk_new PRIMARY KEY (id, joint_col);
+
+```

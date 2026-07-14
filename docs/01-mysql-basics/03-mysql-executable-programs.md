@@ -140,13 +140,11 @@ MySQL 程序先找环境变量，再找配置文件，最后通过命令行传�
 - 很多选项后面都可以跟参数值，例如： -h localhost 或 --host=localhost 表示要连接的主机地址。
 
 - 对于长选项，在选项跟参数值之间使用 = 号连接，对于短选项，选项和参数之间可以带一个空格或不带空格。-hlocalhost 和 -h localhost 是等价的。
-
   - **唯一例外的就是指定密码的时候，只能使用 -ppassword 或 --password=password 这两种格式。**
 
 - 对于选项名称，- 号和 _ 号是等价的， --skip-grant-tables 和 -- skip_grant_tables 是等价的。（但是最前面的 - 号不能用 _ 号代替）。
 
 - 对于一些需要指定数值的参数，可以使用 K,M,G 等后缀来表示 `1024` ，`1024^2`，`1024^3` 。
-
   - 比如 ./mysqladmin -u root -p'admin@123456' --count=1K --sleep=10 ping 表示 连续 ping 1K 次，每次间隔 10s
 
 - 当指定文件名的时候，不要用 ~ 之类的 shell 元字符来指定。
@@ -327,7 +325,10 @@ binlog 的核心其实就是记录在日志文件中的，各种各样的 events
 
 根据这个特点，只要进入 binlog 的存放目录，观察到文件大小异常的 binlog，那么你就可以去解析这个 binlog 获取大事务了。当然，需要注意的是，这只是一部分，文件大小正常的 binlog 中也藏着大事务。
 
-```shell
+```c
+
+// https://github.com/mysql/mysql-server/blob/8.4/libs/mysql/binlog/event/binlog_event.h#L286
+
 enum Log_event_type {
   UNKNOWN_EVENT= 0,
   START_EVENT_V3= 1,
@@ -399,3 +400,204 @@ INSERT INTO `innodb_table`(`name`,`age`) VALUES( 'insert1', CEIL(RAND() * 110) )
 INSERT INTO `innodb_table`(`name`,`age`) VALUES( 'insert2', CEIL(RAND() * 110) );
 INSERT INTO `innodb_table`(`name`,`age`) VALUES( 'insert3', CEIL(RAND() * 110) );
 ```
+
+```shell
+# 使用mysqlbinlog来解析binlog文件，最后可以跟一个或多个binlog文件名作为参数，也可以指定时间
+root@dify-explorer:/data/mysql_data# /data/mysql_install_dir/bin/mysqlbinlog  -vv  \
+        -u root -p"QHdata@12345"   -h localhost   -S /data/mysql_data/mysql.sock  \
+        --start-datetime="2026-07-14 10:00:00"  \
+        --stop-datetime="2026-07-14 12:00:00"   \
+        binlog.000001
+
+
+mysqlbinlog: [Warning] Using a password on the command line interface can be insecure.
+# The proper term is pseudo_replica_mode, but we use this compatibility alias
+# to make the statement usable on server versions 8.0.24 and older.
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
+/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
+DELIMITER /*!*/;
+
+
+# at 4
+#260713 16:08:49 server id 1  end_log_pos 127 CRC32 0xfcfeb284  Start: binlog v 4, server v 8.4.10-debug created 260713 16:08:49 at startup
+# Warning: this binlog is either in use or was not closed properly.
+ROLLBACK/*!*/;
+BINLOG '
+EZ1Uag8BAAAAewAAAH8AAAABAAQAOC40LjEwLWRlYnVnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAARnVRqEwANAAgAAAAABAAEAAAAYwAEGggAAAAAAAACAAAACgoKKioAEjQA
+CigAAAGEsv78
+'/*!*/;
+
+
+# at 478
+#260714 10:38:15 server id 1  end_log_pos 555 CRC32 0x91e04174  Anonymous_GTID  last_committed=1        sequence_number=2       rbr_only=no     original_committed_timestamp=1783996695704427       immediate_commit_timestamp=1783996695704427     transaction_length=185
+# original_commit_timestamp=1783996695704427 (2026-07-14 10:38:15.704427 CST)
+# immediate_commit_timestamp=1783996695704427 (2026-07-14 10:38:15.704427 CST)
+/*!80001 SET @@session.original_commit_timestamp=1783996695704427*//*!*/;
+/*!80014 SET @@session.original_server_version=80410*//*!*/;
+/*!80014 SET @@session.immediate_server_version=80410*//*!*/;
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+
+
+# at 555
+#260714 10:38:15 server id 1  end_log_pos 663 CRC32 0x308e8e83  Query   thread_id=12    exec_time=0     error_code=0    Xid = 9
+SET TIMESTAMP=1783996695/*!*/;
+SET @@session.pseudo_thread_id=12/*!*/;
+SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=0, @@session.unique_checks=1, @@session.autocommit=1/*!*/;
+SET @@session.sql_mode=1168113696/*!*/;
+SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;
+/*!\C utf8mb4 *//*!*/;
+SET @@session.character_set_client=45,@@session.collation_connection=45,@@session.collation_server=45/*!*/;
+SET @@session.lc_time_names=0/*!*/;
+SET @@session.collation_database=DEFAULT/*!*/;
+/*!80011 SET @@session.default_collation_for_utf8mb4=255*//*!*/;
+/*!80016 SET @@session.default_table_encryption=0*//*!*/;
+create database test
+/*!*/;
+
+
+# at 663
+#260714 10:38:26 server id 1  end_log_pos 742 CRC32 0x3ed17093  Anonymous_GTID  last_committed=2        sequence_number=3       rbr_only=no     original_committed_timestamp=1783996707035562       immediate_commit_timestamp=1783996707035562     transaction_length=399
+# original_commit_timestamp=1783996707035562 (2026-07-14 10:38:27.035562 CST)
+# immediate_commit_timestamp=1783996707035562 (2026-07-14 10:38:27.035562 CST)
+/*!80001 SET @@session.original_commit_timestamp=1783996707035562*//*!*/;
+/*!80014 SET @@session.original_server_version=80410*//*!*/;
+/*!80014 SET @@session.immediate_server_version=80410*//*!*/;
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+
+
+# at 742
+#260714 10:38:26 server id 1  end_log_pos 1062 CRC32 0x9f77ca3f         Query   thread_id=12    exec_time=1     error_code=0    Xid = 14
+use `test`/*!*/;
+SET TIMESTAMP=1783996706/*!*/;
+/*!80013 SET @@session.sql_require_primary_key=0*//*!*/;
+CREATE TABLE `innodb_table` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `name` varchar(20) NOT NULL,
+        `age` tinyint(3) NOT NULL,
+        PRIMARY KEY (`id`)
+    ) ENGINE=innodb DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
+/*!*/;
+
+
+# at 1062
+#260714 10:38:47 server id 1  end_log_pos 1141 CRC32 0x6ac4604c         Anonymous_GTID  last_committed=3        sequence_number=4       rbr_only=yes    original_committed_timestamp=1783996727408238       immediate_commit_timestamp=1783996727408238     transaction_length=299
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+# original_commit_timestamp=1783996727408238 (2026-07-14 10:38:47.408238 CST)
+# immediate_commit_timestamp=1783996727408238 (2026-07-14 10:38:47.408238 CST)
+/*!80001 SET @@session.original_commit_timestamp=1783996727408238*//*!*/;
+/*!80014 SET @@session.original_server_version=80410*//*!*/;
+/*!80014 SET @@session.immediate_server_version=80410*//*!*/;
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+
+
+# at 1141
+#260714 10:38:47 server id 1  end_log_pos 1216 CRC32 0x66093f0f         Query   thread_id=12    exec_time=0     error_code=0
+SET TIMESTAMP=1783996727/*!*/;
+BEGIN
+/*!*/;
+
+
+# at 1216
+#260714 10:38:47 server id 1  end_log_pos 1281 CRC32 0xbafc97e1         Table_map: `test`.`innodb_table` mapped to number 112
+# has_generated_invisible_primary_key=0
+
+
+# at 1281
+#260714 10:38:47 server id 1  end_log_pos 1330 CRC32 0xf64a390e         Write_rows: table id 112 flags: STMT_END_F
+BINLOG '
+N6FVahMBAAAAQQAAAAEFAAAAAHAAAAAAAAEABHRlc3QADGlubm9kYl90YWJsZQADAw8BAjwAAAEB
+AAIBIeGX/Lo=
+N6FVah4BAAAAMQAAADIFAAAAAHAAAAAAAAEAAgAD/wABAAAAB2luc2VydDFBDjlK9g==
+'/*!*/;
+### INSERT INTO `test`.`innodb_table`
+### SET
+###   @1=1 /* INT meta=0 nullable=0 is_null=0 */
+###   @2='insert1' /* VARSTRING(60) meta=60 nullable=0 is_null=0 */
+###   @3=65 /* TINYINT meta=0 nullable=0 is_null=0 */
+
+
+# at 1330
+#260714 10:38:47 server id 1  end_log_pos 1361 CRC32 0xce82345f         Xid = 15
+COMMIT/*!*/;
+
+
+# at 1361
+#260714 10:38:47 server id 1  end_log_pos 1440 CRC32 0x1ab29488         Anonymous_GTID  last_committed=3        sequence_number=5       rbr_only=yes    original_committed_timestamp=1783996727415164       immediate_commit_timestamp=1783996727415164     transaction_length=299
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+# original_commit_timestamp=1783996727415164 (2026-07-14 10:38:47.415164 CST)
+# immediate_commit_timestamp=1783996727415164 (2026-07-14 10:38:47.415164 CST)
+/*!80001 SET @@session.original_commit_timestamp=1783996727415164*//*!*/;
+/*!80014 SET @@session.original_server_version=80410*//*!*/;
+/*!80014 SET @@session.immediate_server_version=80410*//*!*/;
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+
+
+# at 1440
+#260714 10:38:47 server id 1  end_log_pos 1515 CRC32 0x74ec52e9         Query   thread_id=12    exec_time=0     error_code=0
+SET TIMESTAMP=1783996727/*!*/;
+BEGIN
+/*!*/;
+# at 1515
+#260714 10:38:47 server id 1  end_log_pos 1580 CRC32 0x270637c7         Table_map: `test`.`innodb_table` mapped to number 112
+# has_generated_invisible_primary_key=0
+# at 1580
+#260714 10:38:47 server id 1  end_log_pos 1629 CRC32 0xdeb5abce         Write_rows: table id 112 flags: STMT_END_F
+
+BINLOG '
+N6FVahMBAAAAQQAAACwGAAAAAHAAAAAAAAEABHRlc3QADGlubm9kYl90YWJsZQADAw8BAjwAAAEB
+AAIBIcc3Bic=
+N6FVah4BAAAAMQAAAF0GAAAAAHAAAAAAAAEAAgAD/wACAAAAB2luc2VydDI3zqu13g==
+'/*!*/;
+### INSERT INTO `test`.`innodb_table`
+### SET
+###   @1=2 /* INT meta=0 nullable=0 is_null=0 */
+###   @2='insert2' /* VARSTRING(60) meta=60 nullable=0 is_null=0 */
+###   @3=55 /* TINYINT meta=0 nullable=0 is_null=0 */
+# at 1629
+#260714 10:38:47 server id 1  end_log_pos 1660 CRC32 0xac4d7395         Xid = 16
+COMMIT/*!*/;
+# at 1660
+#260714 10:38:48 server id 1  end_log_pos 1739 CRC32 0xc98cd59a         Anonymous_GTID  last_committed=3        sequence_number=6       rbr_only=yes    original_committed_timestamp=1783996728612859       immediate_commit_timestamp=1783996728612859     transaction_length=299
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+# original_commit_timestamp=1783996728612859 (2026-07-14 10:38:48.612859 CST)
+# immediate_commit_timestamp=1783996728612859 (2026-07-14 10:38:48.612859 CST)
+/*!80001 SET @@session.original_commit_timestamp=1783996728612859*//*!*/;
+/*!80014 SET @@session.original_server_version=80410*//*!*/;
+/*!80014 SET @@session.immediate_server_version=80410*//*!*/;
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+# at 1739
+#260714 10:38:48 server id 1  end_log_pos 1814 CRC32 0x5b79a5cb         Query   thread_id=12    exec_time=0     error_code=0
+SET TIMESTAMP=1783996728/*!*/;
+BEGIN
+/*!*/;
+# at 1814
+#260714 10:38:48 server id 1  end_log_pos 1879 CRC32 0x164fa96e         Table_map: `test`.`innodb_table` mapped to number 112
+# has_generated_invisible_primary_key=0
+# at 1879
+#260714 10:38:48 server id 1  end_log_pos 1928 CRC32 0x05486664         Write_rows: table id 112 flags: STMT_END_F
+
+BINLOG '
+OKFVahMBAAAAQQAAAFcHAAAAAHAAAAAAAAEABHRlc3QADGlubm9kYl90YWJsZQADAw8BAjwAAAEB
+AAIBIW6pTxY=
+OKFVah4BAAAAMQAAAIgHAAAAAHAAAAAAAAEAAgAD/wADAAAAB2luc2VydDNQZGZIBQ==
+'/*!*/;
+### INSERT INTO `test`.`innodb_table`
+### SET
+###   @1=3 /* INT meta=0 nullable=0 is_null=0 */
+###   @2='insert3' /* VARSTRING(60) meta=60 nullable=0 is_null=0 */
+###   @3=80 /* TINYINT meta=0 nullable=0 is_null=0 */
+# at 1928
+#260714 10:38:48 server id 1  end_log_pos 1959 CRC32 0x46662510         Xid = 17
+COMMIT/*!*/;
+SET @@SESSION.GTID_NEXT= 'AUTOMATIC' /* added by mysqlbinlog */ /*!*/;
+DELIMITER ;
+# End of log file
+/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TYPE*/;
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=0*/;
+root@dify-explorer:/data/mysql_data#
+```
+
+## binlog参数
+
+binlog_row_metadata = FULL

@@ -6,10 +6,7 @@ MySQL主从复制有三种模式：异步复制、半同步复制和并行复制
 
 ## 基本原理
 
-
-
 1、当主库（Master）执行写操作（INSERT/UPDATE/DELETE）时，会将这些操作按顺序记录到二进制日志（Binlog）中。
-
 
 主库将数据的改变记录二进制日志BINLOG，当 master 上的数据发生改变时，则将其改变写入二进制日志中；
 
@@ -20,3 +17,40 @@ slave 服务器会在一定时间间隔内对 master 二进制日志进行探测
 ## 异步复制
 
 异步复制是指主库在执行完客户端提交的事务后会立即把结果返回给客户端，同时调用dump线程通知从库有新事务产生，从库调用IO线程把获取到的binlog写入relay log（中继日志），然后调用SQL线程回放relay log把更新写入本地磁盘。异步复制模式主库不关心从库是否已经接收到binlog，所以主库和从库的数据可能不一致，一旦主库发生故障，强行把从库提升为主库会导致部分数据丢失。
+
+## BINLOG格式
+
+BINLOG其实就是MySQL Server层的逻辑日志，它跟存储引擎层的物理日志（如：MyISAM的.frm文件，如InnoDB的redo日志）不同，BINLOG记录的是数据库的DDL和DML操作，而物理日志记录的是数据库的DML操作。
+
+- redolog 是物理日志，记录的是“在某个数据页上做了什么修改”
+
+- binlog 是逻辑日志，记录的是这个语句的原始逻辑，比如“给ID=2 这一行的c字段加1 ”。
+
+BINLOG主要有三种格式: 1. row-based 2. statement-based 3. mixed
+
+在介绍Binlog类型前先说下什么是非确定性的语句（ non-deterministic），即同一条语句在集群的不同server上执行的结果不同。
+
+举个例子：UUID()，如果在某个修改操作的SQL中使用了这个语句，那么在不同server上的效果是不同的。
+
+```SQL
+-- 比如主库执行了这样的语句，如果从库仅仅是拿着这个语句去执行，那显然主从数据就不一致了
+INSERT INTO t VALUES(SELECT UUID());
+```
+
+### row-based
+
+row-based格式，也叫binlog row format，是MySQL 5.1.0版本之后引入的。目前是默认的binlog格式，row-based格式的binlog记录的是每一行数据的更改，比如：
+
+```SQL
+INSERT INTO t VALUES(1,2,3);
+INSERT INTO t VALUES(4,5,6);
+INSERT INTO t VALUES(7,8,9);
+INSERT INTO t VALUES(10,11,12);
+
+```
+
+## BINLOG源代码
+
+libbinlogevents 是 MySQL 从 5.7 版本引入的核心 C++ 基础库，主要用于解析、读取和处理 MySQL 二进制日志（Binlog）中的事件（Events）
+
+
