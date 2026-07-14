@@ -270,6 +270,12 @@ character-set-server = utf8mb4
 
 众所周知，MySQL Server 在服务器上运行，服务端的可执行程序就是 `mysqld`，它在服务器上启动后，体现为一个后台进程。
 
+整体流程如下：
+
+1. 设置进程名称
+2. 处理配置文件/启动参数以及部分模块初始化，包括：
+   2.1.
+
 `sql/mysqld.cc` 是 **MySQL 服务端守护进程 `mysqld` 的实现文件**——也就是整个数据库服务器"本体"的 C++ 源码(`.cc` = C++ 源文件,不是头文件)。
 
 `mysqld` 启动的那个进程，代码就在这里。
@@ -288,7 +294,7 @@ int mysqld_main(int argc, char **argv) {
     initialize_stack_direction();
 
     // https://github.com/mysql/mysql-server/blob/8.4/sql/mysqld.cc#L1764
-    // 把 argv[0] 换成可执行文件的完整路径。的：让 my_progname 永远是完整路径，这样下一步才能可靠地从路径反推 basedir
+    // 把 argv[0] 换成可执行文件的完整路径。
     substitute_progpath(argv);
 
     // 连接 systemd 的通知 socket
@@ -297,7 +303,7 @@ int mysqld_main(int argc, char **argv) {
     // 给 systemd 报个状态
     sysd::notify("STATUS=Server startup in progress\n");
 
-    // 记下mysqld自己的完整路径：例如/usr/local/mysql/bin/mysqld
+    // 记下mysqld自己的完整路径：例如/usr/local/mysql/bin/mysqld，这样下一步才能可靠地从路径反推 basedir
 	my_progname = argv[0];
 
     // https://github.com/mysql/mysql-server/blob/8.4/sql/mysqld.cc#L8725
@@ -353,8 +359,21 @@ int mysqld_main(int argc, char **argv) {
 
     sys_var_init();
 
+    // 从持久化配置文件加载参数选项
+    bool arg_separator_added = false;
+    if (persisted_variables_cache.init(&argc, &argv) ||
+        persisted_variables_cache.load_persist_file() ||
+        persisted_variables_cache.append_parse_early_variables( &argc, &argv, arg_separator_added)) {
+      flush_error_log_messages();
+      return 1;
+    }
 
+    int heo_error;
+    
+    // 跳过psi初始化
 
+    // https://github.com/mysql/mysql-server/blob/8.4/sql/mysqld.cc#L10374
+    heo_error = handle_early_options();
 
 }
 ```
