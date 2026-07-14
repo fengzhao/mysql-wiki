@@ -123,14 +123,14 @@ mysql> SELECT col1, col2 FROM t1;
 ```SQL
 CREATE TABLE t1 (col1 INT, col2 INT INVISIBLE);
 
-INSERT INTO t1 VALUES(1,2);     -- 正确
-INSERT INTO t1 VALUES(1);       -- 错误
+INSERT INTO t1 VALUES(1,2);     -- 错误：ERROR 1136 (21S01): Column count doesn't match value count at row 1
+INSERT INTO t1 VALUES(1);       -- 正确：只对表插入，隐形列就像不存在一样
 
-INSERT INTO t1 () VALUES(1,2);  -- 正确
-INSERT INTO t1 () VALUES(1);    -- 错误
+INSERT INTO t1 () VALUES(1,2);  -- 错误：ERROR 1136 (21S01): Column count doesn't match value count at row 1
+INSERT INTO t1 () VALUES(1);    -- 正确：空括号表示不指定列，所以和前面一样
 
 
-INSERT INTO t1 (col1) VALUES(1); -- 正确
+INSERT INTO t1(col1) VALUES(1); -- 正确
 ```
 
 在 MySQL 中，如果一个列被设为 `INVISIBLE` ，且你没有在 `INSERT` 语句中显式给它赋值，那么它的行为完全取决于该列的 **约束定义（如 NULL、NOT NULL、DEFAULT 等）**
