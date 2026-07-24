@@ -214,9 +214,8 @@ nav:
 
   - "网络基础":
       - "11-network/index.md"
-      - "01. 计算机网络概述": 11-network/1.计算机网络概述.md
-      - "02. 交换机和交换技术": 11-network/2.交换机和交换技术.md
-
+      - "01. 计算机网络概述": 11-network/01-computer-network-overview.md
+      - "02. 交换机和交换技术": 11-network/02-switches-and-switching-technologies.md
   - "SQLite":
       - "12-sqlite/index.md"
       - "SQLite 概述": 12-sqlite/SQLite.md
