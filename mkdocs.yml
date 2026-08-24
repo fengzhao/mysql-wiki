@@ -167,7 +167,7 @@ nav:
   - "PostgreSQL":
       - "05-postgresql/index.md"
       - "01. PostgreSQL 简介": 05-postgresql/01-postgresql-overview.md
-      - "02. PostgreSQL 安装": 05-postgresql/02-postgresql-instrall.md
+      - "02. PostgreSQL 安装": 05-postgresql/02-postgresql-install.md
       - "03. 体系架构": 05-postgresql/03-postgresql-architecture.md
       - "04. PostgreSQL 访问控制": 05-postgresql/04-postgresql-access-control.md
       - "05. 常用 SQL": 05-postgresql/05-postgresql-common-SQL.md
