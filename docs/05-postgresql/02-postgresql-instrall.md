@@ -1,16 +1,51 @@
 
 # 安装postgresql
 
-## 二进制安装
+
+
+## 前言
+
+PostgreSQL 已经成为全球最流行的开源关系数据库，被 Apple、Instagram、Spotify 等一线公司用于承载核心业务数据，并超越 MySQL 连续第三年居开发者调查榜首。
+
+但“把 PG 跑起来”和“把 PG 跑好”是两件完全不同的事。默认的 PostgreSQL 安装配置是极为保守的——它的设计目标是在最低硬件上稳定运行、不宕机。
+
+对于生产负载来说，这些默认配置浪费了巨大的性能空间。一个经过合理调优的 PG 实例，在同等硬件上可以承载 10 到 50 倍的吞吐量。
+
+
+
+**本系列定位**：面向实际生产环境，从 DBA 的视角出发，覆盖安装部署、参数调优、日志管理、监控体系、备份恢复、容量规划、分区维护、VACUUM/ANALYZE 策略等核心运维主题。每一期都提供可直接落地的配置示例、检查清单和操作命令——不讲空泛的理论，只讲生产中真正需要的东西。
+
+
+
+## 版本选择
+
+生产环境中，版本选择需平衡新特性与稳定性。截至 2026 年 8 月，当前发行版为 18，但以下原则长期有效：
+
+- **首选**：当前最新两个大版本（如 18、17）中相对成熟的那个。通常 .2 以上版本已足够稳定。
+- **次选**：上一个仍处于稳定支持期的版本，兼顾稳定性与足够长的剩余支持窗口。
+- **慎重**：追求“绝对稳定”而选择过于陈旧的版本（如仍使用 10/11/12），可能因错过关键性能优化和安全补丁而得不偿失——除非有外部合规或应用兼容约束。
+
+
+
+## 安装方式
+
+| 方式             | 适用场景                                 | 优缺点                                 |
+| ---------------- | ---------------------------------------- | -------------------------------------- |
+| 官方仓库（推荐） | 绝大多数生产环境                         | 安装便利、安全更新及时、依赖管理完善   |
+| 操作系统默认仓库 | 快速搭建测试环境                         | 版本通常老旧，不推荐生产使用           |
+| 源码编译         | 需要定制编译参数、debug 或研究内核的场景 | 灵活但运维复杂度高，需自行追踪安全更新 |
+
+
+
+## 官方仓库安装
 
 ```shell
 # ubuntu/debian package install 
-
 sudo apt update
 sudo apt -y upgrade
 sudo apt -y install vim bash-completion wget
 
-# 添加PostgreSQL的APT源
+# 添加PostgreSQL官方仓库的APT源
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 # 添加公钥签名
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
@@ -19,7 +54,7 @@ sudo apt update
 
 # Install the latest version of PostgreSQL.
 # If you want a specific version, use 'postgresql-12' or similar instead of 'postgresql':
-sudo apt install postgresql-13 postgresql-client-13
+sudo apt install postgresql-18 postgresql-client-18 postgresql-contrib-18
 
 systemctl status postgresql.service 
 
@@ -27,10 +62,6 @@ Ver  Cluster    Port   Status   Owner      Data directory                    Log
 13    main      5432   down     postgres   /var/lib/postgresql/13/main       /var/log/postgresql/postgresql-13-main.log
 
 pg_ctlcluster 13 main start
-
-
-
-
 ```
 
 ## 编译安装
@@ -131,6 +162,8 @@ WantedBy=multi-user.target
 
 在PostgreSQL 9.4版本之前，如果需要对PostgreSQL服务的某些功能进行优化、或是调整默认配置参数，则修改postgresql.conf配置文件，然后重启PostgreSQL（对于大多数配置参数的修改，均需要重启以生效）服务。
 
+
+
 **参数动态修改**
 
 但是从PostgreSQL 9.4版本开始，新引入了postgresql.auto.conf配置文件，它作为postgresql.conf文件的补充，在参数配置格式上，它和postgresql.conf保持一致。
@@ -139,17 +172,23 @@ WantedBy=multi-user.target
 configuration_parameter = value 或 configuration_parameter = 'value'
 ```
 
-postgresql.conf文件创建成功之后，里面有PostgreSQL依赖的默认配置文件参数，比如"最大连接数、共享缓冲区、时区"等等
+postgresql.conf 文件创建成功之后，里面有PostgreSQL依赖的默认配置文件参数，比如"最大连接数、共享缓冲区、时区"等等
 
-对于postgresql.auto.conf配置文件，一开始除了两行文本注释说明之外，没有其他的配置参数。正如postgresql.auto.conf配置文件中初始化时的文本字符串提示一样：
+对于postgresql.auto.conf配置文件，一开始除了两行文本注释说明之外，没有其他的配置参数。正如`postgresql.auto.conf`配置文件中初始化时的文本字符串提示一样：
 
 > 不要手动修改此文件, 因为它会被ALTER SYSTEM命令给覆盖。
 
-该文件主要用于存储有`ALTER SYSTEM`命令设置的参数值。所以它不需要像postgresql.conf文件一样，每当调整配置参数时，都手动去打开修改、保存。
+该文件主要用于存储有`ALTER SYSTEM`命令设置的参数值。所以它不需要像`postgresql.conf`文件一样，每当调整配置参数时，都手动去打开修改、保存。
 
-`ALTER SYSTEM`语句是PostgreSQL数据库的一个扩展，它用于在PostgreSQL数据库集群中修改服务器的配置参数。然后修改后的参数将保存在postgresql.auto.conf配置文件中。
+`ALTER SYSTEM`语句是PostgreSQL数据库的一个扩展，它用于在PostgreSQL数据库集群中修改服务器的配置参数。然后修改后的参数将保存在`postgresql.auto.conf`配置文件中。
 
-当使用`ALTER SYSTEM`语句修改了某配置参数之后，该文件中存在的这个参数将覆盖解析该文件之前存在的参数值。通俗点说，就是该文件中的这个参数将覆盖掉postgresql.conf文件中的该参数（但是postgresql.conf文件中这个参数值不会被修改，只是对于PostgreSQL服务，postgresql.auto.conf文件中的该参数具有更高的优先级）。
+当使用`ALTER SYSTEM`语句修改了某配置参数之后，该文件中存在的这个参数将覆盖解析该文件之前存在的参数值。
+
+通俗点说，就是该文件中的这个参数将覆盖掉postgresql.conf文件中的该参数（但是postgresql.conf文件中这个参数值不会被修改，只是对于PostgreSQL服务，`postgresql.auto.conf`文件中的该参数具有更高的优先级）。
+
+
+
+部分参数需要**完全重启**才能生效（如 `shared_buffers`、`max_connections`）。另一些如 `log_min_duration_statement` 仅需 `pg_reload_conf()` 或 `SELECT pg_reload_conf()`。
 
 
 ### 客户端认证配置文件
@@ -222,6 +261,8 @@ host all all 0.0.0.0/0        md5 # 允许所有机器登录，使用md5密码�
 
 ```
 
+
+
 # 命令行交互
 
 在UNIX平台中安装PostgreSQL之后，PostgreSQL会在UNIX系统中创建一个名为"postgres"的系统用户。PostgreSQL的默认用户名和数据库也是"postgres"。
@@ -230,9 +271,10 @@ host all all 0.0.0.0/0        md5 # 允许所有机器登录，使用md5密码�
 
 **Linux服务器中的postgresql进程通常是由操作系统的postgres用户来启动的。**
 
-
 如果你连接到一个数据库时，你可以选择以何种PostgreSQL用户名进行连接，如果你不选择，那么默认就是你的当前操作系统账号。
+
 如果这样，那么总有一个与操作系统用户同名的PostgreSQL用户账号用于启动服务器， 并且通常这个用户都有创建数据库的权限。
+
 如果你不想以该用户身份登录， 那么你也可以在任何地方声明一个-U选项以选择一个用于连接的PostgreSQL用户名。
 
 
@@ -242,7 +284,9 @@ host all all 0.0.0.0/0        md5 # 允许所有机器登录，使用md5密码�
 用户就是具体的人：比如陈XX经理，朱XX助理，王XX助理。
 
 在PostgreSQL 里没有区分用户和角色的概念，"CREATE USER" 为 "CREATE ROLE" 的别名
+
 这两个命令几乎是完全相同的，唯一的区别是"CREATE USER" 命令创建的用户默认带有LOGIN属性，而"CREATE ROLE" 命令创建的用户默认不带LOGIN属性
+
 (CREATE USER is equivalent to CREATE ROLE except that CREATE USER assumes LOGIN by default, while CREATE ROLE does not)
 
 PostgreSQL安装后默认用户名和数据库也是"postgres"，默认没有密码。在安装PostgreSQL之后可以以默认用户登录，也可以创建新当用户名。
